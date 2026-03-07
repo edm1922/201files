@@ -1,36 +1,95 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+    <!-- Initialize Alpine.js so the script can be used (local or Public Directory) -->
+    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+    <!-- to work App JS (local or Public Directory) -->
+    <script defer src="{{ asset('js/app.js') }}"></script>
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+    <!-- To Initialize App CSS (local or Public Directory) -->
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
+    @stack('styles')
+</head>
+<body>
+
+    <!-- ── Top Navbar ── -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <!-- Drawer toggle -->
+            <button class="btn btn-dark me-2 px-2" id="sidebar-toggle" title="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a class="navbar-brand" href="{{ route('dashboard') }}">{{ config('app.name', 'Laravel') }}</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('profile.edit') }}">
+                            <i class="fas fa-user me-1"></i>{{ Auth::user()->name }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="nav-link btn btn-link" style="color: rgba(255,255,255,.55);">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </body>
+    </nav>
+
+    <!-- ── Sidebar Backdrop ── -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- ── Sidebar Drawer ── -->
+    <div class="sidebar-drawer" id="sidebar-drawer">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->is('applicant-files*') ? 'active' : '' }}" href="{{ url('/applicant-files') }}">
+                    <i class="fas fa-folder-open"></i> Applicant Files
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->is('portal*') ? 'active' : '' }}" href="{{ url('/portal') }}">
+                    <i class="fas fa-clipboard-list"></i> Portal
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- ── Main Content ── -->
+    <main class="main-content">
+        {{ $slot }}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+
+    @stack('scripts')
+</body>
 </html>
