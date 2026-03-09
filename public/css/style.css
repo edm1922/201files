@@ -1,0 +1,177 @@
+/* ─── 201 Files – Grid Toolbar ─────────────────────────────── */
+
+.parent {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+/* Search bar – spans all 5 columns on row 2 */
+.div1 {
+    grid-column: 1 / span 5;
+    grid-row-start: 2;
+}
+
+
+/* ─── Search Bar ──────────────────────────────────────────── */
+
+.search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fff;
+}
+
+.search-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+
+/* ─── 201 File Panel ──────────────────────────────────────── */
+
+.file-panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* Tab bar row */
+.file-panel__tabbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 16px;
+    background: #fff;
+    flex-wrap: wrap;
+}
+
+/* Tab list */
+.file-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2px;
+}
+
+/* Individual tab button */
+.file-tab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+    /* overlap panel border */
+}
+
+.file-tab:hover {
+    color: #c0392b;
+}
+
+.file-tab.active {
+    color: #c0392b;
+    border-bottom-color: #c0392b;
+    font-weight: 600;
+}
+
+/* Save / Close buttons */
+.file-panel__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 8px 0;
+}
+
+.btn-file-save {
+    padding: 7px 20px;
+    background: #27ae60;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-file-save:hover {
+    background: #219a52;
+}
+
+.btn-file-close {
+    padding: 7px 20px;
+    background: #6b7280;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-file-close:hover {
+    background: #4b5563;
+}
+
+/* Panel body */
+.file-panel__body {
+    padding: 24px;
+}
+
+/* Panel section title (e.g. "PROFILE") */
+.panel-section-title {
+    color: #c0392b;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+/* Field inputs */
+.field-input {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.875rem;
+    padding: 9px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    outline: none;
+}
