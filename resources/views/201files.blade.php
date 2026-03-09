@@ -121,9 +121,64 @@
             {{-- DOCUMENTS TAB --}}
             <div class="tab-pane fade" id="panel-documents"
                  role="tabpanel" aria-labelledby="tab-documents">
-                <h6 class="panel-section-title">DOCUMENTS</h6>
-                <p class="text-muted">Document records will appear here.</p>
+
+                {{-- Header row: title + upload button --}}
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="panel-section-title mb-0">Documents</h6>
+                    <button class="btn-doc-upload">
+                        <i class="fas fa-upload me-1"></i> Upload Document
+                    </button>
+                </div>
+
+
+                {{-- Documents table --}}
+                <div class="doc-table-wrapper">
+                    <table class="doc-table" id="documentsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">No.</th>
+                                <th style="width:160px;">Document Type</th>
+                                <th>File Name</th>
+                                <th style="width:130px;">Validity</th>
+                                <th style="width:110px;">Remarks</th>
+                                <th style="width:150px;">Uploaded by</th>
+                                <th style="width:130px;">Uploaded on</th>
+                                <th style="width:80px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $documentTypes = [
+                                    'SSS',
+                                    'Pag-Ibig',
+                                    'Phil-Health',
+                                    'HMO',
+                                    'Birth Certificate / Marriage Contract',
+                                    'Personal Information Sheet',
+                                ];
+                            @endphp
+                            @foreach($documentTypes as $i => $type)
+                            <tr>
+                                <td class="text-center">{{ $i + 1 }}</td>
+                                <td class="doc-type-cell">{{ $type }}</td>
+                                <td class="text-muted" style="font-size:0.8rem;">N/A</td>
+                                <td class="text-center text-muted" style="font-size:0.8rem;">N/A</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td class="text-center">
+                                    <button class="btn-doc-action" title="View file">
+                                        <i class="fas fa-file-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
+
 
         </div>{{-- end tab-content --}}
     </div>{{-- end file-panel --}}
