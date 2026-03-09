@@ -32,13 +32,13 @@
 <body>
 
     <!-- ── Top Navbar ── -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
             <!-- Drawer toggle -->
             <button class="btn btn-dark me-2 px-2" id="sidebar-toggle" title="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="{{ route('dashboard') }}">{{ config('app.name', 'Laravel') }}</a>
+            <a class="navbar-brand" href="{{ route('dashboard') }}">CSC-DMS</a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
