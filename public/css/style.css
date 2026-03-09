@@ -44,8 +44,8 @@
 }
 
 .search-input:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    border-color: #dd270d;
+    box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.15);
 }
 
 
@@ -97,12 +97,12 @@
 }
 
 .file-tab:hover {
-    color: #c0392b;
+    color: #dd270d;
 }
 
 .file-tab.active {
-    color: #c0392b;
-    border-bottom-color: #c0392b;
+    color: #dd270d;
+    border-bottom-color: #dd270d;
     font-weight: 600;
 }
 
@@ -153,7 +153,7 @@
 
 /* Panel section title (e.g. "PROFILE") */
 .panel-section-title {
-    color: #c0392b;
+    color: #dd270d;
     font-weight: 700;
     font-size: 0.8rem;
     letter-spacing: 0.08em;
@@ -171,7 +171,7 @@
 }
 
 .field-input:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    border-color: #dd270d;
+    box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.12);
     outline: none;
 }
