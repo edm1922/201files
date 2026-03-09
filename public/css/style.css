@@ -1,21 +1,37 @@
-/* ─── 201 Files – Grid Toolbar ─────────────────────────────── */
+/* ─── Toolbar Grid — IN 201files.blade.php ──────────────────────────── */
 
 .parent {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(2, auto);
     gap: 8px;
-    margin-bottom: 4px;
 }
 
-/* Search bar – spans all 5 columns on row 2 */
+/* (1) Search bar — spans all 5 cols, row 2 */
 .div1 {
     grid-column: 1 / span 5;
     grid-row-start: 2;
 }
 
+/* (2) Company selector — col 5, row 1 */
+.div2 {
+    grid-column-start: 5;
+    grid-row-start: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
 
-/* ─── Search Bar ──────────────────────────────────────────── */
+
+.toolbar-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ─── Search Bar ─────────────────iN 201files.blade.php ─────────────────────────── */
 
 .search-wrapper {
     position: relative;
