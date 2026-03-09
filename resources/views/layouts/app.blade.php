@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -57,38 +61,15 @@
         </div>
     </nav>
 
-    <!-- ── Sidebar Backdrop ── -->
-    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
-
-    <!-- ── Sidebar Drawer ── -->
-    <div class="sidebar-drawer" id="sidebar-drawer">
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->is('applicant-files*') ? 'active' : '' }}" href="{{ url('/applicant-files') }}">
-                    <i class="fas fa-folder-open"></i> Applicant Files
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->is('portal*') ? 'active' : '' }}" href="{{ url('/portal') }}">
-                    <i class="fas fa-clipboard-list"></i> Portal
-                </a>
-            </li>
-        </ul>
-    </div>
+    {{-- ── Sidebar ── --}}
+    @include('layouts.sidebar')
 
     <!-- ── Main Content ── -->
     <main class="main-content">
         {{ $slot }}
     </main>
-
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
 
     @stack('scripts')
 </body>
