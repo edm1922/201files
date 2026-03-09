@@ -25,6 +25,9 @@
     <!-- To Initialize App CSS (local or Public Directory) -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
+    <!-- Custom styles -->
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+
     @stack('styles')
 </head>
 <body>
