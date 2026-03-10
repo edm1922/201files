@@ -72,15 +72,15 @@
                     {{-- Row 1: Names and Suffix aligned --}}
                     <div class="col-md-3">
                         <label class="form-label">First Name</label>
-                        <input type="text" class="form-control field-input" placeholder="First Name">
+                        <input type="text" id="firstNameInput" class="form-control field-input" placeholder="First Name">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Middle Name</label>
-                        <input type="text" class="form-control field-input" placeholder="Middle Name">
+                        <input type="text" id="middleNameInput" class="form-control field-input" placeholder="Middle Name">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Last Name</label>
-                        <input type="text" class="form-control field-input" placeholder="Last Name">
+                        <input type="text" id="lastNameInput" class="form-control field-input" placeholder="Last Name">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label" for="suffixInput">Suffix</label>
@@ -101,17 +101,17 @@
                     </div>
 
                     {{-- Row 2: Secondary Information --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Barcode</label>
-                        <input type="text" class="form-control field-input" placeholder="Barcode">
+                    <div class="col-md-3">
+                        <label class="form-label" for="barcodeInput">Barcode</label>
+                        <input type="text" id="barcodeInput" class="form-control field-input" placeholder="Barcode">
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">System ID</label>
-                        <input type="text" class="form-control field-input" placeholder="System ID">
+                    <div class="col-md-3">
+                        <label class="form-label" for="systemIdInput">System ID</label>
+                        <input type="text" id="systemIdInput" class="form-control field-input" placeholder="System ID">
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Code</label>
-                        <input type="text" class="form-control field-input" placeholder="Code">
+                    <div class="col-md-3">
+                        <label class="form-label" for="folderCodeInput">Folder Code</label>
+                        <input type="text" id="folderCodeInput" class="form-control field-input" placeholder="Folder Code">
                     </div>
 
                     {{-- Row 3: Status and Location --}}
