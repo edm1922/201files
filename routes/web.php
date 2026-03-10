@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('companies', CompanyController::class)->except(['show', 'destroy']);
         Route::patch('companies/{company}/toggle-active', [CompanyController::class, 'toggleActive'])
              ->name('companies.toggle-active');
+             
+        Route::resource('departments', DepartmentController::class)->except(['show', 'destroy']);
     });
 });
 

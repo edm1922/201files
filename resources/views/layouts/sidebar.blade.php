@@ -126,7 +126,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/settings/departments') }}">
+                    <a class="nav-link {{ request()->is('settings/departments*') ? 'active' : '' }}" href="{{ route('settings.departments.index') }}">
                         <i class="fas fa-sitemap"></i> Departments
                     </a>
                 </li>
