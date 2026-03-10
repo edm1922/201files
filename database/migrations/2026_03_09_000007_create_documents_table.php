@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+            $table->morphs('owner'); // Creates owner_id and owner_type
             $table->foreignId('document_type_id')->constrained()->onDelete('restrict');
             $table->foreignId('physical_location_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('uploaded_by')->constrained('users')->onDelete('restrict');
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index(['employee_id', 'document_type_id']);
+            $table->index(['owner_type', 'owner_id', 'document_type_id'], 'docs_owner_type_idx');
             $table->index('status');
             $table->index('expiry_date');
         });

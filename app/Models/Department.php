@@ -16,4 +16,9 @@ class Department extends Model
     {
         return $this->hasMany(DocumentType::class);
     }
+
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'owner');
+    }
 }

@@ -48,9 +48,9 @@ class Employee extends Model
         return $name;
     }
 
-    public function documents(): HasMany
+    public function documents()
     {
-        return $this->hasMany(Document::class);
+        return $this->morphMany(Document::class, 'owner');
     }
 
     public function deployments(): HasMany

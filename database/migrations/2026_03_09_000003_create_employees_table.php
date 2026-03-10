@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('suffix')->nullable();
             $table->date('date_of_birth')->nullable();
-            $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
+            $table->enum('status', ['active', 'awol', 'resigned'])->default('active');
             $table->timestamps();
             $table->softDeletes();
 

@@ -11,7 +11,8 @@ class Document extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'employee_id',
+        'owner_type',
+        'owner_id',
         'document_type_id',
         'physical_location_id',
         'uploaded_by',
@@ -55,9 +56,9 @@ class Document extends Model
             && $this->expiry_date->diffInDays(now()) <= $days;
     }
 
-    public function employee(): BelongsTo
+    public function owner()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->morphTo();
     }
 
     public function documentType(): BelongsTo
