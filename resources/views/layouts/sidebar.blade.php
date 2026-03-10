@@ -73,7 +73,7 @@
             </a>
         </li>
 
-        @if(Auth::user()->hasRole('admin', 'encoder'))
+        <!-- @if(Auth::user()->hasRole('admin', 'encoder'))
         {{-- ═══ ENCODING ═══ --}}
         <li class="sidebar-section-label">ENCODING</li>
 
@@ -90,7 +90,7 @@
                 <i class="fas fa-briefcase"></i> Companies
             </a>
         </li>
-        @endif
+        @endif -->
 
         @if(Auth::user()->isAdmin())
         {{-- ═══ ADMINISTRATION ═══ --}}
@@ -128,6 +128,11 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url('/settings/departments') }}">
                         <i class="fas fa-sitemap"></i> Departments
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url('/settings/companies') }}">
+                        <i class="fas fa-briefcase"></i> Companies
                     </a>
                 </li>
             </ul>

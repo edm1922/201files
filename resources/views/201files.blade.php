@@ -66,26 +66,41 @@
         <div class="tab-content file-panel__body" id="fileTabsContent">
 
             {{-- PERSONAL TAB --}}
-            <div class="tab-pane fade show active" id="panel-personal"
-                 role="tabpanel" aria-labelledby="tab-personal">
+            <div class="tab-pane fade show active" id="panel-personal" role="tabpanel" aria-labelledby="tab-personal">
                 <h6 class="panel-section-title">PERSONAL</h6>
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Code</label>
-                        <input type="text" class="form-control field-input" placeholder="Code">
-                    </div>
-                    <div class="col-md-4">
+                    {{-- Row 1: Names and Suffix aligned --}}
+                    <div class="col-md-3">
                         <label class="form-label">First Name</label>
                         <input type="text" class="form-control field-input" placeholder="First Name">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Middle Name</label>
                         <input type="text" class="form-control field-input" placeholder="Middle Name">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Last Name</label>
                         <input type="text" class="form-control field-input" placeholder="Last Name">
                     </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="suffixInput">Suffix</label>
+                        <input
+                            type="text"
+                            id="suffixInput"
+                            class="form-control field-input"
+                            list="suffixOptions"
+                            placeholder="-- Select or type --"
+                            autocomplete="off"
+                        >
+                        <datalist id="suffixOptions">
+                            <option value="JR.">
+                            <option value="SR.">
+                            <option value="II">
+                            <option value="III"> 
+                        </datalist>
+                    </div>
+
+                    {{-- Row 2: Secondary Information --}}
                     <div class="col-md-4">
                         <label class="form-label">Barcode</label>
                         <input type="text" class="form-control field-input" placeholder="Barcode">
@@ -95,8 +110,37 @@
                         <input type="text" class="form-control field-input" placeholder="System ID">
                     </div>
                     <div class="col-md-4">
+                        <label class="form-label">Code</label>
+                        <input type="text" class="form-control field-input" placeholder="Code">
+                    </div>
+
+                    {{-- Row 3: Status and Location --}}
+                    <!-- <div class="col-md-4">
                         <label class="form-label">Document Location</label>
                         <input type="text" class="form-control field-input" placeholder="Document Location">
+                    </div> -->
+                    <div class="col-md-4">
+                        <label class="form-label" for="documentLocationInput">Document Location</label>
+                        <input
+                            type="text"
+                            id="documentLocationInput"
+                            class="form-control field-input"
+                            list="documentLocationOptions"
+                            placeholder="-- Select or type --"
+                            autocomplete="off"
+                        >
+                        <datalist id="documentLocationOptions">
+                            <option value="A1">
+                            <option value="A2">
+                            <option value="A3">
+                            <option value="A4">
+                            <option value="A5">
+                            <option value="A6">
+                            <option value="A7">
+                            <option value="A8">
+                            <option value="A9">
+                            <option value="A10">
+                        </datalist>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="statusInput">Status</label>
@@ -114,7 +158,6 @@
                             <option value="Awol">
                         </datalist>
                     </div>
-
                 </div>
             </div>
 
