@@ -20,7 +20,7 @@ class Employee extends Model
         'suffix',
         'date_of_birth',
         'status',
-        
+        'company_id',
     ];
 
     protected function casts(): array
@@ -48,21 +48,14 @@ class Employee extends Model
         return $name;
     }
 
+
     public function documents()
     {
         return $this->morphMany(Document::class, 'owner');
     }
 
-    public function deployments(): HasMany
+    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->hasMany(Deployment::class);
-    }
-
-    /**
-     * Get the current active deployment.
-     */
-    public function currentDeployment()
-    {
-        return $this->hasOne(Deployment::class)->where('is_current', true)->latestOfMany();
+        return $this->belongsTo(Company::class);
     }
 }
