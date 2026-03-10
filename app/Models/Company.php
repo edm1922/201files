@@ -20,23 +20,11 @@ class Company extends Model
         ];
     }
 
-    public function deployments(): HasMany
-    {
-        return $this->hasMany(Deployment::class);
-    }
-
     /**
-     * Get employees currently deployed to this company.
+     * Get employees assigned to this company.
      */
-    public function activeEmployees()
+    public function employees(): HasMany
     {
-        return $this->hasManyThrough(
-            Employee::class,
-            Deployment::class,
-            'company_id',
-            'id',
-            'id',
-            'employee_id'
-        )->where('deployments.is_current', true);
+        return $this->hasMany(Employee::class);
     }
 }
