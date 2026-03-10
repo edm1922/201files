@@ -13,12 +13,14 @@ class Employee extends Model
     protected $fillable = [
         'system_id',
         'barcode_id',
+        'folder_code',
         'first_name',
         'middle_name',
         'last_name',
         'suffix',
         'date_of_birth',
         'status',
+        
     ];
 
     protected function casts(): array
