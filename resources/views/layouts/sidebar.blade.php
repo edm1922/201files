@@ -131,7 +131,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/settings/companies') }}">
+                    <a class="nav-link {{ request()->is('settings/companies*') ? 'active' : '' }}" href="{{ route('settings.companies.index') }}">
                         <i class="fas fa-briefcase"></i> Companies
                     </a>
                 </li>

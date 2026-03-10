@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/201files', function () {
         return view('201files');
     })->name('201files');
+
+    // ── Admin Settings ──
+    Route::middleware('role:admin')->prefix('settings')->name('settings.')->group(function () {
+        Route::resource('companies', CompanyController::class)->except(['show', 'destroy']);
+        Route::patch('companies/{company}/toggle-active', [CompanyController::class, 'toggleActive'])
+             ->name('companies.toggle-active');
+    });
 });
 
 require __DIR__.'/auth.php';

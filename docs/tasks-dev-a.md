@@ -5,16 +5,19 @@ This document isolates all tasks assigned to **Developer A** across all developm
 ---
 
 ## Phase 2: Core CRUD (Week 3–4)
-- [ ] 2.1 Employees CRUD with `system_id` + `barcode_id` entry
-- [ ] 2.2 Employee Profile hub (integrate provided UI later)
-- [ ] 2.3 Deployments — assign/transfer employees to client companies
-- [ ] 2.4 Employee CSV Import (~200 records) tool
 
-*Expected Outcome: Employees can be created, edited, assigned to companies, and bulk-imported.*
+- [X] 2.5 Companies CRUD
+- [X] 2.6 Departments CRUD (for categorizing doc types)
+- [ ] 2.7 Physical Locations management (admin CRUD for cabinets/racks)
+- [ ] 2.8 Document Types management (admin view + logic)
+- [ ] 2.9 Global Document Requirements settings (admin settings page to toggle required doc types)
+
+*Expected Outcome: System administrators have full control over the structural parameters (companies, locations, and global requirements).*
 
 ---
 
 ## Phase 3: Document Upload & Storage (Week 5–6)
+
 - [ ] 3.3 Document Upload Controller & Storage Logic (handling file ingestion)
 - [ ] 3.4 Multi-file → single PDF Merging Service
 - [ ] 3.5 Storage system (save to `storage/app/documents/{system_id}/` & log)
@@ -25,6 +28,7 @@ This document isolates all tasks assigned to **Developer A** across all developm
 ---
 
 ## Phase 4: Search & Retrieval (Week 7–8)
+
 - [ ] 4.3 Meilisearch backend setup & Scout Integration
 - [ ] 4.4 Searchable models (syncing Employee + Document data to Meilisearch index)
 - [ ] 4.5 Backend Search Controller & Queries (executing Meilisearch queries received from UI)
@@ -34,6 +38,7 @@ This document isolates all tasks assigned to **Developer A** across all developm
 ---
 
 ## Phase 5: Reports & Dashboard (Week 9–10)
+
 - [ ] 5.4 Dashboard & Reports Controllers (Data Aggregation queries)
 - [ ] 5.5 Export Service (generating Excel + PDF reports from data)
 - [ ] 5.6 Scheduled Tasks (Cron) for Expiry Checks (daily job to flag expired documents)
@@ -43,6 +48,7 @@ This document isolates all tasks assigned to **Developer A** across all developm
 ---
 
 ## Phase 6: Polish & Security (Week 11–12)
+
 - [ ] 6.3 Concurrency & Transactions (DB locks, unique constraints backend)
 - [ ] 6.4 Backup Service (schedule `spatie/laravel-backup` to local/external)
 - [ ] 6.5 Performance Testing & Optimization (with Dev B)
