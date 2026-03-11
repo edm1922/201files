@@ -499,12 +499,12 @@
     border-bottom: none;
 }
 
-.milli-item:hover {
+.milli-item:hover,
+.milli-item.active {
     background: #fef2f2;
+    color: #dd270d;
     cursor: pointer;
-}
-
-.milli-item:hover {
-    background: #fef2f2;
-    cursor: pointer;
+    border-left: 3px solid #dd270d;
+    padding-left: 11px;
+    /* offset border to prevent jumping */
 }

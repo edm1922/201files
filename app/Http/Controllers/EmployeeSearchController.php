@@ -14,16 +14,10 @@ class EmployeeSearchController extends Controller
     public function milliSearch(Request $request)
     {
         $query   = $request->get('query');
-        $company = $request->get('company'); // company_id
 
         $employees = Employee::query()
-            ->when($company, function ($q) use ($company) {
-                // Filter by employees assigned to the selected company
-                $q->where('company_id', $company);
-            })
             ->where(function ($q) use ($query) {
                 $q->where('first_name',  'LIKE', $query . '%')
-                ->orWhere('first_name',  'LIKE', '%' . $query . '%')
                   ->orWhere('middle_name', 'LIKE', $query . '%')
                   ->orWhere('last_name',   'LIKE', $query . '%')
                   ->orWhere('barcode_id',  'LIKE', $query . '%')
