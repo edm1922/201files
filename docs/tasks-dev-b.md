@@ -25,9 +25,10 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 3.1 Display the employee in employee tab
 - [X] 3.2 Search Functionality in 201files
 - [X] 3.3 Update the layouts/app.blade and public/css and js, base on the changes
-- [ ] 3.4 Single Page Upload UI (form to select doc type, dates, and physical location)
-- [ ] 3.5 Multi-file UI (Frontend) (drag & drop interface for multiple images/PDFs)
-- [ ] 3.6 Document viewer UI (in-browser PDF/image rendering that pings the backend for file retrieval)
+- [X] 3.4 In Personal tab add a company and the company must get the data in companies table
+- [ ] 3.5 Single Page Upload UI (form to select doc type, dates, and physical location)
+- [ ] 3.6 Multi-file UI (Frontend) (drag & drop interface for multiple images/PDFs)
+- [ ] 3.7 Document viewer UI (in-browser PDF/image rendering that pings the backend for file retrieval)
 
 *Expected Outcome: The user experience for uploading and viewing documents is frictionless. The UI properly captures necessary metadata before sending it to Dev A's upload API.*
 

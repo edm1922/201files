@@ -92,7 +92,7 @@ $(document).ready(function () {
     $('#employeeSearch').on('input', function () {
         clearTimeout(milliTimer);
         const query = $(this).val();
-        const company = $('#companySelect').val();
+        const company = $('#companySelectForm').val();
 
         if (query.length < 1) {
             $('#milliResults').hide().empty();
@@ -109,7 +109,7 @@ $(document).ready(function () {
         if (e.which === 13) {
             e.preventDefault();
             clearTimeout(milliTimer);
-            performSearch($(this).val(), $('#companySelect').val(), true);
+            performSearch($(this).val(), $('#companySelectForm').val(), true);
         }
     });
 
