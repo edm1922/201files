@@ -89,20 +89,34 @@
                                                 </span>
                                             </td>
                                             <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
-                                                <button type="button"
-                                                        class="btn btn-sm btn-light text-secondary hover-primary"
-                                                        title="Edit Rack"
-                                                        style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;"
-                                                        onmouseover="this.style.backgroundColor='rgba(221, 39, 13, 0.1)'; this.style.color='#dd270d !important'"
-                                                        onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.color='#6c757d !important'"
-                                                        @click="openEditModal({{ json_encode([
-                                                            'id' => $location->id,
-                                                            'cabinet_id' => $location->cabinet_id,
-                                                            'rack_id' => $location->rack_id,
-                                                            'updated_at' => $location->updated_at->format('M d, Y h:i A')
-                                                        ]) }})">
-                                                    <i class="fas fa-pen" style="font-size: 0.8rem;"></i>
-                                                </button>
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-light text-secondary hover-primary"
+                                                            title="Edit Rack"
+                                                            style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                                            onmouseover="this.style.backgroundColor='rgba(221, 39, 13, 0.1)'; this.style.color='#dd270d !important'"
+                                                            onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.color='#6c757d !important'"
+                                                            @click="openEditModal({{ json_encode([
+                                                                'id' => $location->id,
+                                                                'cabinet_id' => $location->cabinet_id,
+                                                                'rack_id' => $location->rack_id,
+                                                                'updated_at' => $location->updated_at->format('M d, Y h:i A')
+                                                            ]) }})">
+                                                        <i class="fas fa-pen" style="font-size: 0.8rem;"></i>
+                                                    </button>
+                                                    <button type="button"
+                                                            class="btn btn-sm"
+                                                            title="{{ $location->documents_count > 0 ? 'Cannot delete: Folders exist' : 'Delete Rack' }}"
+                                                            style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; {{ $location->documents_count > 0 ? 'background-color:#f3f4f6; color:#9ca3af; cursor:not-allowed;' : 'background-color:#fef2f2; color:#ef4444;' }}"
+                                                            {{ $location->documents_count > 0 ? 'disabled' : '' }}
+                                                            @if($location->documents_count == 0)
+                                                                onmouseover="this.style.backgroundColor='#fee2e2'; this.style.transform='scale(1.05)'"
+                                                                onmouseout="this.style.backgroundColor='#fef2f2'; this.style.transform='scale(1)'"
+                                                                @click="openConfirmModal({{ $location->id }}, '{{ $location->cabinet_id }} › {{ $location->rack_id }}')"
+                                                            @endif>
+                                                        <i class="fas fa-trash-alt" style="font-size: 0.8rem;"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -124,6 +138,7 @@
 
         @include('physical-locations.create')
         @include('physical-locations.edit')
+        @include('companies.confirm_modal')
     </div>
 
     <script>
@@ -136,6 +151,14 @@
                     rack_id: '',
                     updated_at: ''
                 },
+
+                confirmActionUrl: '',
+                confirmMethod: 'DELETE',
+                confirmTitle: '',
+                confirmMessage: '',
+                confirmButtonText: '',
+                confirmTheme: '',
+                confirmIcon: '',
 
                 init() {
                     @if($errors->any() && old('_method') === 'PUT')
@@ -153,6 +176,19 @@
                     this.editData = { ...location };
                     this.editUrl = `{{ url('settings/physical-locations') }}/${location.id}`;
                     var modal = new bootstrap.Modal(document.getElementById('editLocationModal'));
+                    modal.show();
+                },
+
+                openConfirmModal(id, name) {
+                    this.confirmActionUrl = `{{ url('settings/physical-locations') }}/${id}`;
+                    this.confirmMethod = 'DELETE';
+                    this.confirmTitle = 'Delete Physical Location';
+                    this.confirmMessage = `Are you sure you want to permanently delete the rack <strong>${name}</strong>? This action cannot be undone.`;
+                    this.confirmButtonText = 'Yes, Delete Rack';
+                    this.confirmTheme = 'danger';
+                    this.confirmIcon = 'fas fa-trash-alt';
+                    
+                    var modal = new bootstrap.Modal(document.getElementById('confirmModal'));
                     modal.show();
                 }
             }));

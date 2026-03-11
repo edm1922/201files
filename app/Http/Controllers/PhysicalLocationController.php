@@ -61,4 +61,22 @@ class PhysicalLocationController extends Controller
             ->route('settings.physical-locations.index')
             ->with('success', 'Physical location updated successfully.');
     }
+
+    /**
+     * Remove the specified physical location from storage safely.
+     */
+    public function destroy(PhysicalLocation $physicalLocation)
+    {
+        if ($physicalLocation->documents()->count() > 0) {
+            return redirect()
+                ->route('settings.physical-locations.index')
+                ->with('error', 'Cannot delete this rack because it contains folders.');
+        }
+
+        $physicalLocation->delete();
+
+        return redirect()
+            ->route('settings.physical-locations.index')
+            ->with('success', 'Physical location deleted successfully.');
+    }
 }

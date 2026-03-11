@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('departments/{department}/toggle-active', [DepartmentController::class, 'toggleActive'])
              ->name('departments.toggle-active');
              
-        Route::resource('physical-locations', PhysicalLocationController::class)->except(['show', 'destroy']);
+        Route::resource('physical-locations', PhysicalLocationController::class)->except(['show']);
         Route::resource('document-types', DocumentTypeController::class)->except(['show', 'destroy']);
     });
     // ── 201 Files / Employee Profile Hub ──
