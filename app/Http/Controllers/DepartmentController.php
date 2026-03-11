@@ -13,11 +13,24 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Department::withCount('documentTypes');
+        $query = Department::withCount(['documentTypes', 'documents']);
 
         if ($search = $request->input('search')) {
             $query->where('name', 'like', "%{$search}%");
         }
+        
+        if ($status = $request->input('status')) {
+            if ($status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        } else {
+            // Default to 'active' if no status is explicitly requested
+            $query->where('is_active', true);
+            $request->merge(['status' => 'active']);
+        }
+
 
         $departments = $query->orderBy('name')->paginate(15)->withQueryString();
 
@@ -62,5 +75,46 @@ class DepartmentController extends Controller
         return redirect()
             ->route('settings.departments.index')
             ->with('success', 'Department updated successfully.');
+    }
+
+    /**
+     * Toggle the active status of the specified department.
+     */
+    public function toggleActive(Department $department)
+    {
+        $department->update([
+            'is_active' => !$department->is_active
+        ]);
+
+        $status = $department->is_active ? 'reactivated' : 'deactivated';
+        return redirect()->route('settings.departments.index')
+            ->with('success', "Department has been {$status}.");
+    }
+
+    /**
+     * Remove the specified department from storage.
+     * Prevents deletion if the department has active documents or document types.
+     */
+    public function destroy(Department $department)
+    {
+        // First check if it has associated document types
+        if ($department->documentTypes()->count() > 0) {
+            return redirect()
+                ->route('settings.departments.index')
+                ->with('error', 'Cannot delete a department that has active document types attached. Deactivate it instead.');
+        }
+
+        // Second check if it has any associated documents (morphMany relationship)
+        if ($department->documents()->count() > 0) {
+            return redirect()
+                ->route('settings.departments.index')
+                ->with('error', 'Cannot delete a department that has documents attached. Deactivate it instead.');
+        }
+
+        $department->delete();
+
+        return redirect()
+            ->route('settings.departments.index')
+            ->with('success', 'Department deleted successfully.');
     }
 }
