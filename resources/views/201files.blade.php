@@ -14,22 +14,6 @@
 
     {{-- ── Toolbar Grid ── --}}
     <div class="parent mb-3">
-<!-- 
-        {{-- (2) Company Selector — top-right --}}
-        <div class="div2">
-            <label for="companySelect" class="toolbar-label mb-1">
-                <i class="fas fa-building me-1"></i> Company
-            </label>
-            <select id="companySelect" name="company_id" class="form-select field-input w-100">
-                <option value="">-- Choose Company --</option>
-                @foreach($companies as $company)
-                    <option value="{{ $company->id }}"
-                        {{ ($employee && $employee->company_id == $company->id) ? 'selected' : '' }}>
-                        {{ $company->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div> -->
 
         {{-- (1) Search Bar ── --}}
         <div class="div1">
@@ -64,9 +48,6 @@
         @if(!$isNew)
             @method('PUT')
         @endif
-
-        {{-- Hidden company_id that syncs with the toolbar dropdown --}}
-        <input type="hidden" id="companyIdHidden" name="company_id" value="{{ old('company_id', $employee?->company_id) }}">
 
         <div class="file-panel">
 
@@ -322,6 +303,24 @@
                                 @endforeach
                             </select>
                             @error('physical_location_id')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="companySelectForm">Company <span class="text-danger">*</span></label>
+                            <select id="companySelectForm" name="company_id" 
+                                class="form-control basic-select field-input @error('company_id') is-invalid @enderror"
+                                data-placeholder="- Choose -">
+                                <option value=""></option>
+                                @foreach($companies as $company)
+                                    <option value="{{ $company->id }}" 
+                                        {{ old('company_id', $employee?->company_id) == $company->id ? 'selected' : '' }}>
+                                        {{ $company->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('company_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
