@@ -35,11 +35,15 @@ class EmployeeController extends Controller
     public function store(StoreEmployeeRequest $request)
     {
         $employee = DB::transaction(function () use ($request) {
-            $employee = Employee::create($request->only([
+            $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'date_of_birth', 'status', 'barcode_id', 'folder_code',
+                'suffix', 'date_hired', 'status', 'barcode_id',
                 'company_id',
-            ]));
+            ]);
+            
+            $data['folder_code'] = $this->generateFolderCode();
+
+            $employee = Employee::create($data);
 
             AuditService::log(
                 'employee_created',
@@ -86,7 +90,7 @@ class EmployeeController extends Controller
 
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'date_of_birth', 'status', 'barcode_id', 'folder_code',
+                'suffix', 'date_hired', 'status', 'barcode_id',
                 'company_id',
             ]));
 
@@ -103,4 +107,20 @@ class EmployeeController extends Controller
             ->with('success', 'Employee profile updated successfully.');
     }
 
+    /**
+     * Auto-generates the next folder code in the sequence (e.g., 201HR-0001).
+     */
+    protected function generateFolderCode(): string
+    {
+        $lastEmployee = Employee::where('folder_code', 'like', '201HR-%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$lastEmployee || !preg_match('/^201HR-(\d+)$/', $lastEmployee->folder_code, $matches)) {
+            return '201HR-0001';
+        }
+
+        $nextNumber = ((int) $matches[1]) + 1;
+        return '201HR-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    }
 }

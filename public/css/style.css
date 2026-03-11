@@ -192,6 +192,29 @@
     outline: none;
 }
 
+/* ─── Select2 Overrides (Match .field-input) ───────────────────────── */
+
+.select2-container--default .select2-selection--single {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    height: 40px;
+    /* match field input total height */
+    padding: 5px 6px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px;
+    right: 8px;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #dd270d !important;
+    box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.12) !important;
+}
+
 /* ─── Documents Tab For 201files.blade.php ────────────────────────────────────────── */
 
 /* Upload button */

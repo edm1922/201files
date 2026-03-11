@@ -18,7 +18,7 @@ class Employee extends Model
         'middle_name',
         'last_name',
         'suffix',
-        'date_of_birth',
+        'date_hired',
         'status',
         'company_id',
     ];
@@ -26,7 +26,7 @@ class Employee extends Model
     protected function casts(): array
     {
         return [
-            'date_of_birth' => 'date',
+            'date_hired' => 'date',
         ];
     }
 

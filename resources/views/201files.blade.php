@@ -108,12 +108,12 @@
                 </ul>
 
                 <div class="file-panel__actions">
-                    <a href="{{ route('201files') }}" class="btn-file-new">
-                        <i class="fas fa-plus me-1"></i>New
-                    </a>
                     <button type="submit" class="btn-file-save">
                         <i class="fas fa-save me-1"></i>Save
                     </button>
+                    <a href="{{ route('201files') }}" class="btn btn-secondary ms-2" style="border-radius:4px; font-weight:500;">
+                        <i class="fas fa-times me-1"></i>Close
+                    </a>
                 </div>
             </div>
 
@@ -222,22 +222,32 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label" for="suffixInput">Suffix</label>
-                            <input type="text" id="suffixInput" name="suffix"
-                                   class="form-control field-input @error('suffix') is-invalid @enderror"
-                                   list="suffixOptions"
-                                   placeholder="— Select or type —"
-                                   autocomplete="off"
-                                   value="{{ old('suffix', $employee?->suffix) }}">
-                            <datalist id="suffixOptions">
-                                <option value="JR.">
-                                <option value="SR.">
-                                <option value="II">
-                                <option value="III">
-                            </datalist>
-                            @error('suffix')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label" for="suffixSelect">Suffix</label>
+                            @php
+                                // Get existing value from old input or database
+                                $suffixRaw = old('suffix', $employee?->suffix ?? '');
+                                
+                                // Define standard suffixes
+                                $defaultSuffixes = ['JR.', 'SR.', 'II', 'III', 'IV', 'V'];
+                                $allSuffixes = $defaultSuffixes;
+
+                                // If the database has a suffix not in our list (e.g., "PhD"), 
+                                // add it to the options so it remains selected and visible.
+                                if ($suffixRaw && !in_array($suffixRaw, $defaultSuffixes)) {
+                                    $allSuffixes[] = $suffixRaw;
+                                }
+                            @endphp
+
+                            <select id="suffixSelect" name="suffix"
+                                class="form-control basic-select field-input" 
+                                data-placeholder="- Choose Suffix -">
+                                <option value=""></option>
+                                @foreach($allSuffixes as $suffix)
+                                    <option value="{{ $suffix }}" {{ $suffixRaw === $suffix ? 'selected' : '' }}>
+                                        {{ $suffix }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         {{-- Row 2: IDs --}}
@@ -266,30 +276,27 @@
                         <div class="col-md-4">
                             <label class="form-label" for="folderCodeInput">Folder Code</label>
                             <input type="text" id="folderCodeInput" name="folder_code"
-                                   class="form-control field-input @error('folder_code') is-invalid @enderror"
-                                   placeholder="Folder Code"
-                                   value="{{ old('folder_code', $employee?->folder_code) }}">
-                            @error('folder_code')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                                   class="form-control field-input"
+                                   placeholder="Auto-generated (e.g. 201HR-0001)"
+                                   value="{{ $employee?->folder_code }}" readonly>
                         </div>
 
-                        {{-- Row 3: Date of Birth + Status + Document Location --}}
                         <div class="col-md-4">
-                            <label class="form-label" for="dobInput">Date of Birth</label>
-                            <input type="date" id="dobInput" name="date_of_birth"
-                                   class="form-control field-input @error('date_of_birth') is-invalid @enderror"
-                                   value="{{ old('date_of_birth', $employee?->date_of_birth?->format('Y-m-d')) }}">
-                            @error('date_of_birth')
+                            <label class="form-label" for="dateHiredInput">Date Hired</label>
+                            <input type="date" id="dateHiredInput" name="date_hired"
+                                   class="form-control field-input @error('date_hired') is-invalid @enderror"
+                                   value="{{ old('date_hired', $employee?->date_hired?->format('Y-m-d')) }}">
+                            @error('date_hired')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="statusInput">Status <span class="text-danger">*</span></label>
-                            <select id="statusInput" name="status"
-                                    class="form-select field-input @error('status') is-invalid @enderror">
-                                <option value="">— Select Status —</option>
+                            <label class="form-label" for="statusSelect">Status <span class="text-danger">*</span></label>
+                            <select id="statusSelect" name="status"
+                                    class="form-control basic-select field-input @error('status') is-invalid @enderror"
+                                    data-placeholder="- Choose -">
+                                <option value=""></option>
                                 @foreach(['active' => 'Active', 'awol' => 'AWOL', 'resigned' => 'Resigned'] as $val => $label)
                                     <option value="{{ $val }}"
                                         {{ old('status', $employee?->status) === $val ? 'selected' : '' }}>
@@ -303,20 +310,24 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="documentLocationInput">Document Location</label>
-                            <input type="text" id="documentLocationInput"
-                                   class="form-control field-input"
-                                   list="documentLocationOptions"
-                                   placeholder="— Select or type —"
-                                   autocomplete="off">
-                            <datalist id="documentLocationOptions">
-                                <option value="A1"><option value="A2"><option value="A3">
-                                <option value="A4"><option value="A5"><option value="A6">
-                                <option value="A7"><option value="A8"><option value="A9">
-                                <option value="A10">
-                            </datalist>
+                            <label class="form-label" for="documentLocationSelect">Document Location</label>
+                            @php
+                                $locRaw = old('document_location', $employee?->document_location ?? '');
+                                $defaultLocs = ['A1','A2','A3','A4','A5','A6','A7','A8','A9','A10'];
+                                $allLocs = $defaultLocs;
+                                if ($locRaw && !in_array($locRaw, $defaultLocs)) {
+                                    $allLocs[] = $locRaw;
+                                }
+                            @endphp
+                            <select id="documentLocationSelect" name="document_location"
+                                class="form-control basic-select field-input" {{-- Changed tagging-select to basic-select --}}
+                                data-placeholder="- Choose -">
+                                <option value=""></option>
+                                @foreach($allLocs as $loc)
+                                    <option value="{{ $loc }}" {{ $locRaw === $loc ? 'selected' : '' }}>{{ $loc }}</option>
+                                @endforeach
+                            </select>
                         </div>
-
                     </div>
                 </div>
 
@@ -392,3 +403,5 @@
     @endpush
 
 </x-app-layout>
+
+
