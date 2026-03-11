@@ -23,10 +23,12 @@ class EmployeeSearchController extends Controller
             })
             ->where(function ($q) use ($query) {
                 $q->where('first_name',  'LIKE', $query . '%')
+                ->orWhere('first_name',  'LIKE', '%' . $query . '%')
                   ->orWhere('middle_name', 'LIKE', $query . '%')
                   ->orWhere('last_name',   'LIKE', $query . '%')
                   ->orWhere('barcode_id',  'LIKE', $query . '%')
-                  ->orWhere('system_id',   'LIKE', $query . '%');
+                  ->orWhere('system_id',   'LIKE', $query . '%')
+                  ->orWhere('folder_code', 'LIKE', $query . '%');
             })
             ->limit(10)
             ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'folder_code', 'status']);
