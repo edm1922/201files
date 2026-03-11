@@ -22,10 +22,9 @@ class UpdateEmployeeRequest extends FormRequest
             'middle_name'  => ['nullable', 'string', 'max:100'],
             'last_name'    => ['required', 'string', 'max:100'],
             'suffix'       => ['nullable', 'string', 'max:20'],
-            'date_of_birth'=> ['nullable', 'date'],
+            'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employeeId)],
-            'folder_code'  => ['nullable', 'string', 'max:100'],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
         ];
     }

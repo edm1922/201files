@@ -119,4 +119,18 @@ $(document).ready(function () {
             $('#milliResults').hide();
         }
     });
+
+    // Select2 Initialization
+    $('.basic-select').select2({
+        width: '100%',
+        allowClear: true,
+        minimumResultsForSearch: 0
+    });
+
+    $('.tagging-select').select2({
+        width: '100%',
+        tags: true,
+        allowClear: true,
+        minimumResultsForSearch: 0
+    });
 });
