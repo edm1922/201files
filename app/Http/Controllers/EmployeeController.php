@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Company;
 use App\Models\DocumentType;
 use App\Models\Employee;
+use App\Models\PhysicalLocation;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 
@@ -21,11 +22,13 @@ class EmployeeController extends Controller
         $documentTypes = DocumentType::whereHas('department', fn($q) => $q->where('name', 'Human Resource'))
             ->orderBy('name')
             ->get();
+        $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
 
         return view('201files', [
             'employee'      => null,
             'companies'     => $companies,
             'documentTypes' => $documentTypes,
+            'physicalLocations' => $physicalLocations,
         ]);
     }
 
@@ -38,7 +41,7 @@ class EmployeeController extends Controller
             $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id',
+                'company_id', 'physical_location_id',
             ]);
             
             $data['folder_code'] = $this->generateFolderCode();
@@ -69,11 +72,13 @@ class EmployeeController extends Controller
         $documentTypes = DocumentType::whereHas('department', fn($q) => $q->where('name', 'Human Resource'))
             ->orderBy('name')
             ->get();
+        $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
 
         return view('201files', [
             'employee'      => $employee,
             'companies'     => $companies,
             'documentTypes' => $documentTypes,
+            'physicalLocations' => $physicalLocations,
         ]);
     }
 
@@ -91,7 +96,7 @@ class EmployeeController extends Controller
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id',
+                'company_id', 'physical_location_id',
             ]));
 
             AuditService::log(

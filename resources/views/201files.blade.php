@@ -14,7 +14,7 @@
 
     {{-- ── Toolbar Grid ── --}}
     <div class="parent mb-3">
-
+<!-- 
         {{-- (2) Company Selector — top-right --}}
         <div class="div2">
             <label for="companySelect" class="toolbar-label mb-1">
@@ -29,7 +29,7 @@
                     </option>
                 @endforeach
             </select>
-        </div>
+        </div> -->
 
         {{-- (1) Search Bar ── --}}
         <div class="div1">
@@ -311,22 +311,19 @@
 
                         <div class="col-md-4">
                             <label class="form-label" for="documentLocationSelect">Document Location</label>
-                            @php
-                                $locRaw = old('document_location', $employee?->document_location ?? '');
-                                $defaultLocs = ['A1','A2','A3','A4','A5','A6','A7','A8','A9','A10'];
-                                $allLocs = $defaultLocs;
-                                if ($locRaw && !in_array($locRaw, $defaultLocs)) {
-                                    $allLocs[] = $locRaw;
-                                }
-                            @endphp
-                            <select id="documentLocationSelect" name="document_location"
-                                class="form-control basic-select field-input" {{-- Changed tagging-select to basic-select --}}
+                            <select id="documentLocationSelect" name="physical_location_id"
+                                class="form-control basic-select field-input"
                                 data-placeholder="- Choose -">
                                 <option value=""></option>
-                                @foreach($allLocs as $loc)
-                                    <option value="{{ $loc }}" {{ $locRaw === $loc ? 'selected' : '' }}>{{ $loc }}</option>
+                                @foreach($physicalLocations as $location)
+                                    <option value="{{ $location->id }}" {{ old('physical_location_id', $employee?->physical_location_id) == $location->id ? 'selected' : '' }}>
+                                        {{ $location->display_name }}
+                                    </option>
                                 @endforeach
                             </select>
+                            @error('physical_location_id')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -391,14 +388,6 @@
             document.getElementById('companyIdHidden').value = this.value;
         });
 
-        // When a search result is clicked, also update the company dropdown if the employee has a company assignment
-        const originalFill = window.fillEmployeeData;
-        window.fillEmployeeData = function (emp) {
-            // Navigate to the employee profile
-            if (emp.id) {
-                window.location.href = '/employees/' + emp.id;
-            }
-        };
     </script>
     @endpush
 
