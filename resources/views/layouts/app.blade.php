@@ -23,7 +23,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Initialize Alpine.js so the script can be used (local or Public Directory) -->
-    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
+    <!-- <script defer src="{{ asset('js/alpine.min.js') }}"></script> -->
 
     <!-- to work App JS (local or Public Directory) -->
     <script defer src="{{ asset('js/app.js') }}"></script>

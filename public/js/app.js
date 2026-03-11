@@ -33,8 +33,10 @@ document.addEventListener('DOMContentLoaded', function () {
 // Milli-Search Functionality
 $(document).ready(function () {
     let milliTimer;
+    let selectedIndex = -1; // Track currently highlighted index
 
-    function performSearch(query, company, autoSelectFirst = false) {
+    function performSearch(query, autoSelectFirst = false) {
+        selectedIndex = -1; // reset on new search
         if (query.length < 1) {
             $('#milliResults').hide().empty();
             return;
@@ -46,7 +48,7 @@ $(document).ready(function () {
         $.ajax({
             url: milliSearchUrl,
             type: 'GET',
-            data: { query: query, company: company },
+            data: { query: query },
             success: function (data) {
                 const container = $('#milliResults');
                 container.empty().show();
@@ -57,15 +59,17 @@ $(document).ready(function () {
                         return;
                     }
 
+                    // --- milliSearchUrl result ---
                     data.forEach(emp => {
                         const item = $(`
                             <div class="milli-item">
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
                                     <span><strong>${emp.last_name}</strong>, ${emp.first_name}</span>
-                                    <span class="badge bg-secondary" style="font-size:0.7rem;">${emp.barcode_id || ''}</span>
+                                    <span style="font-size:0.75rem; color:#dd270d; font-weight:700;"> ${emp.folder_code || ''}</span>
                                 </div>
                             </div>
                         `);
+
                         item.on('click', function () {
                             navigateToEmployee(emp);
                         });
@@ -92,7 +96,6 @@ $(document).ready(function () {
     $('#employeeSearch').on('input', function () {
         clearTimeout(milliTimer);
         const query = $(this).val();
-        const company = $('#companySelectForm').val();
 
         if (query.length < 1) {
             $('#milliResults').hide().empty();
@@ -100,18 +103,58 @@ $(document).ready(function () {
         }
 
         milliTimer = setTimeout(function () {
-            performSearch(query, company, false);
+            performSearch(query, false);
         }, 150);
     });
 
-    // Enter key → auto-select first result
-    $('#employeeSearch').on('keypress', function (e) {
-        if (e.which === 13) {
+    // Keyboard navigation (Up, Down, Enter)
+    $('#employeeSearch').on('keydown', function (e) {
+        const items = $('.milli-item');
+
+        if (items.length === 0) return; // ignore if no results open
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % items.length;
+            updateHighlight(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+            updateHighlight(items);
+        } else if (e.key === 'Enter') {
             e.preventDefault();
             clearTimeout(milliTimer);
-            performSearch($(this).val(), $('#companySelectForm').val(), true);
+
+            if (selectedIndex >= 0 && selectedIndex < items.length) {
+                // An item is highlighted, click it
+                items.eq(selectedIndex).click();
+            } else {
+                // No item highlighted, just auto-select the first result
+                performSearch($(this).val(), true);
+            }
         }
     });
+
+    function updateHighlight(items) {
+        items.removeClass('active');
+        if (selectedIndex >= 0) {
+            const activeItem = items.eq(selectedIndex);
+            activeItem.addClass('active');
+
+            // Auto scroll container if needed
+            const container = $('#milliResults');
+            const itemTop = activeItem.position().top;
+            const itemBottom = itemTop + activeItem.outerHeight();
+            const containerScroll = container.scrollTop();
+            const containerHeight = container.height();
+
+            if (itemTop < 0) {
+                container.scrollTop(containerScroll + itemTop);
+            } else if (itemBottom > containerHeight) {
+                container.scrollTop(containerScroll + itemBottom - containerHeight);
+            }
+        }
+    }
 
     // Hide dropdown when clicking outside
     $(document).on('click', function (e) {
