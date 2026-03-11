@@ -132,7 +132,7 @@
 
 .btn-file-save {
     padding: 7px 20px;
-    background: #27ae60;
+    background: #dd270d;
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -213,6 +213,11 @@
 .select2-container--default.select2-container--open .select2-selection--single {
     border-color: #dd270d !important;
     box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.12) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    background-color: #dd270d !important;
+    color: white !important;
 }
 
 /* ─── Documents Tab For 201files.blade.php ────────────────────────────────────────── */
