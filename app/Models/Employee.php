@@ -21,6 +21,7 @@ class Employee extends Model
         'date_hired',
         'status',
         'company_id',
+        'physical_location_id',
     ];
 
     protected function casts(): array
@@ -57,5 +58,10 @@ class Employee extends Model
     public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function physicalLocation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(PhysicalLocation::class);
     }
 }

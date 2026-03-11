@@ -26,6 +26,7 @@ class UpdateEmployeeRequest extends FormRequest
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employeeId)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
+            'physical_location_id' => ['nullable', 'integer', 'exists:physical_locations,id'],
         ];
     }
 

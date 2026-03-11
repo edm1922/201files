@@ -436,8 +436,8 @@
 }
 
 .emp-summary-mono {
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    font-weight: 600;
     color: #dd270d;
 }
 
@@ -492,6 +492,11 @@
 
 .milli-item:last-child {
     border-bottom: none;
+}
+
+.milli-item:hover {
+    background: #fef2f2;
+    cursor: pointer;
 }
 
 .milli-item:hover {
