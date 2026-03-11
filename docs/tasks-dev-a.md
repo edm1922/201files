@@ -10,7 +10,7 @@ This document isolates all tasks assigned to **Developer A** across all developm
 - [X] 2.6 Departments CRUD (for categorizing doc types)
 - [X] 2.7 Physical Locations management (admin CRUD for cabinets/racks)
 - [X] 2.8 Document Types management (admin view + logic)
-- [ ] 2.9 Global Document Requirements settings (admin settings page to toggle required doc types)
+- [X] 2.9 Global Document Requirements (Removed — covered by Document Types CRUD)
 
 *Expected Outcome: System administrators have full control over the structural parameters (companies, locations, and global requirements).*
 

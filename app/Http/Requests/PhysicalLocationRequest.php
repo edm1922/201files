@@ -12,6 +12,14 @@ class PhysicalLocationRequest extends FormRequest
         return $this->user()?->isAdmin() ?? false;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'cabinet_id' => $this->cabinet_id ? mb_strtoupper(trim($this->cabinet_id)) : null,
+            'rack_id'    => $this->rack_id ? mb_strtoupper(trim($this->rack_id)) : null,
+        ]);
+    }
+
     public function rules(): array
     {
         $locationId = $this->route('physical_location')?->id;

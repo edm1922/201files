@@ -1,111 +1,197 @@
 <x-app-layout>
 
-    {{-- ── Page Header ── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="h4 mb-1 fw-bold">Physical Locations</h2>
-            <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage the physical cabinets and racks where physical documents are stored.</p>
-        </div>
-        <a href="{{ route('settings.physical-locations.create') }}" class="btn btn-brand d-inline-flex align-items-center gap-2">
-            <i class="fas fa-plus"></i> Add Location
-        </a>
-    </div>
-
-    {{-- ── Flash Messages ── --}}
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert" style="border-left: 4px solid #27ae60; border-radius: 8px;">
-            <i class="fas fa-check-circle"></i>
-            <span>{{ session('success') }}</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    {{-- ── Filters Card ── --}}
-    <div class="card shadow-sm mb-4">
-        <div class="card-body py-3">
-            <form method="GET" action="{{ route('settings.physical-locations.index') }}" class="row g-3 align-items-end">
-                <div class="col-md-6 col-lg-5">
-                    <label for="search" class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Search</label>
-                    <div class="search-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text"
-                               id="search"
-                               name="search"
-                               class="search-input"
-                               placeholder="Search by cabinet, rack, or label…"
-                               value="{{ request('search') }}">
-                    </div>
-                </div>
-                <div class="col-md-3 col-lg-2 d-flex gap-2">
-                    <button type="submit" class="btn btn-brand flex-grow-1">
-                        <i class="fas fa-search me-1"></i> Search
-                    </button>
-                    <a href="{{ route('settings.physical-locations.index') }}" class="btn btn-outline-secondary" title="Clear search">
-                        <i class="fas fa-times"></i>
-                    </a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ── Locations Table ── --}}
-    <div class="card shadow-sm">
-        <div class="doc-table-wrapper" style="border: none;">
-            <table class="doc-table">
-                <thead>
-                    <tr>
-                        <th style="width: 150px;">Cabinet ID</th>
-                        <th style="width: 150px;">Rack ID</th>
-                        <th>Label (Optional)</th>
-                        <th style="width: 150px; text-align: center;">Stored Documents</th>
-                        <th style="width: 100px; text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($physicalLocations as $location)
-                        <tr>
-                            <td class="fw-medium" style="color: #1e2328;">{{ $location->cabinet_id }}</td>
-                            <td class="fw-medium" style="color: #1e2328;">{{ $location->rack_id }}</td>
-                            <td class="text-muted" style="font-size: 0.85rem;">
-                                {{ $location->label ?: '—' }}
-                            </td>
-                            <td class="text-center">
-                                <span class="badge rounded-pill" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 5px 12px; font-weight: 600;">
-                                    <i class="fas fa-file-alt me-1" style="font-size: 0.6rem;"></i> {{ $location->documents_count }}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center">
-                                    {{-- Edit --}}
-                                    <a href="{{ route('settings.physical-locations.edit', $location) }}"
-                                       class="btn-doc-action"
-                                       title="Edit location">
-                                        <i class="fas fa-pen" style="font-size: 0.7rem;"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-5">
-                                <i class="fas fa-archive mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
-                                <p class="mb-0 mt-2">No physical locations found.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <div x-data="locationManager()">
+        {{-- ── Page Header ── --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 mb-1 fw-bold">Physical Locations</h2>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage the physical cabinets and racks where documents are stored.</p>
+            </div>
+            <button type="button" class="btn btn-brand d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createLocationModal">
+                <i class="fas fa-plus"></i> Add Rack
+            </button>
         </div>
 
-        {{-- Pagination --}}
-        @if($physicalLocations->hasPages())
-            <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3 px-4" style="border-radius: 0 0 10px 10px;">
-                <div class="text-muted" style="font-size: 0.8rem;">
-                    Showing {{ $physicalLocations->firstItem() }}–{{ $physicalLocations->lastItem() }} of {{ $physicalLocations->total() }}
-                </div>
-                {{ $physicalLocations->links('pagination::bootstrap-5') }}
+        {{-- ── Flash Messages ── --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert" style="border-left: 4px solid #27ae60; border-radius: 8px;">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ session('success') }}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+
+        {{-- ── Accordion List ── --}}
+        <div class="d-flex flex-column gap-3 mb-5">
+            @forelse($locations as $cabinetId => $racks)
+                @php
+                    $totalFolders = $racks->sum('documents_count');
+                    $rackCount = $racks->count();
+                @endphp
+                {{-- Cabinet Block --}}
+                <div class="card shadow-sm border-0"
+                     style="border-radius: 12px; overflow: hidden;"
+                     x-data="{ expanded: false }">
+                    
+                    {{-- Cabinet Header (Clickable) --}}
+                    <div class="card-header bg-white border-bottom-0 p-4 d-flex justify-content-between align-items-center"
+                         style="cursor: pointer; transition: background 0.2s;"
+                         @click="expanded = !expanded"
+                         onmouseover="this.style.backgroundColor='#f9fafb'"
+                         onmouseout="this.style.backgroundColor='#ffffff'">
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(221, 39, 13, 0.08);">
+                                <i class="fas fa-archive" style="color: #dd270d; font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-1 fw-bold" style="color: #111827;">{{ $cabinetId }}</h3>
+                                <div class="d-flex gap-3 text-muted" style="font-size: 0.85rem;">
+                                    <span><i class="fas fa-layer-group me-1 opacity-50"></i> {{ $rackCount }} {{ Str::plural('Rack', $rackCount) }}</span>
+                                    <span><i class="fas fa-folder me-1 opacity-50"></i> {{ $totalFolders }} {{ Str::plural('Folder', $totalFolders) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="btn btn-light rounded-circle" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; color: #6b7280; transition: transform 0.3s;" :style="expanded ? 'transform: rotate(180deg);' : ''">
+                                <i class="fas fa-chevron-down"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Rack List (Collapsible) --}}
+                    <div x-show="expanded"
+                         x-collapse
+                         style="display: none;"
+                         class="border-top">
+                        <div class="p-0">
+                            <table class="table table-hover mb-0 align-middle" style="font-size: 0.9rem;">
+                                <thead style="background-color: #f9fafb;">
+                                    <tr>
+                                        <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Rack ID</th>
+                                        <th class="border-0 text-uppercase text-muted text-center" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px; width: 150px;">Folders</th>
+                                        <th class="border-0 text-uppercase text-muted text-center" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px; width: 100px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($racks as $location)
+                                        <tr>
+                                            <td class="border-bottom-0" style="padding: 16px 24px;">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div style="width: 6px; height: 6px; border-radius: 50%; background-color: #10b981;"></div>
+                                                    <span class="fw-semibold" style="color: #374151;">{{ $location->rack_id }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
+                                                <span class="badge rounded-pill" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 5px 12px; font-weight: 600; font-size: 0.8rem;">
+                                                    <i class="fas fa-folder me-1" style="font-size: 0.6rem;"></i> {{ $location->documents_count }}
+                                                </span>
+                                            </td>
+                                            <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-light text-secondary hover-primary"
+                                                            title="Edit Rack"
+                                                            style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                                            onmouseover="this.style.backgroundColor='rgba(221, 39, 13, 0.1)'; this.style.color='#dd270d !important'"
+                                                            onmouseout="this.style.backgroundColor='#f8f9fa'; this.style.color='#6c757d !important'"
+                                                            @click="openEditModal({{ json_encode([
+                                                                'id' => $location->id,
+                                                                'cabinet_id' => $location->cabinet_id,
+                                                                'rack_id' => $location->rack_id,
+                                                                'updated_at' => $location->updated_at->format('M d, Y h:i A')
+                                                            ]) }})">
+                                                        <i class="fas fa-pen" style="font-size: 0.8rem;"></i>
+                                                    </button>
+                                                    <button type="button"
+                                                            class="btn btn-sm"
+                                                            title="{{ $location->documents_count > 0 ? 'Cannot delete: Folders exist' : 'Delete Rack' }}"
+                                                            style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; {{ $location->documents_count > 0 ? 'background-color:#f3f4f6; color:#9ca3af; cursor:not-allowed;' : 'background-color:#fef2f2; color:#ef4444;' }}"
+                                                            {{ $location->documents_count > 0 ? 'disabled' : '' }}
+                                                            @if($location->documents_count == 0)
+                                                                onmouseover="this.style.backgroundColor='#fee2e2'; this.style.transform='scale(1.05)'"
+                                                                onmouseout="this.style.backgroundColor='#fef2f2'; this.style.transform='scale(1)'"
+                                                                @click="openConfirmModal({{ $location->id }}, '{{ $location->cabinet_id }} › {{ $location->rack_id }}')"
+                                                            @endif>
+                                                        <i class="fas fa-trash-alt" style="font-size: 0.8rem;"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="card shadow-sm border-0" style="border-radius: 12px; border-left: 4px solid #9ca3af !important;">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-archive mb-3" style="font-size: 2.5rem; opacity: 0.2;"></i>
+                        <h4 class="h5 fw-bold text-dark mb-1">No Physical Locations Found</h4>
+                        <p class="text-muted mb-0" style="font-size: 0.9rem;">Start by adding a new physical location for document storage.</p>
+                    </div>
+                </div>
+            @endforelse
+        </div>
+
+        @include('physical-locations.create')
+        @include('physical-locations.edit')
+        @include('companies.confirm_modal')
     </div>
 
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('locationManager', () => ({
+                editUrl: '',
+                editData: {
+                    id: '',
+                    cabinet_id: '',
+                    rack_id: '',
+                    updated_at: ''
+                },
+
+                confirmActionUrl: '',
+                confirmMethod: 'DELETE',
+                confirmTitle: '',
+                confirmMessage: '',
+                confirmButtonText: '',
+                confirmTheme: '',
+                confirmIcon: '',
+
+                init() {
+                    @if($errors->any() && old('_method') === 'PUT')
+                        this.editUrl = '{{ url("settings/physical-locations") }}/{{ old("id") }}';
+                        this.editData = {
+                            id: '{{ old("id") }}',
+                            cabinet_id: '{!! addslashes(old("cabinet_id")) !!}',
+                            rack_id: '{!! addslashes(old("rack_id")) !!}',
+                            updated_at: ''
+                        };
+                    @endif
+                },
+
+                openEditModal(location) {
+                    this.editData = { ...location };
+                    this.editUrl = `{{ url('settings/physical-locations') }}/${location.id}`;
+                    var modal = new bootstrap.Modal(document.getElementById('editLocationModal'));
+                    modal.show();
+                },
+
+                openConfirmModal(id, name) {
+                    this.confirmActionUrl = `{{ url('settings/physical-locations') }}/${id}`;
+                    this.confirmMethod = 'DELETE';
+                    this.confirmTitle = 'Delete Physical Location';
+                    this.confirmMessage = `Are you sure you want to permanently delete the rack <strong>${name}</strong>? This action cannot be undone.`;
+                    this.confirmButtonText = 'Yes, Delete Rack';
+                    this.confirmTheme = 'danger';
+                    this.confirmIcon = 'fas fa-trash-alt';
+                    
+                    var modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+                    modal.show();
+                }
+            }));
+        });
+    </script>
 </x-app-layout>

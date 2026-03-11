@@ -28,12 +28,15 @@ Route::middleware('auth')->group(function () {
 
     // ── Admin Settings ──
     Route::middleware('role:admin')->prefix('settings')->name('settings.')->group(function () {
-        Route::resource('companies', CompanyController::class)->except(['show', 'destroy']);
+        Route::resource('companies', CompanyController::class)->except(['show']);
         Route::patch('companies/{company}/toggle-active', [CompanyController::class, 'toggleActive'])
              ->name('companies.toggle-active');
              
-        Route::resource('departments', DepartmentController::class)->except(['show', 'destroy']);
-        Route::resource('physical-locations', PhysicalLocationController::class)->except(['show', 'destroy']);
+        Route::resource('departments', DepartmentController::class)->except(['show']);
+        Route::patch('departments/{department}/toggle-active', [DepartmentController::class, 'toggleActive'])
+             ->name('departments.toggle-active');
+             
+        Route::resource('physical-locations', PhysicalLocationController::class)->except(['show']);
         Route::resource('document-types', DocumentTypeController::class)->except(['show', 'destroy']);
     });
     // ── 201 Files / Employee Profile Hub ──
