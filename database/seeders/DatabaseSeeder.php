@@ -103,5 +103,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // ── Test Employees ──
+        $this->call(EmployeeSeeder::class);
     }
 }
