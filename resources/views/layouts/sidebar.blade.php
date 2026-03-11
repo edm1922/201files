@@ -116,7 +116,7 @@
             </a>
             <ul class="nav flex-column ms-3" x-show="open" x-transition x-cloak>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/settings/document-types') }}">
+                    <a class="nav-link {{ request()->is('settings/document-types*') ? 'active' : '' }}" href="{{ route('settings.document-types.index') }}">
                         <i class="fas fa-file-alt"></i> Document Types
                     </a>
                 </li>
