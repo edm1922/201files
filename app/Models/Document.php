@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Department; // Added for the new relationship
 
 class Document extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
-        'owner_type',
-        'owner_id',
+        'department_id',
         'document_type_id',
         'physical_location_id',
         'uploaded_by',

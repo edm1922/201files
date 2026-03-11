@@ -27,10 +27,6 @@ class DocumentTypeController extends Controller
             $query->where('department_id', $departmentId);
         }
 
-        if ($target = $request->input('target')) {
-            $query->where('target', $target);
-        }
-
         $documentTypes = $query->orderBy('name')->paginate(15)->withQueryString();
         $departments   = Department::orderBy('name')->get();
 

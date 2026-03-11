@@ -19,15 +19,13 @@ class EmployeeController extends Controller
     public function create()
     {
         $companies     = Company::where('is_active', true)->orderBy('name')->get();
-        $documentTypes = DocumentType::whereHas('department', fn($q) => $q->where('name', 'Human Resource'))
-            ->orderBy('name')
-            ->get();
+
         $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
 
         return view('201files', [
             'employee'      => null,
             'companies'     => $companies,
-            'documentTypes' => $documentTypes,
+
             'physicalLocations' => $physicalLocations,
         ]);
     }
@@ -69,15 +67,13 @@ class EmployeeController extends Controller
         $employee->load('company');
 
         $companies     = Company::where('is_active', true)->orderBy('name')->get();
-        $documentTypes = DocumentType::whereHas('department', fn($q) => $q->where('name', 'Human Resource'))
-            ->orderBy('name')
-            ->get();
+
         $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
 
         return view('201files', [
             'employee'      => $employee,
             'companies'     => $companies,
-            'documentTypes' => $documentTypes,
+
             'physicalLocations' => $physicalLocations,
         ]);
     }

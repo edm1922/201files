@@ -51,15 +51,7 @@
                     </select>
                 </div>
 
-                {{-- Target Filter --}}
-                <div class="col-md-2">
-                    <label for="target" class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Target</label>
-                    <select id="target" name="target" class="form-select field-input" style="font-size: 0.85rem;">
-                        <option value="">All Targets</option>
-                        <option value="employee" {{ request('target') === 'employee' ? 'selected' : '' }}>Employee</option>
-                        <option value="department" {{ request('target') === 'department' ? 'selected' : '' }}>Department</option>
-                    </select>
-                </div>
+
 
                 {{-- Buttons --}}
                 <div class="col-md-3 col-lg-2 d-flex gap-2">
@@ -82,7 +74,7 @@
                     <tr>
                         <th style="width: 200px;">Name</th>
                         <th style="width: 100px; text-align: center;">Code</th>
-                        <th style="width: 110px; text-align: center;">Target</th>
+
                         <th style="width: 150px;">Department</th>
                         <th style="width: 90px; text-align: center;">Expiry?</th>
                         <th style="width: 90px; text-align: center;">Required?</th>
@@ -100,11 +92,7 @@
                                     {{ $docType->code }}
                                 </code>
                             </td>
-                            <td class="text-center">
-                                <span class="badge" style="background: {{ $docType->target === 'employee' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(139, 92, 246, 0.1)' }}; color: {{ $docType->target === 'employee' ? '#3b82f6' : '#8b5cf6' }}; padding: 5px 10px; font-weight: 600;">
-                                    {{ ucfirst($docType->target) }}
-                                </span>
-                            </td>
+
                             <td class="text-muted" style="font-size: 0.8rem;">
                                 {{ $docType->department?->name ?? '—' }}
                             </td>

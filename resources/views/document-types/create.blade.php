@@ -58,23 +58,6 @@
                 </div>
 
                 <div class="row g-3 mb-3">
-                    {{-- Target --}}
-                    <div class="col-md-6">
-                        <label for="target" class="form-label fw-semibold" style="font-size: 0.85rem;">
-                            Target <span class="text-danger">*</span>
-                        </label>
-                        <select id="target"
-                                name="target"
-                                class="form-select field-input @error('target') is-invalid @enderror"
-                                required>
-                            <option value="employee" {{ old('target', 'employee') === 'employee' ? 'selected' : '' }}>Employee</option>
-                            <option value="department" {{ old('target') === 'department' ? 'selected' : '' }}>Department</option>
-                        </select>
-                        @error('target')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     {{-- Department --}}
                     <div class="col-md-6">
                         <label for="department_id" class="form-label fw-semibold" style="font-size: 0.85rem;">

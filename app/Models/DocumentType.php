@@ -12,7 +12,6 @@ class DocumentType extends Model
         'department_id',
         'name',
         'code',
-        'target',
         'has_expiry',
         'is_required',
         'max_pages',
