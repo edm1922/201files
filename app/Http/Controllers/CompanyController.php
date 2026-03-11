@@ -99,4 +99,21 @@ class CompanyController extends Controller
             ->route('settings.companies.index')
             ->with('success', "Company {$status} successfully.");
     }
+    /**
+     * Remove the specified company from storage (only if it has no employees).
+     */
+    public function destroy(Company $company)
+    {
+        if ($company->employees()->count() > 0) {
+            return redirect()
+                ->route('settings.companies.index')
+                ->with('error', 'Cannot delete a company that has employees assigned to it. Deactivate it instead.');
+        }
+
+        $company->delete();
+
+        return redirect()
+            ->route('settings.companies.index')
+            ->with('success', 'Company removed successfully.');
+    }
 }

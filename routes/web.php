@@ -28,7 +28,7 @@ Route::middleware('auth')->group(function () {
 
     // ── Admin Settings ──
     Route::middleware('role:admin')->prefix('settings')->name('settings.')->group(function () {
-        Route::resource('companies', CompanyController::class)->except(['show', 'destroy']);
+        Route::resource('companies', CompanyController::class)->except(['show']);
         Route::patch('companies/{company}/toggle-active', [CompanyController::class, 'toggleActive'])
              ->name('companies.toggle-active');
              
