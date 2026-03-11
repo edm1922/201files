@@ -44,7 +44,7 @@ class EmployeeFactory extends Factory
     }
 
     /**
-     * Helper to auto-generate the 201HR-XXXX sequence during factory creation.
+     * Helper to auto-generate the CSC-HR-XXXX sequence during factory creation.
      */
     protected function generateSequentialFolderCode(): string
     {
@@ -52,11 +52,11 @@ class EmployeeFactory extends Factory
         static $sequence = null;
 
         if ($sequence === null) {
-            $lastEmployee = Employee::where('folder_code', 'like', '201HR-%')
+            $lastEmployee = Employee::where('folder_code', 'like', 'CSC-HR-%')
                 ->orderBy('id', 'desc')
                 ->first();
 
-            if (!$lastEmployee || !preg_match('/^201HR-(\d+)$/', $lastEmployee->folder_code, $matches)) {
+            if (!$lastEmployee || !preg_match('/^CSC-HR-(\d+)$/', $lastEmployee->folder_code, $matches)) {
                 $sequence = 1;
             } else {
                 $sequence = ((int) $matches[1]) + 1;
@@ -65,6 +65,6 @@ class EmployeeFactory extends Factory
             $sequence++;
         }
 
-        return '201HR-' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return 'CSC-HR-' . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 }
