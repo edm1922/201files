@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeSearchController;
@@ -33,6 +34,7 @@ Route::middleware('auth')->group(function () {
              
         Route::resource('departments', DepartmentController::class)->except(['show', 'destroy']);
         Route::resource('physical-locations', PhysicalLocationController::class)->except(['show', 'destroy']);
+        Route::resource('document-types', DocumentTypeController::class)->except(['show', 'destroy']);
     });
     // ── 201 Files / Employee Profile Hub ──
     // NOTE: milli-search must be defined BEFORE {employee} wildcard route
