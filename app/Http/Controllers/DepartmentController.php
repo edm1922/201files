@@ -15,22 +15,6 @@ class DepartmentController extends Controller
     {
         $query = Department::withCount(['documentTypes', 'documents']);
 
-        if ($search = $request->input('search')) {
-            $query->where('name', 'like', "%{$search}%");
-        }
-        
-        if ($status = $request->input('status')) {
-            if ($status === 'active') {
-                $query->where('is_active', true);
-            } elseif ($status === 'inactive') {
-                $query->where('is_active', false);
-            }
-        } else {
-            // Default to 'active' if no status is explicitly requested
-            $query->where('is_active', true);
-            $request->merge(['status' => 'active']);
-        }
-
 
         $departments = $query->orderBy('name')->paginate(15)->withQueryString();
 

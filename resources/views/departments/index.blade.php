@@ -21,34 +21,6 @@
             </div>
         @endif
 
-        {{-- ── Filters Card ── --}}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body py-3">
-                <form method="GET" action="{{ route('settings.departments.index') }}" class="row g-3 align-items-end">
-                    <div class="col-md-6 col-lg-5">
-                        <label for="search" class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Search</label>
-                        <div class="search-wrapper">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text"
-                                   id="search"
-                                   name="search"
-                                   class="search-input"
-                                   placeholder="Search by department name…"
-                                   value="{{ request('search') }}">
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-lg-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-brand flex-grow-1">
-                            <i class="fas fa-search me-1"></i> Search
-                        </button>
-                        <a href="{{ route('settings.departments.index') }}" class="btn btn-outline-secondary" title="Clear filters">
-                            <i class="fas fa-times"></i>
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         {{-- ── Departments Table ── --}}
         <div class="card shadow-sm">
             <div class="doc-table-wrapper" style="border: none;">
