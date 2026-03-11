@@ -9,26 +9,17 @@ use Illuminate\Http\Request;
 class PhysicalLocationController extends Controller
 {
     /**
-     * Display a paginated list of physical locations.
+     * Display physical locations grouped by cabinet.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $query = PhysicalLocation::withCount('documents');
+        $locations = PhysicalLocation::withCount('documents')
+            ->orderBy('cabinet_id')
+            ->orderBy('rack_id')
+            ->get()
+            ->groupBy('cabinet_id');
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('cabinet_id', 'like', "%{$search}%")
-                  ->orWhere('rack_id', 'like', "%{$search}%")
-                  ->orWhere('label', 'like', "%{$search}%");
-            });
-        }
-
-        $physicalLocations = $query->orderBy('cabinet_id')
-                                   ->orderBy('rack_id')
-                                   ->paginate(15)
-                                   ->withQueryString();
-
-        return view('physical-locations.index', compact('physicalLocations'));
+        return view('physical-locations.index', compact('locations'));
     }
 
     /**
