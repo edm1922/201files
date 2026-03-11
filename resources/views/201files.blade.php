@@ -192,7 +192,7 @@
                             <label class="form-label" for="firstNameInput">First Name <span class="text-danger">*</span></label>
                             <input type="text" id="firstNameInput" name="first_name"
                                    class="form-control field-input @error('first_name') is-invalid @enderror"
-                                   placeholder="First Name"
+                                   placeholder="Enter First Name"
                                    value="{{ old('first_name', $employee?->first_name) }}">
                             @error('first_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -203,7 +203,7 @@
                             <label class="form-label" for="middleNameInput">Middle Name</label>
                             <input type="text" id="middleNameInput" name="middle_name"
                                    class="form-control field-input @error('middle_name') is-invalid @enderror"
-                                   placeholder="Middle Name"
+                                   placeholder="Enter Middle Name"
                                    value="{{ old('middle_name', $employee?->middle_name) }}">
                             @error('middle_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -214,7 +214,7 @@
                             <label class="form-label" for="lastNameInput">Last Name <span class="text-danger">*</span></label>
                             <input type="text" id="lastNameInput" name="last_name"
                                    class="form-control field-input @error('last_name') is-invalid @enderror"
-                                   placeholder="Last Name"
+                                   placeholder="Enter Last Name"
                                    value="{{ old('last_name', $employee?->last_name) }}">
                             @error('last_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -255,7 +255,7 @@
                             <label class="form-label" for="barcodeInput">Barcode ID</label>
                             <input type="text" id="barcodeInput" name="barcode_id"
                                    class="form-control field-input @error('barcode_id') is-invalid @enderror"
-                                   placeholder="Barcode ID"
+                                   placeholder="Enter Barcode ID"
                                    value="{{ old('barcode_id', $employee?->barcode_id) }}">
                             @error('barcode_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -266,7 +266,7 @@
                             <label class="form-label" for="systemIdInput">System ID <span class="text-danger">*</span></label>
                             <input type="text" id="systemIdInput" name="system_id"
                                    class="form-control field-input @error('system_id') is-invalid @enderror"
-                                   placeholder="System ID"
+                                   placeholder="Enter System ID"
                                    value="{{ old('system_id', $employee?->system_id) }}">
                             @error('system_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
