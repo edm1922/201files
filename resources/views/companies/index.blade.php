@@ -65,7 +65,7 @@
                         <th style="width: 100px;">Code</th>
                         <th>Company Name</th>
                         <th style="width: 120px; text-align: center;">Status</th>
-                        <th style="width: 140px; text-align: center;">Active Deployments</th>
+                        <th style="width: 140px; text-align: center;">Active Employees</th>
                         <th style="width: 130px; text-align: center;">Actions</th>
                     </tr>
                 </thead>
