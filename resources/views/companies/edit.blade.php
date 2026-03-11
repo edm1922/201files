@@ -74,7 +74,7 @@
                             Active
                         </label>
                     </div>
-                    <div class="form-text" style="font-size: 0.78rem;">Inactive companies won't appear in deployment dropdowns.</div>
+                    <div class="form-text" style="font-size: 0.78rem;">Inactive companies won't appear in company assignment dropdowns.</div>
                 </div>
 
                 {{-- Actions --}}

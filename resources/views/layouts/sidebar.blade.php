@@ -121,7 +121,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/settings/physical-locations') }}">
+                    <a class="nav-link {{ request()->is('settings/physical-locations*') ? 'active' : '' }}" href="{{ route('settings.physical-locations.index') }}">
                         <i class="fas fa-archive"></i> Physical Locations
                     </a>
                 </li>

@@ -380,7 +380,7 @@
             document.getElementById('companyIdHidden').value = this.value;
         });
 
-        // When a search result is clicked, also update the company dropdown if the employee has a deployment
+        // When a search result is clicked, also update the company dropdown if the employee has a company assignment
         const originalFill = window.fillEmployeeData;
         window.fillEmployeeData = function (emp) {
             // Navigate to the employee profile

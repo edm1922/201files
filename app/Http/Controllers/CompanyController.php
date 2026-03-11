@@ -14,8 +14,8 @@ class CompanyController extends Controller
     public function index(Request $request)
     {
         $query = Company::withCount([
-            'deployments as active_employees_count' => function ($q) {
-                $q->where('is_current', true);
+            'employees as active_employees_count' => function ($q) {
+                $q->where('status', 'active');
             },
         ]);
 

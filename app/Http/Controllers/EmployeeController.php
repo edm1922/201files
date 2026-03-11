@@ -30,7 +30,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Store a newly created employee and optionally deploy them to a company.
+     * Store a newly created employee and optionally assign them to a company.
      */
     public function store(StoreEmployeeRequest $request)
     {
@@ -74,7 +74,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Update an existing employee and optionally change their deployment.
+     * Update an existing employee and optionally change their company assignment.
      */
     public function update(UpdateEmployeeRequest $request, Employee $employee)
     {

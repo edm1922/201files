@@ -5,6 +5,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeSearchController;
+use App\Http\Controllers\PhysicalLocationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -31,6 +32,7 @@ Route::middleware('auth')->group(function () {
              ->name('companies.toggle-active');
              
         Route::resource('departments', DepartmentController::class)->except(['show', 'destroy']);
+        Route::resource('physical-locations', PhysicalLocationController::class)->except(['show', 'destroy']);
     });
     // ── 201 Files / Employee Profile Hub ──
     // NOTE: milli-search must be defined BEFORE {employee} wildcard route
