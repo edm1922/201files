@@ -95,52 +95,72 @@
                      role="tabpanel" aria-labelledby="tab-employee">
 
                     @if($employee)
-                        <h6 class="panel-section-title">Employee Summary</h6>
-
-                        <div class="emp-summary-grid">
-
-                            <div class="emp-summary-card">
-                                <span class="emp-summary-label">Full Name</span>
-                                <span class="emp-summary-value text-uppercase">{{ $employee->full_name }}</span>
-                            </div>
-
-                            <div class="emp-summary-card">
-                                <span class="emp-summary-label">Barcode ID</span>
-                                <span class="emp-summary-value emp-summary-mono">
-                                    {{ $employee->barcode_id ?? '—' }}
-                                </span>
-                            </div>
-
-                            <div class="emp-summary-card">
-                                <span class="emp-summary-label">System ID</span>
-                                <span class="emp-summary-value emp-summary-mono">
-                                    {{ $employee->system_id }}
-                                </span>
-                            </div>
-
-                            <div class="emp-summary-card">
-                                <span class="emp-summary-label">Folder Code</span>
-                                <span class="emp-summary-value emp-summary-mono">
+                        <div class="profile-header">
+                            @php
+                                $initials = collect(explode(' ', $employee->full_name))
+                                    ->map(fn($n) => mb_substr($n, 0, 1))
+                                    ->take(2)
+                                    ->join('');
+                            @endphp
+                            <div class="profile-avatar">{{ strtoupper($initials) }}</div>
+                            <div class="profile-info">
+                                <h2 class="text-uppercase">{{ $employee->full_name }}</h2>
+                                <div class="profile-meta">
+                                    <span class="text-gray-500 text-sm font-medium">Folder code:</span>
+                                    <span class="profile-field__value profile-field__value--red profile-field__value--mono">
                                     {{ $employee->folder_code ?? '—' }}
-                                </span>
-                            </div>
-
-                            <div class="emp-summary-card">
-                                <span class="emp-summary-label">Status</span>
-                                <span class="emp-summary-value">
+                                    </span>
                                     <span class="emp-status-badge emp-status-badge--{{ $employee->status }}">
                                         {{ ucfirst($employee->status) }}
                                     </span>
-                                </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-grid">
+                            {{-- IDENTIFICATION CARD --}}
+                            <div class="profile-card">
+                                <div class="profile-card__header">Identification</div>
+                                <div class="profile-card__body">
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">System No.</span>
+                                        <span class="profile-field__value profile-field__value--mono">
+                                            {{ $employee->system_id }}
+                                        </span>
+                                    </div>
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">Barcode ID</span>
+                                        <span class="profile-field__value profile-field__value--mono">
+                                            {{ $employee->barcode_id ?? '—' }}
+                                        </span>
+                                    </div>
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">Document Location</span>
+                                        <span class="profile-field__value profile-field__value--red profile-field__value--mono">
+                                            {{ $employee->physicalLocation?->display_name ?? '—' }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div class="emp-summary-card">
-                                <span class="emp-summary-label">Current Company</span>
-                                <span class="emp-summary-value">
-                                    {{ $employee->company?->name ?? '— Not Assigned —' }}
-                                </span>
+                            {{-- ASSIGNMENT CARD --}}
+                            <div class="profile-card">
+                                <div class="profile-card__header">Assignment</div>
+                                <div class="profile-card__body">
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">Company</span>
+                                        <span class="profile-field__value">
+                                            {{ $employee->company?->name ?? '— Not Assigned —' }}
+                                        </span>
+                                    </div>
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">Date Hired</span>
+                                        <span class="profile-field__value">
+                                            {{ $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—' }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-
                         </div>
                     @else
                         <div class="text-center py-5 text-muted">
@@ -294,6 +314,24 @@
                                 @endforeach
                             </select>
                             @error('company_id')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="locationSelectForm">Document Location</label>
+                            <select id="locationSelectForm" name="physical_location_id" 
+                                class="form-control basic-select field-input @error('physical_location_id') is-invalid @enderror"
+                                data-placeholder="- Choose -">
+                                <option value=""></option>
+                                @foreach($physicalLocations as $loc)
+                                    <option value="{{ $loc->id }}" 
+                                        {{ old('physical_location_id', $employee?->physical_location_id) == $loc->id ? 'selected' : '' }}>
+                                        {{ $loc->display_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('physical_location_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
