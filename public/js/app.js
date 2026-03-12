@@ -60,12 +60,18 @@ $(document).ready(function () {
                     }
 
                     // --- milliSearchUrl result ---
+                    // data.forEach(emp => {
+                    //     const item = $(`
+
                     data.forEach(emp => {
+                        // Check if middle_name exists; if not, use an empty string
+                        const middleName = emp.middle_name && emp.middle_name !== 'NULL' ? emp.middle_name : '';
                         const item = $(`
+        
                             <div class="milli-item">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="text-uppercase"><strong>${emp.last_name}</strong>, ${emp.first_name}</span>
-                                    <span style="font-size:0.75rem; color:#dd270d; font-weight:700;"> ${emp.folder_code || ''}</span>
+                                    <span class="text-uppercase">${emp.last_name}, ${emp.first_name} ${middleName}</span>
+                                    <span class="milli-folder-code"> ${emp.folder_code || ''}</span>
                                 </div>
                             </div>
                         `);
@@ -75,6 +81,7 @@ $(document).ready(function () {
                         });
                         container.append(item);
                     });
+
                 } else {
                     container.append('<div class="p-2 text-muted">No results found.</div>');
                 }

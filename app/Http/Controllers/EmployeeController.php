@@ -64,7 +64,7 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load('company');
+        $employee->load(['company', 'physicalLocation']);
 
         $companies     = Company::where('is_active', true)->orderBy('name')->get();
 

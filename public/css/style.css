@@ -495,6 +495,12 @@
     transition: background 0.12s;
 }
 
+.milli-folder-code {
+    color: #dd270d;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
 .milli-item:last-child {
     border-bottom: none;
 }
@@ -507,4 +513,119 @@
     border-left: 3px solid #dd270d;
     padding-left: 11px;
     /* offset border to prevent jumping */
+}
+
+/* ─── Profile Header Redesign ─────────────────────────────────────── */
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background: #f0d6d6;
+    color: #b91c1c;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.profile-info h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.02em;
+}
+
+.profile-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.profile-meta .dot {
+    width: 4px;
+    height: 4px;
+    background: #d1d5db;
+    border-radius: 50%;
+}
+
+/* ─── Profile Cards ──────────────────────────────────────────────── */
+
+.profile-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-card {
+    flex: 1;
+    min-width: 300px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.profile-card__header {
+    background: #f9fafb;
+    padding: 12px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #374151;
+}
+
+.profile-card__body {
+    padding: 0;
+}
+
+.profile-field {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.profile-field:last-child {
+    border-bottom: none;
+}
+
+.profile-field__label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.profile-field__value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.profile-field__value--red {
+    color: #b91c1c;
+}
+
+.profile-field__value--mono {
+    font-family: 'Monaco', 'Consolas', monospace;
 }
