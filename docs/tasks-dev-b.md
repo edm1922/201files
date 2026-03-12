@@ -41,7 +41,9 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 4.1 Search UI Frontend (full-page search with sidebar facets: Company, Doc Type, Status, Expiry)
 - [X] 4.2 Employee Tab Design, modify the employee tab and use the picture as reference![1773276574629](image/tasks-dev-b/1773276574629.png)
   please note: Do not enclude the save and close button and related documents just follow whats in the existing employee tab.
-- [ ] 4.3 Update the UI design of the profile/partial/edit
+- [ ] 4.3 Update the UI design of the profile/partial/edit, take the picture below as reference
+
+  ![1773285941495](image/tasks-dev-b/1773285941495.png)
 
 *Expected Outcome: The main search interface visually mimics the CENTRO style, actively pinging Dev A's Meilisearch controller to live-update results.*
 
