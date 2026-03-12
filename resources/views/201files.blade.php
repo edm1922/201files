@@ -22,15 +22,14 @@
                 <input
                     type="text"
                     id="employeeSearch"
-                    class="search-input"
-                    placeholder="Search employees... (or press Enter)"
+                    class="search-input text-uppercase"
+                    placeholder="Search employees..."
                     autocomplete="off"
                     value="{{ $employee ? $employee->last_name . ', ' . $employee->first_name : '' }}"
                 >
                 <div id="milliResults" class="milli-results-container" style="display:none;"></div>
             </div>
         </div>
-
     </div>
 
     {{-- ── 201 File Tab Panel ── --}}
@@ -76,16 +75,6 @@
                             <i class="fas fa-user me-1"></i>Personal
                         </button>
                     </li>
-
-                    {{-- Documents tab --}}
-                    <li class="nav-item" role="presentation">
-                        <button class="file-tab" id="tab-documents"
-                                data-bs-toggle="tab" data-bs-target="#panel-documents"
-                                type="button" role="tab"
-                                aria-controls="panel-documents" aria-selected="false">
-                            <i class="fas fa-folder-open me-1"></i>Documents
-                        </button>
-                    </li>
                 </ul>
 
                 <div class="file-panel__actions">
@@ -112,7 +101,7 @@
 
                             <div class="emp-summary-card">
                                 <span class="emp-summary-label">Full Name</span>
-                                <span class="emp-summary-value">{{ $employee->full_name }}</span>
+                                <span class="emp-summary-value text-uppercase">{{ $employee->full_name }}</span>
                             </div>
 
                             <div class="emp-summary-card">
@@ -172,7 +161,7 @@
                         <div class="col-md-3">
                             <label class="form-label" for="firstNameInput">First Name <span class="text-danger">*</span></label>
                             <input type="text" id="firstNameInput" name="first_name"
-                                   class="form-control field-input @error('first_name') is-invalid @enderror"
+                                   class="form-control field-input text-uppercase @error('first_name') is-invalid @enderror"
                                    placeholder="Enter First Name"
                                    value="{{ old('first_name', $employee?->first_name) }}">
                             @error('first_name')
@@ -183,7 +172,7 @@
                         <div class="col-md-3">
                             <label class="form-label" for="middleNameInput">Middle Name</label>
                             <input type="text" id="middleNameInput" name="middle_name"
-                                   class="form-control field-input @error('middle_name') is-invalid @enderror"
+                                   class="form-control field-input text-uppercase @error('middle_name') is-invalid @enderror"
                                    placeholder="Enter Middle Name"
                                    value="{{ old('middle_name', $employee?->middle_name) }}">
                             @error('middle_name')
@@ -194,7 +183,7 @@
                         <div class="col-md-3">
                             <label class="form-label" for="lastNameInput">Last Name <span class="text-danger">*</span></label>
                             <input type="text" id="lastNameInput" name="last_name"
-                                   class="form-control field-input @error('last_name') is-invalid @enderror"
+                                   class="form-control field-input text-uppercase @error('last_name') is-invalid @enderror"
                                    placeholder="Enter Last Name"
                                    value="{{ old('last_name', $employee?->last_name) }}">
                             @error('last_name')
@@ -258,7 +247,7 @@
                             <label class="form-label" for="folderCodeInput">Folder Code</label>
                             <input type="text" id="folderCodeInput" name="folder_code"
                                    class="form-control field-input"
-                                   placeholder="Auto-generated (e.g. 201HR-0001)"
+                                   placeholder="Auto-generated (e.g. CSC-HR-0001)"
                                    value="{{ $employee?->folder_code }}" readonly>
                         </div>
 
@@ -290,22 +279,6 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label" for="documentLocationSelect">Document Location</label>
-                            <select id="documentLocationSelect" name="physical_location_id"
-                                class="form-control basic-select field-input"
-                                data-placeholder="- Choose -">
-                                <option value=""></option>
-                                @foreach($physicalLocations as $location)
-                                    <option value="{{ $location->id }}" {{ old('physical_location_id', $employee?->physical_location_id) == $location->id ? 'selected' : '' }}>
-                                        {{ $location->display_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('physical_location_id')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
 
                         <div class="col-md-4">
                             <label class="form-label" for="companySelectForm">Company <span class="text-danger">*</span></label>
@@ -326,56 +299,6 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- ══ DOCUMENTS TAB ══ --}}
-                <div class="tab-pane fade" id="panel-documents"
-                     role="tabpanel" aria-labelledby="tab-documents">
-
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="panel-section-title mb-0">Documents</h6>
-                        <button type="button" class="btn-doc-upload">
-                            <i class="fas fa-upload me-1"></i>Upload Document
-                        </button>
-                    </div>
-
-                    <div class="doc-table-wrapper">
-                        <table class="doc-table" id="documentsTable">
-                            <thead>
-                                <tr>
-                                    <th style="width:50px;">No.</th>
-                                    <th style="width:200px;">Document Type</th>
-                                    <th>File Name</th>
-                                    <th style="width:120px;">Expiry Date</th>
-                                    <th style="width:110px;">Remarks</th>
-                                    <th style="width:140px;">Uploaded By</th>
-                                    <th style="width:120px;">Uploaded On</th>
-                                    <th style="width:80px;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($documentTypes as $i => $docType)
-                                <tr>
-                                    <td class="text-center">{{ $i + 1 }}</td>
-                                    <td class="doc-type-cell">{{ $docType->name }}</td>
-                                    <td class="text-muted" style="font-size:0.8rem;">N/A</td>
-                                    <td class="text-center text-muted" style="font-size:0.8rem;">
-                                        {{ $docType->has_expiry ? 'N/A' : '—' }}
-                                    </td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn-doc-action" title="View file">
-                                            <i class="fas fa-file-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>{{-- end documents tab --}}
-
             </div>{{-- end tab-content --}}
         </div>{{-- end file-panel --}}
     </form>

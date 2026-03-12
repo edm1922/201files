@@ -109,19 +109,19 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Auto-generates the next folder code in the sequence (e.g., 201HR-0001).
+     * Auto-generates the next folder code in the sequence (e.g., CSC-HR-0001).
      */
     protected function generateFolderCode(): string
     {
-        $lastEmployee = Employee::where('folder_code', 'like', '201HR-%')
+        $lastEmployee = Employee::where('folder_code', 'like', 'CSC-HR-%')
             ->orderBy('id', 'desc')
             ->first();
 
-        if (!$lastEmployee || !preg_match('/^201HR-(\d+)$/', $lastEmployee->folder_code, $matches)) {
-            return '201HR-0001';
+        if (!$lastEmployee || !preg_match('/^CSC-HR-(\d+)$/', $lastEmployee->folder_code, $matches)) {
+            return 'CSC-HR-0001';
         }
 
         $nextNumber = ((int) $matches[1]) + 1;
-        return '201HR-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return 'CSC-HR-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

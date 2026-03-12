@@ -64,7 +64,7 @@ $(document).ready(function () {
                         const item = $(`
                             <div class="milli-item">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span><strong>${emp.last_name}</strong>, ${emp.first_name}</span>
+                                    <span class="text-uppercase"><strong>${emp.last_name}</strong>, ${emp.first_name}</span>
                                     <span style="font-size:0.75rem; color:#dd270d; font-weight:700;"> ${emp.folder_code || ''}</span>
                                 </div>
                             </div>
