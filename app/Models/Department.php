@@ -9,6 +9,8 @@ class Department extends Model
 {
     protected $fillable = [
         'name',
+        'code',
+        'folder_code',
         'description',
         'is_active',
     ];
@@ -22,8 +24,8 @@ class Department extends Model
         return $this->hasMany(DocumentType::class);
     }
 
-    public function documents()
+    public function documents(): HasMany
     {
-        return $this->morphMany(Document::class, 'owner');
+        return $this->hasMany(Document::class);
     }
 }

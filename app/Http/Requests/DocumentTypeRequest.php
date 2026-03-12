@@ -15,25 +15,22 @@ class DocumentTypeRequest extends FormRequest
     public function rules(): array
     {
         $documentTypeId = $this->route('document_type')?->id;
-
         return [
-            'name' => [
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'name'          => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('document_types', 'name')->ignore($documentTypeId),
+                Rule::unique('document_types', 'name')->ignore($this->documentType?->id),
             ],
-            'code' => [
+            'code'          => [
                 'required',
                 'string',
                 'max:20',
-                'alpha_dash:ascii',
-                Rule::unique('document_types', 'code')->ignore($documentTypeId),
+                Rule::unique('document_types', 'code')->ignore($this->documentType?->id),
             ],
-            'target'        => ['required', 'string', Rule::in(['employee', 'department'])],
-            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
-            'has_expiry'    => ['nullable', 'boolean'],
-            'is_required'   => ['nullable', 'boolean'],
+            'has_expiry'    => ['boolean'],
+            'is_required'   => ['boolean'],
             'max_pages'     => ['required', 'integer', 'min:1', 'max:100'],
         ];
     }
@@ -48,8 +45,6 @@ class DocumentTypeRequest extends FormRequest
             'code.unique'     => 'This code is already taken by another document type.',
             'code.max'        => 'Code must not exceed 20 characters.',
             'code.alpha_dash' => 'Code may only contain letters, numbers, dashes, and underscores.',
-            'target.required' => 'Please select a target (Employee or Department).',
-            'target.in'       => 'Target must be either Employee or Department.',
             'department_id.exists' => 'The selected department does not exist.',
             'max_pages.required' => 'Max pages is required.',
             'max_pages.min'      => 'Max pages must be at least 1.',

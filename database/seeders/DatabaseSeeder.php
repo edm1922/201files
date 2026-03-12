@@ -43,11 +43,10 @@ class DatabaseSeeder extends Seeder
 
         // ── Departments (cooperative-internal) ──
         $departments = [
-            ['name' => 'Human Resource', 'description' => 'HR and employment documents'],
-            ['name' => 'Finance', 'description' => 'Financial and payroll documents'],
-            ['name' => 'Accounting', 'description' => 'Accounting records and reports'],
-            ['name' => 'CDA', 'description' => 'Cooperative Development Authority documents'],
-            ['name' => 'Braveheart', 'description' => 'Braveheart division documents'],
+            ['name' => 'Finance', 'code' => 'FIN', 'folder_code' => 'CSC-FIN-0000', 'description' => 'Financial and payroll documents'],
+            ['name' => 'Accounting', 'code' => 'ACCT', 'folder_code' => 'CSC-ACCT-0000', 'description' => 'Accounting records and reports'],
+            ['name' => 'CDA', 'code' => 'CDA', 'folder_code' => 'CSC-CDA-0000', 'description' => 'Cooperative Development Authority documents'],
+            ['name' => 'Braveheart', 'code' => 'BH', 'folder_code' => 'CSC-BH-0000', 'description' => 'Braveheart division documents'],
         ];
         foreach ($departments as $dept) {
             Department::create($dept);
@@ -58,24 +57,8 @@ class DatabaseSeeder extends Seeder
         $finance = Department::where('name', 'Finance')->first();
 
         $documentTypes = [
-            // HR Documents
-            ['department_id' => $hr?->id, 'name' => 'SSS E1 Form', 'code' => 'SSS', 'has_expiry' => false, 'is_required' => true, 'max_pages' => 2],
-            ['department_id' => $hr?->id, 'name' => 'PhilHealth MDR', 'code' => 'PHIL', 'has_expiry' => false, 'is_required' => true, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'Pag-IBIG MDF', 'code' => 'PAGIBIG', 'has_expiry' => false, 'is_required' => true, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'NBI Clearance', 'code' => 'NBI', 'has_expiry' => true, 'is_required' => true, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'Birth Certificate', 'code' => 'BIRTHCERT', 'has_expiry' => false, 'is_required' => true, 'max_pages' => 2],
-            ['department_id' => $hr?->id, 'name' => 'TIN ID / Form 1902', 'code' => 'TIN', 'has_expiry' => false, 'is_required' => true, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'HMO Card', 'code' => 'HMO', 'has_expiry' => true, 'is_required' => true, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'Resume / CV', 'code' => 'RESUME', 'has_expiry' => false, 'is_required' => false, 'max_pages' => 3],
-            ['department_id' => $hr?->id, 'name' => 'Diploma / TOR', 'code' => 'DIPLOMA', 'has_expiry' => false, 'is_required' => false, 'max_pages' => 2],
-            ['department_id' => $hr?->id, 'name' => 'Barangay Clearance', 'code' => 'BARANGAY', 'has_expiry' => true, 'is_required' => false, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'Police Clearance', 'code' => 'POLICE', 'has_expiry' => true, 'is_required' => false, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'Drug Test Result', 'code' => 'DRUGTEST', 'has_expiry' => true, 'is_required' => false, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => 'Medical Certificate', 'code' => 'MEDCERT', 'has_expiry' => true, 'is_required' => false, 'max_pages' => 1],
-            ['department_id' => $hr?->id, 'name' => '2x2 ID Photo', 'code' => 'PHOTO', 'has_expiry' => false, 'is_required' => false, 'max_pages' => 1],
-
             // Finance Documents
-            ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true, 'is_required' => false, 'max_pages' => 2],
+            ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true, 'max_pages' => 2],
         ];
 
         foreach ($documentTypes as $type) {

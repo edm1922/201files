@@ -37,7 +37,7 @@ Route::middleware('auth')->group(function () {
              ->name('departments.toggle-active');
              
         Route::resource('physical-locations', PhysicalLocationController::class)->except(['show']);
-        Route::resource('document-types', DocumentTypeController::class)->except(['show', 'destroy']);
+        Route::resource('document-types', DocumentTypeController::class)->except(['show', 'create', 'edit']);
     });
     // ── 201 Files / Employee Profile Hub ──
     // NOTE: milli-search must be defined BEFORE {employee} wildcard route

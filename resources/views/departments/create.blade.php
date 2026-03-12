@@ -11,6 +11,26 @@
                 <div class="modal-body px-4 pt-2">
                     <p class="text-muted mb-4" style="font-size: 0.9rem; line-height: 1.5;">Register a new department to categorize documents.</p>
 
+                    {{-- Department Code --}}
+                    <div class="mb-4">
+                        <label for="code" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                            Department Code <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               id="code"
+                               name="code"
+                               class="form-control field-input @error('code') is-invalid @enderror"
+                               value="{{ old('code') }}"
+                               placeholder="e.g. HR, FIN"
+                               required
+                               maxlength="10"
+                               autofocus
+                               style="background-color: #f9fafb; text-transform: uppercase;">
+                        @error('code')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     {{-- Department Name --}}
                     <div class="mb-4">
                         <label for="name" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
@@ -23,7 +43,6 @@
                                value="{{ old('name') }}"
                                placeholder="e.g. Finance, Human Resource"
                                required
-                               autofocus
                                style="background-color: #f9fafb;">
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>

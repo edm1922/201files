@@ -23,6 +23,12 @@ class DepartmentRequest extends FormRequest
                 'max:255',
                 Rule::unique('departments', 'name')->ignore($departmentId),
             ],
+            'code' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('departments', 'code')->ignore($departmentId),
+            ],
             'description' => ['nullable', 'string', 'max:1000'],
         ];
     }
