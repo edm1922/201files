@@ -98,7 +98,7 @@
 
         {{-- User Management --}}
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('users*') ? 'active' : '' }}" href="{{ url('/users') }}">
+            <a class="nav-link {{ request()->is('settings/users*') ? 'active' : '' }}" href="{{ route('settings.users.index') }}">
                 <i class="fas fa-user-cog"></i> User Management
             </a>
         </li>
