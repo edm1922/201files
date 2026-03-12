@@ -162,6 +162,22 @@
     background: #4b5563;
 }
 
+/* Branded primary button */
+.btn-brand {
+    background: #dd270d;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.btn-brand:hover {
+    background: #b91500;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
 /* Panel body */
 .file-panel__body {
     padding: 24px;
