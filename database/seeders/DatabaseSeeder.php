@@ -16,29 +16,29 @@ class DatabaseSeeder extends Seeder
     {
         // ── Admin User ──
         User::create([
-            'name' => 'Admin',
-            'email' => 'admin@csc.com',
-            'password' => Hash::make('password'),
+            'first_name' => 'System',
+            'last_name' => 'Admin',
+            'username' => 'admin',
+            'password' => Hash::make('admincsc'),
             'role' => 'admin',
-            'email_verified_at' => now(),
         ]);
 
         // ── Encoder User (for testing) ──
         User::create([
-            'name' => 'Encoder',
-            'email' => 'encoder@csc.com',
-            'password' => Hash::make('password'),
+            'first_name' => 'Test',
+            'last_name' => 'Encoder',
+            'username' => 'encoder',
+            'password' => Hash::make('encodercsc'),
             'role' => 'encoder',
-            'email_verified_at' => now(),
         ]);
 
         // ── Viewer User (for testing) ──
         User::create([
-            'name' => 'Viewer',
-            'email' => 'viewer@csc.com',
-            'password' => Hash::make('password'),
+            'first_name' => 'Test',
+            'last_name' => 'Viewer',
+            'username' => 'viewer',
+            'password' => Hash::make('viewercsc'),
             'role' => 'viewer',
-            'email_verified_at' => now(),
         ]);
 
         // ── Departments (cooperative-internal) ──

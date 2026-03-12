@@ -19,9 +19,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'username',
         'password',
+        'must_change_password',
         'role',
         'last_active_at',
     ];
@@ -46,8 +50,29 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
             'last_active_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the user's full name.
+     */
+    public function getNameAttribute(): string
+    {
+        $name = "{$this->first_name}";
+        
+        if ($this->middle_name) {
+            $name .= " {$this->middle_name}";
+        }
+        
+        $name .= " {$this->last_name}";
+        
+        if ($this->suffix) {
+            $name .= " {$this->suffix}";
+        }
+        
+        return $name;
     }
 
     public function isAdmin(): bool
