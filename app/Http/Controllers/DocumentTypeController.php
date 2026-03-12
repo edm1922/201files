@@ -33,15 +33,7 @@ class DocumentTypeController extends Controller
         return view('document-types.index', compact('documentTypes', 'departments'));
     }
 
-    /**
-     * Show the form for creating a new document type.
-     */
-    public function create()
-    {
-        $departments = Department::orderBy('name')->get();
 
-        return view('document-types.create', compact('departments'));
-    }
 
     /**
      * Store a newly created document type in storage.
@@ -55,15 +47,7 @@ class DocumentTypeController extends Controller
             ->with('success', 'Document type created successfully.');
     }
 
-    /**
-     * Show the form for editing the specified document type.
-     */
-    public function edit(DocumentType $documentType)
-    {
-        $departments = Department::orderBy('name')->get();
 
-        return view('document-types.edit', compact('documentType', 'departments'));
-    }
 
     /**
      * Update the specified document type in storage.

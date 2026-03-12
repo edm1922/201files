@@ -13,7 +13,6 @@ class DocumentType extends Model
         'name',
         'code',
         'has_expiry',
-        'is_required',
         'max_pages',
     ];
 
@@ -21,7 +20,6 @@ class DocumentType extends Model
     {
         return [
             'has_expiry' => 'boolean',
-            'is_required' => 'boolean',
         ];
     }
 

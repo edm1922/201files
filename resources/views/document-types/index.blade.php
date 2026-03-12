@@ -1,15 +1,16 @@
 <x-app-layout>
 
-    {{-- ── Page Header ── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="h4 mb-1 fw-bold">Document Types</h2>
-            <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage the classification types used to categorize uploaded documents.</p>
+    <div x-data="documentTypeManager()">
+        {{-- ── Page Header ── --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 mb-1 fw-bold">Document Types</h2>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage the classification types used to categorize uploaded documents.</p>
+            </div>
+            <button class="btn btn-brand d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createDocumentTypeModal">
+                <i class="fas fa-plus"></i> Add Document Type
+            </button>
         </div>
-        <a href="{{ route('settings.document-types.create') }}" class="btn btn-brand d-inline-flex align-items-center gap-2">
-            <i class="fas fa-plus"></i> Add Document Type
-        </a>
-    </div>
 
     {{-- ── Flash Messages ── --}}
     @if(session('success'))
@@ -77,7 +78,7 @@
 
                         <th style="width: 150px;">Department</th>
                         <th style="width: 90px; text-align: center;">Expiry?</th>
-                        <th style="width: 90px; text-align: center;">Required?</th>
+
                         <th style="width: 90px; text-align: center;">Max Pages</th>
                         <th style="width: 100px; text-align: center;">Documents</th>
                         <th style="width: 80px; text-align: center;">Actions</th>
@@ -103,13 +104,7 @@
                                     <i class="fas fa-minus-circle" style="color: #d1d5db;" title="No expiry"></i>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                @if($docType->is_required)
-                                    <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 8px; font-weight: 600;">Required</span>
-                                @else
-                                    <span class="text-muted" style="font-size: 0.8rem;">Optional</span>
-                                @endif
-                            </td>
+
                             <td class="text-center" style="font-size: 0.85rem;">{{ $docType->max_pages }}</td>
                             <td class="text-center">
                                 <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 5px 10px; font-weight: 600;">
@@ -118,11 +113,19 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center">
-                                    <a href="{{ route('settings.document-types.edit', $docType) }}"
+                                    <button type="button" 
                                        class="btn-doc-action"
-                                       title="Edit document type">
+                                       title="Edit document type"
+                                       @click="openEditModal({{ json_encode([
+                                            'id' => $docType->id,
+                                            'name' => $docType->name,
+                                            'code' => $docType->code,
+                                            'department_id' => $docType->department_id,
+                                            'has_expiry' => (bool)$docType->has_expiry,
+                                            'max_pages' => $docType->max_pages
+                                       ]) }})">
                                         <i class="fas fa-pen" style="font-size: 0.7rem;"></i>
-                                    </a>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -148,5 +151,53 @@
             </div>
         @endif
     </div>
+
+    @include('document-types.create')
+    @include('document-types.edit')
+
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('documentTypeManager', () => ({
+                // Edit Modal Data
+                editUrl: '',
+                editData: {
+                    id: '',
+                    name: '',
+                    code: '',
+                    department_id: '',
+                    has_expiry: false,
+                    max_pages: 1
+                },
+
+                init() {
+                    // Reopen edit modal with old inputs if validation fails on update
+                    @if($errors->any() && old('_method') === 'PUT')
+                        this.editUrl = '{{ url("settings/document-types") }}/{{ old("id") }}';
+                        this.editData = {
+                            id: '{{ old("id") }}',
+                            name: '{!! addslashes(old("name")) !!}',
+                            code: '{!! addslashes(old("code")) !!}',
+                            department_id: '{{ old("department_id") }}',
+                            has_expiry: {{ old('has_expiry') ? 'true' : 'false' }},
+                            max_pages: {{ old('max_pages', 1) }}
+                        };
+                        setTimeout(() => {
+                            var modal = new bootstrap.Modal(document.getElementById('editDocumentTypeModal'));
+                            modal.show();
+                        }, 100);
+                    @endif
+                },
+
+                openEditModal(docType) {
+                    this.editData = { ...docType };
+                    this.editUrl = `{{ url('settings/document-types') }}/${docType.id}`;
+                    var modal = new bootstrap.Modal(document.getElementById('editDocumentTypeModal'));
+                    modal.show();
+                }
+            }));
+        });
+    </script>
 
 </x-app-layout>

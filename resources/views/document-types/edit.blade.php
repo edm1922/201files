@@ -1,157 +1,111 @@
-<x-app-layout>
-
-    {{-- ── Page Header ── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="h4 mb-1 fw-bold">Edit Document Type</h2>
-            <p class="text-muted mb-0" style="font-size: 0.85rem;">Update details for <strong>{{ $documentType->name }}</strong>.</p>
-        </div>
-        <a href="{{ route('settings.document-types.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
-
-    {{-- ── Form Card ── --}}
-    <div class="card shadow-sm" style="max-width: 640px;">
-        <div class="card-body p-4">
-            <div class="panel-section-title mb-3">Document Type Details</div>
-
-            <form method="POST" action="{{ route('settings.document-types.update', $documentType) }}">
+{{-- ── Edit Document Type Modal ── --}}
+<div class="modal fade" id="editDocumentTypeModal" tabindex="-1" aria-labelledby="editDocTypeLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 16px; overflow: hidden;">
+            <form method="POST" :action="editUrl">
                 @csrf
                 @method('PUT')
-
-                {{-- Name --}}
-                <div class="mb-3">
-                    <label for="name" class="form-label fw-semibold" style="font-size: 0.85rem;">
-                        Name <span class="text-danger">*</span>
-                    </label>
-                    <input type="text"
-                           id="name"
-                           name="name"
-                           class="form-control field-input @error('name') is-invalid @enderror"
-                           value="{{ old('name', $documentType->name) }}"
-                           placeholder="e.g. SSS E1 Form, NBI Clearance"
-                           required>
-                    @error('name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
+                    <h5 class="modal-title fw-bold" id="editDocTypeLabel" style="color: #111827; letter-spacing: -0.025em; font-size: 1.25rem;">Edit Document Type</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em; opacity: 0.5;"></button>
                 </div>
+                <div class="modal-body px-4 pt-4">
+                    <p class="text-muted mb-4" style="font-size: 0.9rem; line-height: 1.5;">Update the details for this document classification.</p>
 
-                {{-- Code --}}
-                <div class="mb-3">
-                    <label for="code" class="form-label fw-semibold" style="font-size: 0.85rem;">
-                        Code <span class="text-danger">*</span>
-                    </label>
-                    <input type="text"
-                           id="code"
-                           name="code"
-                           class="form-control field-input @error('code') is-invalid @enderror"
-                           value="{{ old('code', $documentType->code) }}"
-                           placeholder="e.g. SSS, NBI, PAGIBIG"
-                           maxlength="20"
-                           style="text-transform: uppercase;"
-                           required>
-                    @error('code')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    <div class="form-text" style="font-size: 0.78rem;">Unique short code. Max 20 characters. Letters, numbers, dashes, and underscores only.</div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    {{-- Department --}}
-                    <div class="col-md-6">
-                        <label for="department_id" class="form-label fw-semibold" style="font-size: 0.85rem;">
-                            Department
-                        </label>
-                        <select id="department_id"
-                                name="department_id"
-                                class="form-select field-input @error('department_id') is-invalid @enderror">
-                            <option value="">— None —</option>
-                            @foreach($departments as $dept)
-                                <option value="{{ $dept->id }}" {{ old('department_id', $documentType->department_id) == $dept->id ? 'selected' : '' }}>
-                                    {{ $dept->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('department_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text" style="font-size: 0.78rem;">Optional. Categorize this type under a department.</div>
-                    </div>
-                </div>
-
-                {{-- Max Pages --}}
-                <div class="mb-3">
-                    <label for="max_pages" class="form-label fw-semibold" style="font-size: 0.85rem;">
-                        Max Pages <span class="text-danger">*</span>
-                    </label>
-                    <input type="number"
-                           id="max_pages"
-                           name="max_pages"
-                           class="form-control field-input @error('max_pages') is-invalid @enderror"
-                           value="{{ old('max_pages', $documentType->max_pages) }}"
-                           min="1"
-                           max="100"
-                           style="max-width: 120px;"
-                           required>
-                    @error('max_pages')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    <div class="form-text" style="font-size: 0.78rem;">Maximum number of pages allowed for this document type.</div>
-                </div>
-
-                {{-- Boolean Toggles --}}
-                <div class="row g-3 mb-4">
-                    {{-- Has Expiry --}}
-                    <div class="col-md-6">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="has_expiry"
-                                   name="has_expiry"
-                                   value="1"
-                                   {{ old('has_expiry', $documentType->has_expiry) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="has_expiry" style="font-size: 0.85rem;">
-                                <i class="fas fa-calendar-times me-1 text-muted"></i> Has Expiry Date
+                    <div class="row g-4">
+                        {{-- Name --}}
+                        <div class="col-md-6">
+                            <label for="edit_name" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                                Document Name <span class="text-danger">*</span>
                             </label>
+                            <input type="text"
+                                   id="edit_name"
+                                   name="name"
+                                   class="form-control field-input"
+                                   x-model="editData.name"
+                                   required
+                                   style="background-color: #f9fafb;">
+                            <div class="form-text" style="font-size: 0.78rem;">The full, readable name.</div>
                         </div>
-                        <div class="form-text ms-4" style="font-size: 0.78rem;">Enable if this document type can expire (e.g. NBI Clearance).</div>
-                    </div>
 
-                    {{-- Is Required --}}
-                    <div class="col-md-6">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="is_required"
-                                   name="is_required"
-                                   value="1"
-                                   {{ old('is_required', $documentType->is_required) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold" for="is_required" style="font-size: 0.85rem;">
-                                <i class="fas fa-asterisk me-1 text-danger" style="font-size: 0.6rem;"></i> Globally Required
+                        {{-- Code --}}
+                        <div class="col-md-6">
+                            <label for="edit_code" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                                Short Code <span class="text-danger">*</span>
                             </label>
+                            <input type="text"
+                                   id="edit_code"
+                                   name="code"
+                                   class="form-control field-input"
+                                   x-model="editData.code"
+                                   required
+                                   style="background-color: #f9fafb; font-family: monospace;">
+                            <div class="form-text" style="font-size: 0.78rem;">A unique, URL-safe identifier. No spaces.</div>
                         </div>
-                        <div class="form-text ms-4" style="font-size: 0.78rem;">If checked, every employee must have this document type on file.</div>
+
+                        {{-- Department --}}
+                        <div class="col-md-6">
+                            <label for="edit_department_id" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                                Department <span class="text-danger">*</span>
+                            </label>
+                            <select id="edit_department_id"
+                                    name="department_id"
+                                    class="form-select field-input"
+                                    x-model="editData.department_id"
+                                    required
+                                    style="background-color: #f9fafb;">
+                                <option value="" disabled>Select a department...</option>
+                                @foreach($departments as $dept)
+                                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text" style="font-size: 0.78rem;">Department that owns this document type.</div>
+                        </div>
+
+                        {{-- Max Pages --}}
+                        <div class="col-md-6">
+                            <label for="edit_max_pages" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                                Maximum Pages <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fas fa-file-alt text-muted"></i></span>
+                                <input type="number"
+                                       id="edit_max_pages"
+                                       name="max_pages"
+                                       class="form-control field-input"
+                                       x-model="editData.max_pages"
+                                       min="1" max="100" required
+                                       style="background-color: #f9fafb;">
+                            </div>
+                            <div class="form-text" style="font-size: 0.78rem;">Allowed length for uploads.</div>
+                        </div>
+
+                        <hr class="mt-4 mb-2">
+
+                        {{-- Has Expiry --}}
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       id="edit_has_expiry"
+                                       name="has_expiry"
+                                       value="1"
+                                       x-bind:checked="editData.has_expiry">
+                                <label class="form-check-label fw-semibold" for="edit_has_expiry" style="font-size: 0.85rem;">
+                                    <i class="fas fa-calendar-times me-1 text-warning" style="font-size: 0.8rem;"></i> Has Expiry Date
+                                </label>
+                            </div>
+                            <div class="form-text ms-4" style="font-size: 0.78rem;">Enable if this document type can expire (e.g. NBI Clearance).</div>
+                        </div>
                     </div>
                 </div>
-
-                {{-- Actions --}}
-                <div class="d-flex gap-2 pt-2 border-top">
-                    <button type="submit" class="btn btn-brand d-inline-flex align-items-center gap-2">
-                        <i class="fas fa-save"></i> Update Document Type
+                <div class="modal-footer border-top-0 px-4 pb-4 pt-4" style="background-color: #ffffff;">
+                    <button type="button" class="btn btn-light" style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 18px; color: #4b5563; background-color: #f3f4f6; border: none; transition: background 0.2s;" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn text-white d-inline-flex align-items-center gap-2" style="background-color: #dd270d; font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 20px; border: none;">
+                        <i class="fas fa-save"></i> Save Changes
                     </button>
-                    <a href="{{ route('settings.document-types.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
-
-        {{-- ── Meta Info ── --}}
-        <div class="card-footer bg-white border-top px-4 py-3" style="border-radius: 0 0 10px 10px;">
-            <div class="d-flex gap-4" style="font-size: 0.78rem; color: #9ca3af;">
-                <span><i class="far fa-clock me-1"></i> Created: {{ $documentType->created_at->format('M d, Y h:i A') }}</span>
-                <span><i class="far fa-edit me-1"></i> Updated: {{ $documentType->updated_at->format('M d, Y h:i A') }}</span>
-            </div>
-        </div>
     </div>
-
-</x-app-layout>
+</div>
