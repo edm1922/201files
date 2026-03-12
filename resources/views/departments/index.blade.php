@@ -28,6 +28,7 @@
                     <thead>
                         <tr>
                             <th style="width: 250px;">Department Name</th>
+                            <th style="width: 150px;">Code / Folder ID</th>
                             <th>Description</th>
                             <th style="width: 120px; text-align: center;">Status</th>
                             <th style="width: 160px; text-align: center;">Document Types</th>
@@ -38,6 +39,10 @@
                         @forelse($departments as $department)
                             <tr>
                                 <td class="fw-medium" style="color: #1e2328;">{{ $department->name }}</td>
+                                <td>
+                                    <div class="fw-bold" style="font-size: 0.85rem; color: #374151;">{{ $department->code ?? '—' }}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem; font-family: monospace;">{{ $department->folder_code ?? '—' }}</div>
+                                </td>
                                 <td class="text-muted" style="font-size: 0.8rem;">
                                     {{ Str::limit($department->description ?: 'No description provided.', 80) }}
                                 </td>
@@ -66,6 +71,8 @@
                                                 @click="openEditModal({{ json_encode([
                                                     'id' => $department->id,
                                                     'name' => $department->name,
+                                                    'code' => $department->code,
+                                                    'folder_code' => $department->folder_code,
                                                     'description' => $department->description,
                                                     'is_active' => $department->is_active,
                                                     'updated_at' => $department->updated_at->format('M d, Y h:i A')
@@ -155,6 +162,8 @@
                 editData: {
                     id: '',
                     name: '',
+                    code: '',
+                    folder_code: '',
                     description: '',
                     updated_at: ''
                 },
@@ -175,6 +184,7 @@
                         this.editData = {
                             id: '{{ old("id") }}',
                             name: '{!! addslashes(old("name")) !!}',
+                            code: '{!! addslashes(old("code")) !!}',
                             description: '{!! addslashes(old("description")) !!}',
                             is_active: {{ old('is_active') ? 'true' : 'false' }},
                             updated_at: ''

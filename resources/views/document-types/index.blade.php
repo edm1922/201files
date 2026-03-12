@@ -20,6 +20,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert" style="border-left: 4px solid #e74c3c; border-radius: 8px;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>{{ session('error') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     {{-- ── Filters Card ── --}}
     <div class="card shadow-sm mb-4">
@@ -112,7 +119,7 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex justify-content-center">
+                                <div class="d-flex justify-content-center gap-2">
                                     <button type="button" 
                                        class="btn-doc-action"
                                        title="Edit document type"
@@ -126,6 +133,32 @@
                                        ]) }})">
                                         <i class="fas fa-pen" style="font-size: 0.7rem;"></i>
                                     </button>
+
+                                    @if($docType->documents_count == 0)
+                                        <button type="button"
+                                                class="btn-doc-action"
+                                                title="Delete document type"
+                                                style="border-color: #ef4444; color: #ef4444;"
+                                                @click="openConfirmModal(
+                                                    '{{ route('settings.document-types.destroy', $docType) }}',
+                                                    'DELETE',
+                                                    'Delete Document Type',
+                                                    'Are you sure you want to permanently delete &lt;strong&gt;{{ addslashes($docType->name) }}&lt;/strong&gt;? This action cannot be undone.',
+                                                    'Delete',
+                                                    'danger',
+                                                    'fa-trash'
+                                                )">
+                                            <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+                                        </button>
+                                    @else
+                                        <button type="button"
+                                                class="btn-doc-action"
+                                                title="Cannot delete document types with active documents"
+                                                style="border-color: #d1d5db; color: #9ca3af; cursor: not-allowed;"
+                                                disabled>
+                                            <i class="fas fa-trash" style="font-size: 0.7rem;"></i>
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -154,6 +187,7 @@
 
     @include('document-types.create')
     @include('document-types.edit')
+    @include('companies.confirm_modal')
 
     </div>
 
@@ -170,6 +204,15 @@
                     has_expiry: false,
                     max_pages: 1
                 },
+
+                // Confirmation Modal Data (Toggle/Delete)
+                confirmActionUrl: '',
+                confirmMethod: 'POST',
+                confirmTitle: 'Confirm',
+                confirmMessage: 'Are you sure?',
+                confirmButtonText: 'Confirm',
+                confirmTheme: 'brand', // brand, danger, success
+                confirmIcon: 'fa-exclamation-triangle',
 
                 init() {
                     // Reopen edit modal with old inputs if validation fails on update
@@ -194,6 +237,18 @@
                     this.editData = { ...docType };
                     this.editUrl = `{{ url('settings/document-types') }}/${docType.id}`;
                     var modal = new bootstrap.Modal(document.getElementById('editDocumentTypeModal'));
+                    modal.show();
+                },
+
+                openConfirmModal(url, method, title, message, btnText, theme, icon) {
+                    this.confirmActionUrl = url;
+                    this.confirmMethod = method;
+                    this.confirmTitle = title;
+                    this.confirmMessage = message;
+                    this.confirmButtonText = btnText;
+                    this.confirmTheme = theme;
+                    this.confirmIcon = icon;
+                    var modal = new bootstrap.Modal(document.getElementById('confirmModal'));
                     modal.show();
                 }
             }));

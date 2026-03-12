@@ -12,6 +12,28 @@
                 <div class="modal-body px-4 pt-2">
                     <p class="text-muted mb-4" style="font-size: 0.9rem; line-height: 1.5;">Update details for <strong x-text="editData.name" style="color: #111827;"></strong>.</p>
 
+                    {{-- Department Code --}}
+                    <div class="mb-4">
+                        <label for="edit_code" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                            Department Code <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               id="edit_code"
+                               name="code"
+                               class="form-control field-input @error('code') is-invalid @enderror"
+                               x-model="editData.code"
+                               placeholder="e.g. HR, FIN"
+                               required
+                               maxlength="10"
+                               style="background-color: #f9fafb; text-transform: uppercase;">
+                        @error('code')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text" style="font-size: 0.78rem; color: #6b7280; margin-top: 6px;">
+                            Auto-generated folder ID: <strong x-text="'CSC-' + (editData.code ? editData.code.toUpperCase() : 'XXX') + '-0000'"></strong>
+                        </div>
+                    </div>
+
                     {{-- Department Name --}}
                     <div class="mb-4">
                         <label for="edit_name" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">

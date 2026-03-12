@@ -60,4 +60,21 @@ class DocumentTypeController extends Controller
             ->route('settings.document-types.index')
             ->with('success', 'Document type updated successfully.');
     }
+
+    /**
+     * Remove the specified document type from storage.
+     */
+    public function destroy(DocumentType $documentType)
+    {
+        // Prevent deletion if the document type is already in use
+        if ($documentType->documents()->count() > 0) {
+            return back()->with('error', 'Cannot delete document type because it has uploaded documents attached to it.');
+        }
+
+        $documentType->delete();
+
+        return redirect()
+            ->route('settings.document-types.index')
+            ->with('success', 'Document type deleted successfully.');
+    }
 }

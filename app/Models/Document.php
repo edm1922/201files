@@ -56,9 +56,9 @@ class Document extends Model
             && $this->expiry_date->diffInDays(now()) <= $days;
     }
 
-    public function owner()
+    public function department(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(Department::class);
     }
 
     public function documentType(): BelongsTo

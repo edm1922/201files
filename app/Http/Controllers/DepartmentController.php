@@ -34,7 +34,11 @@ class DepartmentController extends Controller
      */
     public function store(DepartmentRequest $request)
     {
-        Department::create($request->validated());
+        $data = $request->validated();
+        $code = strtoupper($data['code']);
+        $data['folder_code'] = 'CSC-' . $code . '-0000';
+        
+        Department::create($data);
 
         return redirect()
             ->route('settings.departments.index')
@@ -54,7 +58,11 @@ class DepartmentController extends Controller
      */
     public function update(DepartmentRequest $request, Department $department)
     {
-        $department->update($request->validated());
+        $data = $request->validated();
+        $code = strtoupper($data['code']);
+        $data['folder_code'] = 'CSC-' . $code . '-0000';
+        
+        $department->update($data);
 
         return redirect()
             ->route('settings.departments.index')

@@ -51,10 +51,6 @@ class Employee extends Model
     }
 
 
-    public function documents()
-    {
-        return $this->morphMany(Document::class, 'owner');
-    }
 
     public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
