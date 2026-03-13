@@ -25,7 +25,7 @@
         <div class="d-flex flex-column gap-3 mb-5">
             @forelse($locations as $cabinetId => $racks)
                 @php
-                    $totalFolders = $racks->sum('documents_count');
+                    $totalFolders = $racks->sum('employees_count') + $racks->sum('departments_count');
                     $rackCount = $racks->count();
                 @endphp
                 {{-- Cabinet Block --}}
@@ -85,7 +85,7 @@
                                             </td>
                                             <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
                                                 <span class="badge rounded-pill" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 5px 12px; font-weight: 600; font-size: 0.8rem;">
-                                                    <i class="fas fa-folder me-1" style="font-size: 0.6rem;"></i> {{ $location->documents_count }}
+                                                    <i class="fas fa-folder me-1" style="font-size: 0.6rem;"></i> {{ $location->employees_count + $location->departments_count }}
                                                 </span>
                                             </td>
                                             <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
@@ -106,10 +106,10 @@
                                                     </button>
                                                     <button type="button"
                                                             class="btn btn-sm"
-                                                            title="{{ $location->documents_count > 0 ? 'Cannot delete: Folders exist' : 'Delete Rack' }}"
-                                                            style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; {{ $location->documents_count > 0 ? 'background-color:#f3f4f6; color:#9ca3af; cursor:not-allowed;' : 'background-color:#fef2f2; color:#ef4444;' }}"
-                                                            {{ $location->documents_count > 0 ? 'disabled' : '' }}
-                                                            @if($location->documents_count == 0)
+                                                            title="{{ ($location->employees_count + $location->departments_count) > 0 ? 'Cannot delete: Folders exist' : 'Delete Rack' }}"
+                                                            style="border-radius: 6px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; {{ ($location->employees_count + $location->departments_count) > 0 ? 'background-color:#f3f4f6; color:#9ca3af; cursor:not-allowed;' : 'background-color:#fef2f2; color:#ef4444;' }}"
+                                                            {{ ($location->employees_count + $location->departments_count) > 0 ? 'disabled' : '' }}
+                                                            @if(($location->employees_count + $location->departments_count) == 0)
                                                                 onmouseover="this.style.backgroundColor='#fee2e2'; this.style.transform='scale(1.05)'"
                                                                 onmouseout="this.style.backgroundColor='#fef2f2'; this.style.transform='scale(1)'"
                                                                 @click="openConfirmModal({{ $location->id }}, '{{ $location->cabinet_id }} › {{ $location->rack_id }}')"

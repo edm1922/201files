@@ -13,7 +13,7 @@ class PhysicalLocationController extends Controller
      */
     public function index()
     {
-        $locations = PhysicalLocation::withCount('documents')
+        $locations = PhysicalLocation::withCount(['employees', 'departments'])
             ->orderBy('cabinet_id')
             ->orderBy('rack_id')
             ->get()
@@ -67,7 +67,7 @@ class PhysicalLocationController extends Controller
      */
     public function destroy(PhysicalLocation $physicalLocation)
     {
-        if ($physicalLocation->documents()->count() > 0) {
+        if ($physicalLocation->employees()->count() > 0 || $physicalLocation->departments()->count() > 0) {
             return redirect()
                 ->route('settings.physical-locations.index')
                 ->with('error', 'Cannot delete this rack because it contains folders.');
