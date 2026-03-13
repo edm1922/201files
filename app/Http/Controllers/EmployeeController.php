@@ -7,7 +7,7 @@ use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Company;
 use App\Models\DocumentType;
 use App\Models\Employee;
-use App\Models\PhysicalLocation;
+use App\Models\Slot;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 
@@ -18,29 +18,26 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $companies     = Company::where('is_active', true)->orderBy('name')->get();
-
-        $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
-        $lastFolderCode    = $this->getLastFolderCode();
+        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $slots     = Slot::available()->with('rack.cabinet')->get();
 
         return view('201files', [
-            'employee'      => null,
-            'companies'     => $companies,
-            'physicalLocations' => $physicalLocations,
-            'lastFolderCode'    => $lastFolderCode,
+            'employee'  => null,
+            'companies' => $companies,
+            'slots'     => $slots,
         ]);
     }
 
     /**
-     * Store a newly created employee and optionally assign them to a company.
+     * Store a newly created employee.
      */
     public function store(StoreEmployeeRequest $request)
     {
         $employee = DB::transaction(function () use ($request) {
             $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'date_hired', 'status', 'barcode_id', 'folder_code',
-                'company_id', 'physical_location_id',
+                'suffix', 'date_hired', 'status', 'barcode_id',
+                'company_id', 'slot_id',
             ]);
 
             $employee = Employee::create($data);
@@ -50,8 +47,23 @@ class EmployeeController extends Controller
                 "Created employee: {$employee->full_name} (System ID: {$employee->system_id})"
             );
 
+            // If created as resigned, auto-archive
+            if ($employee->status === 'resigned') {
+                $employee->delete(); // soft-delete = archive
+                AuditService::log(
+                    'employee_archived',
+                    "Auto-archived employee: {$employee->full_name} (status: resigned)"
+                );
+            }
+
             return $employee;
         });
+
+        if ($employee->trashed()) {
+            return redirect()
+                ->route('201files')
+                ->with('success', 'Employee created and automatically archived (resigned).');
+        }
 
         return redirect()
             ->route('employees.show', $employee)
@@ -63,36 +75,35 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load(['company', 'physicalLocation']);
+        $employee->load(['company', 'slot.rack.cabinet']);
 
-        $companies     = Company::where('is_active', true)->orderBy('name')->get();
-
-        $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
-        $lastFolderCode    = $this->getLastFolderCode();
+        $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $slots     = Slot::available()->with('rack.cabinet')->get();
 
         return view('201files', [
-            'employee'      => $employee,
-            'companies'     => $companies,
-            'physicalLocations' => $physicalLocations,
-            'lastFolderCode'    => $lastFolderCode,
+            'employee'  => $employee,
+            'companies' => $companies,
+            'slots'     => $slots,
         ]);
     }
 
     /**
-     * Update an existing employee and optionally change their company assignment.
+     * Update an existing employee.
      */
     public function update(UpdateEmployeeRequest $request, Employee $employee)
     {
         DB::transaction(function () use ($request, $employee) {
+            $oldStatus = $employee->status;
+
             $old = $employee->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'status', 'barcode_id', 'folder_code',
+                'suffix', 'status', 'barcode_id',
             ]);
 
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'date_hired', 'status', 'barcode_id', 'folder_code',
-                'company_id', 'physical_location_id',
+                'suffix', 'date_hired', 'status', 'barcode_id',
+                'company_id', 'slot_id',
             ]));
 
             AuditService::log(
@@ -101,7 +112,22 @@ class EmployeeController extends Controller
                 null,
                 ['before' => $old, 'after' => $employee->fresh()->toArray()]
             );
+
+            // Auto-archive if status changed to resigned
+            if ($oldStatus !== 'resigned' && $employee->status === 'resigned') {
+                $employee->delete(); // soft-delete = archive
+                AuditService::log(
+                    'employee_archived',
+                    "Auto-archived employee: {$employee->full_name} (status changed to resigned)"
+                );
+            }
         });
+
+        if ($employee->trashed()) {
+            return redirect()
+                ->route('201files')
+                ->with('success', 'Employee has been resigned and moved to the archive.');
+        }
 
         return redirect()
             ->route('employees.show', $employee)
@@ -109,13 +135,67 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Returns the last used folder code (e.g., CSC-HR-0101).
+     * List archived (soft-deleted resigned) employees. Admin only.
      */
-    protected function getLastFolderCode(): ?string
+    public function archiveIndex()
     {
-        return Employee::where('folder_code', 'like', 'CSC-HR-%')
-            ->orderBy('id', 'desc')
-            ->first()
-            ?->folder_code;
+        $employees = Employee::archived()
+            ->with('slot.rack.cabinet')
+            ->orderBy('deleted_at', 'desc')
+            ->get();
+
+        return view('employees.archive', compact('employees'));
+    }
+
+    /**
+     * Restore an archived employee. Admin only.
+     */
+    public function restore(int $id)
+    {
+        $employee = Employee::onlyTrashed()->findOrFail($id);
+
+        DB::transaction(function () use ($employee) {
+            $employee->restore();
+            $employee->update(['status' => 'active']);
+
+            AuditService::log(
+                'employee_restored',
+                "Restored employee: {$employee->full_name} from archive (status set to active)"
+            );
+        });
+
+        return redirect()
+            ->route('employees.show', $employee)
+            ->with('success', 'Employee restored successfully.');
+    }
+
+    /**
+     * Permanently delete an archived employee. Admin only.
+     * This frees the slot (is_available = true).
+     */
+    public function forceDestroy(int $id)
+    {
+        $employee = Employee::onlyTrashed()->findOrFail($id);
+
+        DB::transaction(function () use ($employee) {
+            // Free the slot if assigned
+            if ($employee->slot_id) {
+                Slot::where('id', $employee->slot_id)->update(['is_available' => true]);
+            }
+
+            $name = $employee->full_name;
+            $systemId = $employee->system_id;
+
+            $employee->forceDelete();
+
+            AuditService::log(
+                'employee_deleted',
+                "Permanently deleted employee: {$name} (System ID: {$systemId}). Slot freed."
+            );
+        });
+
+        return redirect()
+            ->route('employees.archive')
+            ->with('success', 'Employee permanently deleted. Folder slot is now available.');
     }
 }

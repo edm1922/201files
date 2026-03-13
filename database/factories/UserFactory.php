@@ -14,20 +14,20 @@ class UserFactory extends Factory
     /**
      * The current password being used by the factory.
      */
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     public function definition(): array
     {
-        $lastName = fake()->lastName();
         return [
             'first_name' => fake()->firstName(),
-            'last_name' => $lastName,
+            'middle_name' => fake()->optional()->firstName(),
+            'last_name' => fake()->lastName(),
+            'suffix' => fake()->optional()->suffix(),
             'username' => fake()->unique()->userName(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make(strtolower($lastName) . 'csc'),
+            'password' => static::$password ??= password_hash('password', PASSWORD_BCRYPT),
+            'must_change_password' => false,
+            'role' => 'viewer',
             'remember_token' => Str::random(10),
         ];
     }
@@ -39,6 +39,36 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user has the admin role.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+        ]);
+    }
+
+    /**
+     * Indicate that the user has the encoder role.
+     */
+    public function encoder(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'encoder',
+        ]);
+    }
+
+    /**
+     * Indicate that the user has the viewer role.
+     */
+    public function viewer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'viewer',
         ]);
     }
 }

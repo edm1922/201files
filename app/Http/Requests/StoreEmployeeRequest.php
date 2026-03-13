@@ -37,7 +37,7 @@ class StoreEmployeeRequest extends FormRequest
             'barcode_id'   => ['nullable', 'string', 'max:100', 'unique:employees,barcode_id'],
             'folder_code'  => ['required', 'string', 'max:255', 'unique:employees,folder_code'],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
-            'physical_location_id' => ['nullable', 'integer', 'exists:physical_locations,id'],
+            'slot_id'      => ['nullable', 'integer', 'exists:slots,id'],
         ];
     }
 
@@ -54,6 +54,7 @@ class StoreEmployeeRequest extends FormRequest
             'folder_code.required' => 'Folder Code is required.',
             'folder_code.unique'   => 'This Folder Code is already in use.',
             'company_id.exists'   => 'The selected company does not exist.',
+            'slot_id.exists'      => 'The selected slot does not exist.',
         ];
     }
 }
