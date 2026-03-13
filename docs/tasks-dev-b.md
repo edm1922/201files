@@ -60,17 +60,17 @@ This document isolates all tasks assigned to **Developer B** across all developm
 
   value="{{ $employee?->folder_code }}">
 
-
-
 *Expected Outcome: The main search interface visually mimics the CENTRO style, actively pinging Dev A's Meilisearch controller to live-update results.*
 
 ---
 
 ## Phase 5: Reports & Dashboard (Week 9–10)
 
-- [ ] 5.1 Dashboard widgets UI (summary cards, recent uploads frontend)
-- [ ] 5.2 Missing Documents UI (tabular display of what's missing per employee vs global requirements)
-- [ ] 5.3 Expiry Alert UI (tabular display of expiring documents)
+- [X] 5.1 Dashboard widgets UI (summary cards, recent uploads frontend)
+- [X] 5.2 Add in the dashboard indicate the employee numbers, and add a graph in the that indicate the number of employees base on the date hired
+- [X] 5.3 Add a filter in the graph Year and Month.
+- [ ] 5.4 Add a piechart indicate how many employees in each companies, remov the "recent upload" section and replace it with the pie chart,
+- [ ] 5.5 Adjust the sizes of the chart and graph so it can fit in.
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
