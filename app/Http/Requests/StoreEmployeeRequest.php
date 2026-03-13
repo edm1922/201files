@@ -11,6 +11,19 @@ class StoreEmployeeRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('folder_code')) {
+            $code = $this->folder_code;
+            // Prepend prefix if only digits were provided
+            if (is_numeric($code)) {
+                $this->merge([
+                    'folder_code' => 'CSC-HR-' . str_pad($code, 4, '0', STR_PAD_LEFT)
+                ]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -22,6 +35,7 @@ class StoreEmployeeRequest extends FormRequest
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', 'unique:employees,barcode_id'],
+            'folder_code'  => ['required', 'string', 'max:255', 'unique:employees,folder_code'],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'physical_location_id' => ['nullable', 'integer', 'exists:physical_locations,id'],
         ];
@@ -37,6 +51,8 @@ class StoreEmployeeRequest extends FormRequest
             'status.required'     => 'Status is required.',
             'status.in'           => 'Status must be active, awol, or resigned.',
             'barcode_id.unique'   => 'This Barcode ID is already in use.',
+            'folder_code.required' => 'Folder Code is required.',
+            'folder_code.unique'   => 'This Folder Code is already in use.',
             'company_id.exists'   => 'The selected company does not exist.',
         ];
     }

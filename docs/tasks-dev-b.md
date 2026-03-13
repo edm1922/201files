@@ -41,9 +41,26 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 4.1 Search UI Frontend (full-page search with sidebar facets: Company, Doc Type, Status, Expiry)
 - [X] 4.2 Employee Tab Design, modify the employee tab and use the picture as reference![1773276574629](image/tasks-dev-b/1773276574629.png)
   please note: Do not enclude the save and close button and related documents just follow whats in the existing employee tab.
-- [ ] 4.3 Update the UI design of the profile/partial/edit, take the picture below as reference
+- [X] 4.3 Update the UI design of the profile/partial/edit, take the picture below as reference
 
   ![1773285941495](image/tasks-dev-b/1773285941495.png)
+- [ ] 4.4. Change The Folder Code in 201files. Instead Of Auto Generated, user can input the code but it must cannot be dulpicated.
+- [ ] 4.5 Update the 201files add a last incoded number e.g. if user the last number is 0500, there must be small message underneat
+  the folder code input that says last encoded number CSC-HR-XXXX :
+
+  <divclass="col-md-4">
+
+  <labelclass="form-label"for="folderCodeInput">Folder Code `</label>`
+
+  <inputtype="text"id="folderCodeInput"name="folder_code"
+
+  class="form-control field-input"
+
+  placeholder="Auto-generated (e.g. CSC-HR-0001)"
+
+  value="{{ $employee?->folder_code }}">
+
+
 
 *Expected Outcome: The main search interface visually mimics the CENTRO style, actively pinging Dev A's Meilisearch controller to live-update results.*
 
