@@ -20,11 +20,13 @@ class EmployeeController extends Controller
     {
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $slots     = Slot::available()->with('rack.cabinet')->get();
+        $lastFolderCode = Slot::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
-            'employee'  => null,
-            'companies' => $companies,
-            'slots'     => $slots,
+            'employee'       => null,
+            'companies'      => $companies,
+            'slots'          => $slots,
+            'lastFolderCode' => $lastFolderCode,
         ]);
     }
 
@@ -79,11 +81,13 @@ class EmployeeController extends Controller
 
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $slots     = Slot::available()->with('rack.cabinet')->get();
+        $lastFolderCode = Slot::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
-            'employee'  => $employee,
-            'companies' => $companies,
-            'slots'     => $slots,
+            'employee'       => $employee,
+            'companies'      => $companies,
+            'slots'          => $slots,
+            'lastFolderCode' => $lastFolderCode,
         ]);
     }
 

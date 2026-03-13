@@ -18,12 +18,6 @@ class EmployeeFactory extends Factory
      */
     public function definition(): array
     {
-        $companyIds = Company::pluck('id')->toArray();
-        $slotIds    = Slot::where('is_available', true)->pluck('id')->toArray();
-
-        $companyId = count($companyIds) > 0 ? $this->faker->randomElement($companyIds) : null;
-        $slotId    = count($slotIds) > 0 ? $this->faker->randomElement($slotIds) : null;
-
         // Realistic PH typical suffixes or none
         $suffixes = ['', '', '', 'Jr.', 'Sr.', 'II', 'III'];
 
@@ -36,8 +30,10 @@ class EmployeeFactory extends Factory
             'suffix'      => $this->faker->randomElement($suffixes),
             'date_hired'  => $this->faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d'),
             'status'      => $this->faker->randomElement(['active', 'active', 'active', 'resigned', 'awol']),
-            'company_id'  => $companyId,
-            'slot_id'     => $slotId,
+            'company_id'  => function () {
+                return Company::inRandomOrder()->first()->id ?? null;
+            },
+            'slot_id'     => null, // Handled primarily by the seeder to map to correct racks
         ];
     }
 }
