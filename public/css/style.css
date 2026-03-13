@@ -645,3 +645,150 @@
 .profile-field__value--mono {
     font-family: 'Monaco', 'Consolas', monospace;
 }
+
+/* ─── Dashboard Styles ─────────────────────────────────────────────── */
+
+.stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef0f3;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-height: 140px;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.stat-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.stat-icon-wrap {
+    font-size: 1.25rem;
+    opacity: 0.8;
+}
+
+.stat-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-value-large {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+}
+
+.trend-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.trend-pill--up {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.trend-pill--down {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.stat-footer {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.dashboard-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.recent-uploads-table th {
+    background: #f9fafb;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b7280;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.recent-uploads-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.graph-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    height: 100%;
+}
+
+.filter-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+/* Date Pill Styles */
+.date-pill {
+    background: #fff;
+    border: 1px solid #eef0f3;
+    border-radius: 100px;
+    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.875rem;
+    color: #111827;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.date-pill:hover {
+    background: #f9fafb;
+}
+
+.date-pill i.fa-calendar-alt {
+    color: #4b5563;
+    font-size: 1rem;
+}
+
+.date-pill i.fa-chevron-down {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
