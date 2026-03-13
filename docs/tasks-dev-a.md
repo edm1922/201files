@@ -29,9 +29,9 @@ This document isolates all tasks assigned to **Developer A** across all developm
 
 ## Phase 4: Search & Retrieval (Week 7–8)
 
-- [ ] 4.3 Meilisearch backend setup & Scout Integration
-- [ ] 4.4 Searchable models (syncing Employee + Document data to Meilisearch index)
-- [ ] 4.5 Backend Search Controller & Queries (executing Meilisearch queries received from UI)
+- [X] 4.3 Meilisearch backend setup & Scout Integration
+- [X] 4.4 Searchable models (syncing Employee + Document data to Meilisearch index)
+- [X] 4.5 Backend Search Controller & Queries (executing Meilisearch queries received from UI)
 
 *Expected Outcome: The database seamlessly syncs with Meilisearch, and an API/Controller is available to receive facet filters from the UI and return lightning-fast results.*
 
