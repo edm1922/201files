@@ -23,7 +23,7 @@ class StoreEmployeeRequest extends FormRequest
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', 'unique:employees,barcode_id'],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
-            'physical_location_id' => ['nullable', 'integer', 'exists:physical_locations,id'],
+            'slot_id'      => ['nullable', 'integer', 'exists:slots,id'],
         ];
     }
 
@@ -38,6 +38,7 @@ class StoreEmployeeRequest extends FormRequest
             'status.in'           => 'Status must be active, awol, or resigned.',
             'barcode_id.unique'   => 'This Barcode ID is already in use.',
             'company_id.exists'   => 'The selected company does not exist.',
+            'slot_id.exists'      => 'The selected slot does not exist.',
         ];
     }
 }

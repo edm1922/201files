@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cabinet;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\DocumentType;
-use App\Models\PhysicalLocation;
+use App\Models\Rack;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,32 +15,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Admin User ──
-        User::create([
-            'first_name' => 'System',
-            'last_name' => 'Admin',
-            'username' => 'admin',
-            'password' => Hash::make('admincsc'),
-            'role' => 'admin',
-        ]);
-
-        // ── Encoder User (for testing) ──
-        User::create([
-            'first_name' => 'Test',
-            'last_name' => 'Encoder',
-            'username' => 'encoder',
-            'password' => Hash::make('encodercsc'),
-            'role' => 'encoder',
-        ]);
-
-        // ── Viewer User (for testing) ──
-        User::create([
-            'first_name' => 'Test',
-            'last_name' => 'Viewer',
-            'username' => 'viewer',
-            'password' => Hash::make('viewercsc'),
-            'role' => 'viewer',
-        ]);
+        // ── Administrative Users ──
+        $this->call(UserSeeder::class);
 
         // ── Departments (cooperative-internal) ──
         $departments = [
@@ -53,11 +30,9 @@ class DatabaseSeeder extends Seeder
         }
 
         // ── Document Types ──
-        $hr = Department::where('name', 'Human Resource')->first();
         $finance = Department::where('name', 'Finance')->first();
 
         $documentTypes = [
-            // Finance Documents
             ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true, 'max_pages' => 2],
         ];
 
@@ -74,15 +49,17 @@ class DatabaseSeeder extends Seeder
             Company::create($company);
         }
 
-        // ── Physical Locations (Cabinets & Racks) ──
-        $cabinets = ['Cabinet 1', 'Cabinet 2', 'Cabinet 3'];
-        $racks = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5'];
+        // ── Cabinets & Racks ──
+        $cabinetData = ['Cabinet 1', 'Cabinet 2', 'Cabinet 3'];
+        $rackCodes   = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5'];
 
-        foreach ($cabinets as $cabinet) {
-            foreach ($racks as $rack) {
-                PhysicalLocation::create([
-                    'cabinet_id' => $cabinet,
-                    'rack_id' => $rack,
+        foreach ($cabinetData as $cabinetName) {
+            $cabinet = Cabinet::create(['name' => $cabinetName]);
+
+            foreach ($rackCodes as $rackCode) {
+                Rack::create([
+                    'cabinet_id' => $cabinet->id,
+                    'rack_code'  => $rackCode,
                 ]);
             }
         }

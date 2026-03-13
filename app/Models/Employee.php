@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class Employee extends Model
 {
     use HasFactory, SoftDeletes;
@@ -14,7 +17,6 @@ class Employee extends Model
     protected $fillable = [
         'system_id',
         'barcode_id',
-        'folder_code',
         'first_name',
         'middle_name',
         'last_name',
@@ -22,7 +24,7 @@ class Employee extends Model
         'date_hired',
         'status',
         'company_id',
-        'physical_location_id',
+        'slot_id',
     ];
 
     protected function casts(): array
@@ -50,16 +52,21 @@ class Employee extends Model
         return $name;
     }
 
-
+    /**
+     * Scope: only archived (soft-deleted resigned) employees.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->onlyTrashed()->where('status', 'resigned');
+    }
 
     public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function physicalLocation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function slot(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(PhysicalLocation::class);
+        return $this->belongsTo(Slot::class);
     }
 }
-

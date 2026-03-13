@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Department; // Added for the new relationship
+use App\Models\Department;
 
 class Document extends Model
 {
@@ -14,7 +14,7 @@ class Document extends Model
     protected $fillable = [
         'department_id',
         'document_type_id',
-        'physical_location_id',
+        'slot_id',
         'uploaded_by',
         'file_path',
         'original_filename',
@@ -66,9 +66,9 @@ class Document extends Model
         return $this->belongsTo(DocumentType::class);
     }
 
-    public function physicalLocation(): BelongsTo
+    public function slot(): BelongsTo
     {
-        return $this->belongsTo(PhysicalLocation::class);
+        return $this->belongsTo(Slot::class);
     }
 
     public function uploader(): BelongsTo

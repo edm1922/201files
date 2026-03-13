@@ -137,7 +137,7 @@
                                     <div class="profile-field">
                                         <span class="profile-field__label">Document Location</span>
                                         <span class="profile-field__value profile-field__value--red profile-field__value--mono">
-                                            {{ $employee->physicalLocation?->display_name ?? '—' }}
+                                            {{ $employee->slot?->full_location ?? '—' }}
                                         </span>
                                     </div>
                                 </div>
@@ -264,11 +264,12 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="folderCodeInput">Folder Code</label>
-                            <input type="text" id="folderCodeInput" name="folder_code"
+                            <label class="form-label">Folder Code</label>
+                            <input type="text"
                                    class="form-control field-input"
-                                   placeholder="Auto-generated (e.g. CSC-HR-0001)"
-                                   value="{{ $employee?->folder_code }}" readonly>
+                                   placeholder="Assigned via Slot"
+                                   value="{{ $employee?->slot?->folder_code }}" readonly
+                                   style="background-color: transparent; border-color: transparent; font-family: 'Courier New', monospace; font-weight: bold; color: #dd270d !important;">
                         </div>
 
                         <div class="col-md-4">
@@ -319,19 +320,33 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="locationSelectForm">Document Location</label>
-                            <select id="locationSelectForm" name="physical_location_id" 
-                                class="form-control basic-select field-input @error('physical_location_id') is-invalid @enderror"
-                                data-placeholder="- Choose -">
+                            <label class="form-label" for="locationSelectForm">Folder Slot</label>
+                            <select id="locationSelectForm" name="slot_id" 
+                                class="form-control basic-select field-input @error('slot_id') is-invalid @enderror"
+                                data-placeholder="- Choose Slot -">
                                 <option value=""></option>
-                                @foreach($physicalLocations as $loc)
-                                    <option value="{{ $loc->id }}" 
-                                        {{ old('physical_location_id', $employee?->physical_location_id) == $loc->id ? 'selected' : '' }}>
-                                        {{ $loc->display_name }}
-                                    </option>
-                                @endforeach
+                                
+                                {{-- If employee already has a slot, show it first so it's not lost on edit --}}
+                                @if($employee?->slot)
+                                    <optgroup label="Current Assignment">
+                                        <option value="{{ $employee->slot->id }}" selected>
+                                            {{ $employee->slot->full_location }}
+                                        </option>
+                                    </optgroup>
+                                @endif
+
+                                @if(isset($slots) && count($slots) > 0)
+                                    <optgroup label="Available Slots">
+                                    @foreach($slots as $slot)
+                                        <option value="{{ $slot->id }}" 
+                                            {{ old('slot_id', $employee?->slot_id) == $slot->id ? 'selected' : '' }}>
+                                            {{ $slot->full_location }}
+                                        </option>
+                                    @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
-                            @error('physical_location_id')
+                            @error('slot_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>

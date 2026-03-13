@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Department extends Model
@@ -13,6 +14,7 @@ class Department extends Model
         'folder_code',
         'description',
         'is_active',
+        'slot_id',
     ];
 
     protected $casts = [
@@ -27,5 +29,10 @@ class Department extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    public function slot(): BelongsTo
+    {
+        return $this->belongsTo(Slot::class);
     }
 }

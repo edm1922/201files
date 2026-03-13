@@ -38,6 +38,15 @@
             </a>
         </li>
 
+        @if(Auth::user()->isAdmin())
+        {{-- Archive (admin only) --}}
+        <li class="nav-item">
+            <a class="nav-link {{ request()->is('employees/archive*') ? 'active' : '' }}" href="{{ route('employees.archive') }}">
+                <i class="fas fa-box-archive"></i> Archive
+            </a>
+        </li>
+        @endif
+
         {{-- ═══ DOCUMENT MANAGEMENT ═══ --}}
         <li class="sidebar-section-label">DOCUMENT MANAGEMENT</li>
 
@@ -121,7 +130,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('settings/physical-locations*') ? 'active' : '' }}" href="{{ route('settings.physical-locations.index') }}">
+                    <a class="nav-link {{ request()->is('settings/cabinets*') ? 'active' : '' }}" href="{{ route('settings.cabinets.index') }}">
                         <i class="fas fa-archive"></i> Physical Locations
                     </a>
                 </li>
