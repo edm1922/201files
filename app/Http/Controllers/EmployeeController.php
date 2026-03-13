@@ -21,12 +21,13 @@ class EmployeeController extends Controller
         $companies     = Company::where('is_active', true)->orderBy('name')->get();
 
         $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
+        $lastFolderCode    = $this->getLastFolderCode();
 
         return view('201files', [
             'employee'      => null,
             'companies'     => $companies,
-
             'physicalLocations' => $physicalLocations,
+            'lastFolderCode'    => $lastFolderCode,
         ]);
     }
 
@@ -38,11 +39,9 @@ class EmployeeController extends Controller
         $employee = DB::transaction(function () use ($request) {
             $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'date_hired', 'status', 'barcode_id',
+                'suffix', 'date_hired', 'status', 'barcode_id', 'folder_code',
                 'company_id', 'physical_location_id',
             ]);
-            
-            $data['folder_code'] = $this->generateFolderCode();
 
             $employee = Employee::create($data);
 
@@ -69,12 +68,13 @@ class EmployeeController extends Controller
         $companies     = Company::where('is_active', true)->orderBy('name')->get();
 
         $physicalLocations = PhysicalLocation::orderBy('cabinet_id')->orderBy('rack_id')->get();
+        $lastFolderCode    = $this->getLastFolderCode();
 
         return view('201files', [
             'employee'      => $employee,
             'companies'     => $companies,
-
             'physicalLocations' => $physicalLocations,
+            'lastFolderCode'    => $lastFolderCode,
         ]);
     }
 
@@ -91,7 +91,7 @@ class EmployeeController extends Controller
 
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'date_hired', 'status', 'barcode_id',
+                'suffix', 'date_hired', 'status', 'barcode_id', 'folder_code',
                 'company_id', 'physical_location_id',
             ]));
 
@@ -109,19 +109,13 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Auto-generates the next folder code in the sequence (e.g., CSC-HR-0001).
+     * Returns the last used folder code (e.g., CSC-HR-0101).
      */
-    protected function generateFolderCode(): string
+    protected function getLastFolderCode(): ?string
     {
-        $lastEmployee = Employee::where('folder_code', 'like', 'CSC-HR-%')
+        return Employee::where('folder_code', 'like', 'CSC-HR-%')
             ->orderBy('id', 'desc')
-            ->first();
-
-        if (!$lastEmployee || !preg_match('/^CSC-HR-(\d+)$/', $lastEmployee->folder_code, $matches)) {
-            return 'CSC-HR-0001';
-        }
-
-        $nextNumber = ((int) $matches[1]) + 1;
-        return 'CSC-HR-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            ->first()
+            ?->folder_code;
     }
 }
