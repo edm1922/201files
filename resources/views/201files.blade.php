@@ -264,12 +264,29 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Folder Code</label>
-                            <input type="text"
-                                   class="form-control field-input"
-                                   placeholder="Assigned via Slot"
-                                   value="{{ $employee?->slot?->folder_code }}" readonly
-                                   style="background-color: transparent; border-color: transparent; font-family: 'Courier New', monospace; font-weight: bold; color: #dd270d !important;">
+                            <label class="form-label" for="folderCodeInput">Folder Code <span class="text-danger">*</span></label>
+                            @php
+                                $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
+                                $dynamicMaxLength = max(4, strlen($numericPart));
+                                
+                                // For the value in the input, if we are editing an employee, use their code.
+                                // If it's a new employee, we leave it empty for manual entry.
+                                $currentCodeValue = $employee ? str_replace('CSC-HR-', '', $employee->folder_code) : old('folder_code');
+                            @endphp
+                            <div class="input-group">
+                                <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500;">CSC-HR-</span>
+                                <input type="text" id="folderCodeInput" name="folder_code"
+                                       class="form-control field-input @error('folder_code') is-invalid @enderror"
+                                       placeholder="{{ str_pad('', $dynamicMaxLength, '0') }}"
+                                       maxlength="{{ $dynamicMaxLength }}"
+                                       value="{{ $currentCodeValue }}">
+                            </div>
+                            <small class="text-muted mt-1 d-block">
+                                Last encoded number: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
+                            </small>
+                            @error('folder_code')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="col-md-4">
@@ -361,6 +378,11 @@
         // Sync toolbar company dropdown → hidden form field
         document.getElementById('companySelect').addEventListener('change', function () {
             document.getElementById('companyIdHidden').value = this.value;
+        });
+
+        // Folder Code: Restrict to digits only
+        document.getElementById('folderCodeInput').addEventListener('input', function (e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
         });
 
     </script>

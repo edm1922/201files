@@ -12,6 +12,19 @@ class UpdateEmployeeRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('folder_code')) {
+            $code = $this->folder_code;
+            // Prepend prefix if only digits were provided
+            if (is_numeric($code)) {
+                $this->merge([
+                    'folder_code' => 'CSC-HR-' . str_pad($code, 4, '0', STR_PAD_LEFT)
+                ]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         $employeeId = $this->route('employee');
@@ -25,6 +38,7 @@ class UpdateEmployeeRequest extends FormRequest
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employeeId)],
+            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('employees', 'folder_code')->ignore($employeeId)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'slot_id'      => ['nullable', 'integer', 'exists:slots,id'],
         ];
@@ -40,6 +54,8 @@ class UpdateEmployeeRequest extends FormRequest
             'status.required'     => 'Status is required.',
             'status.in'           => 'Status must be active, awol, or resigned.',
             'barcode_id.unique'   => 'This Barcode ID is already in use.',
+            'folder_code.required' => 'Folder Code is required.',
+            'folder_code.unique'   => 'This Folder Code is already in use.',
             'company_id.exists'   => 'The selected company does not exist.',
             'slot_id.exists'      => 'The selected slot does not exist.',
         ];
