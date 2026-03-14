@@ -38,9 +38,9 @@ class UpdateEmployeeRequest extends FormRequest
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employeeId)],
-            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('slots', 'folder_code')->ignore($this->slot_id)],
+            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folder_locations', 'folder_code')->ignore($this->folder_location_id)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
-            'slot_id'      => ['nullable', 'integer', 'exists:slots,id'],
+            'folder_location_id' => ['nullable', 'integer', 'exists:folder_locations,id'],
         ];
     }
 
@@ -57,7 +57,7 @@ class UpdateEmployeeRequest extends FormRequest
             'folder_code.required' => 'Folder Code is required.',
             'folder_code.unique'   => 'This Folder Code is already in use.',
             'company_id.exists'   => 'The selected company does not exist.',
-            'slot_id.exists'      => 'The selected slot does not exist.',
+            'folder_location_id.exists' => 'The selected folder location does not exist.',
         ];
     }
 }

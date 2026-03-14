@@ -48,7 +48,7 @@
                             <tr>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
                                     <span class="fw-semibold" style="color: #dd270d; font-family: 'Courier New', monospace;">
-                                        {{ $employee->slot?->folder_code ?? '—' }}
+                                        {{ $employee->folder?->folder_code ?? '—' }}
                                     </span>
                                 </td>
                                 <td class="border-bottom-0 text-uppercase" style="padding: 16px 24px;">
@@ -61,7 +61,7 @@
                                     {{ $employee->date_hired ? $employee->date_hired->format('M d, Y') : '—' }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
-                                    {{ $employee->slot?->rack?->display_name ?? '—' }}
+                                    {{ $employee->folder?->full_location ?? '—' }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
                                     {{ $employee->deleted_at?->format('M d, Y h:i A') }}
@@ -98,7 +98,7 @@
                                                 style="border-radius: 6px; padding: 6px 12px; background-color: #fef2f2; color: #ef4444; font-weight: 500; transition: all 0.2s;"
                                                 onmouseover="this.style.backgroundColor='#fee2e2'"
                                                 onmouseout="this.style.backgroundColor='#fef2f2'"
-                                                @click="openConfirmModal({{ $employee->id }}, '{{ addslashes($employee->full_name) }}', '{{ $employee->slot?->folder_code }}')">
+                                                @click="openConfirmModal({{ $employee->id }}, '{{ addslashes($employee->full_name) }}', '{{ $employee->folder?->folder_code }}')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>

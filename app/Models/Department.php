@@ -14,7 +14,7 @@ class Department extends Model
         'folder_code',
         'description',
         'is_active',
-        'slot_id',
+        'folder_location_id',
     ];
 
     protected $casts = [
@@ -31,8 +31,8 @@ class Department extends Model
         return $this->hasMany(Document::class);
     }
 
-    public function slot(): BelongsTo
+    public function folderLocation(): BelongsTo
     {
-        return $this->belongsTo(Slot::class);
+        return $this->belongsTo(FolderLocation::class);
     }
 }

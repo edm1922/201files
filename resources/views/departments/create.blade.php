@@ -65,6 +65,22 @@
                         @enderror
                         <div class="form-text" style="font-size: 0.78rem; color: #6b7280; margin-top: 6px;">Optional. Maximum 1000 characters.</div>
                     </div>
+
+                    {{-- Physical Location --}}
+                    <div class="mb-2 mt-4">
+                        <label for="folder_location_id" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                            Physical Location / Folder
+                        </label>
+                        <select id="folder_location_id" name="folder_location_id" class="form-control basic-select field-input @error('folder_location_id') is-invalid @enderror">
+                            <option value="">- No Physical Location -</option>
+                            @foreach($folders as $folder)
+                                <option value="{{ $folder->id }}" {{ old('folder_location_id') == $folder->id ? 'selected' : '' }}>
+                                    {{ $folder->full_location }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('folder_location_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
                 </div>
                 <div class="modal-footer border-top-0 px-4 pb-4 pt-2" style="background-color: #ffffff;">
                     <button type="button" class="btn btn-light" style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 18px; color: #4b5563; background-color: #f3f4f6; border: none; transition: background 0.2s;" data-bs-dismiss="modal" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">Cancel</button>

@@ -69,6 +69,21 @@
                         @enderror
                         <div class="form-text" style="font-size: 0.78rem; color: #6b7280; margin-top: 6px;">Optional. Maximum 1000 characters.</div>
                     </div>
+
+                    {{-- Physical Location --}}
+                    <div class="mb-2 mt-4">
+                        <label for="edit_folder_location_id" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
+                            Physical Location / Folder
+                        </label>
+                        <select id="edit_folder_location_id" name="folder_location_id" class="form-control field-input" x-model="editData.folder_location_id">
+                            <option value="">- No Physical Location -</option>
+                            @foreach($folders as $folder)
+                                <option value="{{ $folder->id }}">
+                                    {{ $folder->full_location }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer border-top-0 px-4 pb-4 pt-2 d-flex justify-content-between align-items-center" style="background-color: #ffffff;">
                     <div class="text-muted" style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px;" x-show="editData.updated_at">

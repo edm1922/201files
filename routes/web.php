@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\CabinetController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\FolderLocationController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
@@ -41,11 +41,13 @@ Route::middleware('auth')->group(function () {
         Route::patch('departments/{department}/toggle-active', [DepartmentController::class, 'toggleActive'])
              ->name('departments.toggle-active');
 
-        // Cabinets & Racks (replaces physical-locations)
-        Route::get('cabinets', [CabinetController::class, 'index'])->name('cabinets.index');
-        Route::post('cabinets/racks', [CabinetController::class, 'storeRack'])->name('cabinets.store-rack');
-        Route::put('cabinets/racks/{rack}', [CabinetController::class, 'updateRack'])->name('cabinets.update-rack');
-        Route::delete('cabinets/racks/{rack}', [CabinetController::class, 'destroyRack'])->name('cabinets.destroy-rack');
+        // Folder Locations (Physical Storage)
+        Route::prefix('folder-locations')->name('folder-locations.')->group(function () {
+            Route::get('/', [FolderLocationController::class, 'index'])->name('index');
+            Route::post('/', [FolderLocationController::class, 'store'])->name('store');
+            Route::put('/{folderLocation}', [FolderLocationController::class, 'update'])->name('update');
+            Route::delete('/{folderLocation}', [FolderLocationController::class, 'destroy'])->name('destroy');
+        });
 
         Route::resource('document-types', DocumentTypeController::class)->except(['show', 'create', 'edit']);
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])

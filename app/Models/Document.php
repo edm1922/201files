@@ -14,7 +14,7 @@ class Document extends Model
     protected $fillable = [
         'department_id',
         'document_type_id',
-        'slot_id',
+        'folder_location_id',
         'uploaded_by',
         'file_path',
         'original_filename',
@@ -66,9 +66,9 @@ class Document extends Model
         return $this->belongsTo(DocumentType::class);
     }
 
-    public function slot(): BelongsTo
+    public function folderLocation(): BelongsTo
     {
-        return $this->belongsTo(Slot::class);
+        return $this->belongsTo(FolderLocation::class);
     }
 
     public function uploader(): BelongsTo

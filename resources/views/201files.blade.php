@@ -108,7 +108,7 @@
                                 <div class="profile-meta">
                                     <span class="text-gray-500 text-sm font-medium">Folder code:</span>
                                     <span class="profile-field__value profile-field__value--red profile-field__value--mono">
-                                    {{ $employee->slot?->folder_code ?? '—' }}
+                                    {{ $employee->folderLocation?->folder_code ?? '—' }}
                                     </span>
                                     <span class="emp-status-badge emp-status-badge--{{ $employee->status }}">
                                         {{ ucfirst($employee->status) }}
@@ -137,7 +137,7 @@
                                     <div class="profile-field">
                                         <span class="profile-field__label">Document Location</span>
                                         <span class="profile-field__value profile-field__value--red profile-field__value--mono">
-                                            {{ $employee->slot?->full_location ?? '—' }}
+                                            {{ $employee->folderLocation?->full_location ?? '—' }}
                                         </span>
                                     </div>
                                 </div>
@@ -269,9 +269,9 @@
                                 $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
                                 $dynamicMaxLength = max(4, strlen($numericPart));
                                 
-                                // For the value in the input, if we are editing an employee, use their code from the slot.
+                                // For the value in the input, if we are editing an employee, use their code from the folder.
                                 // If it's a new employee, we leave it empty for manual entry.
-                                $currentCodeValue = ($employee && $employee->slot) ? str_replace('CSC-HR-', '', $employee->slot->folder_code) : old('folder_code');
+                                $currentCodeValue = ($employee && $employee->folderLocation) ? str_replace('CSC-HR-', '', $employee->folderLocation->folder_code) : old('folder_code');
                             @endphp
                             <div class="input-group">
                                 <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500;">CSC-HR-</span>
@@ -337,33 +337,33 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="locationSelectForm">Folder Slot</label>
-                            <select id="locationSelectForm" name="slot_id" 
-                                class="form-control basic-select field-input @error('slot_id') is-invalid @enderror"
-                                data-placeholder="- Choose Slot -">
+                            <label class="form-label" for="locationSelectForm">Folder/Location</label>
+                            <select id="locationSelectForm" name="folder_location_id" 
+                                class="form-control basic-select field-input @error('folder_location_id') is-invalid @enderror"
+                                data-placeholder="- Choose Folder -">
                                 <option value=""></option>
                                 
-                                {{-- If employee already has a slot, show it first so it's not lost on edit --}}
-                                @if($employee?->slot)
+                                {{-- If employee already has a folder, show it first so it's not lost on edit --}}
+                                @if($employee?->folderLocation)
                                     <optgroup label="Current Assignment">
-                                        <option value="{{ $employee->slot->id }}" data-code="{{ str_replace('CSC-HR-', '', $employee->slot->folder_code) }}" selected>
-                                            {{ $employee->slot->full_location }}
+                                        <option value="{{ $employee->folderLocation->id }}" data-code="{{ str_replace('CSC-HR-', '', $employee->folderLocation->folder_code) }}" selected>
+                                            {{ $employee->folderLocation->full_location }}
                                         </option>
                                     </optgroup>
                                 @endif
 
-                                @if(isset($slots) && count($slots) > 0)
-                                    <optgroup label="Available Slots">
-                                    @foreach($slots as $slot)
-                                            <option value="{{ $slot->id }}" data-code="{{ str_replace('CSC-HR-', '', $slot->folder_code) }}"
-                                                {{ old('slot_id', $employee?->slot_id) == $slot->id ? 'selected' : '' }}>
-                                                {{ $slot->full_location }}
+                                @if(isset($folders) && count($folders) > 0)
+                                    <optgroup label="Available Locations">
+                                    @foreach($folders as $folder)
+                                            <option value="{{ $folder->id }}" data-code="{{ str_replace('CSC-HR-', '', $folder->folder_code) }}"
+                                                {{ old('folder_location_id', $employee?->folder_location_id) == $folder->id ? 'selected' : '' }}>
+                                                {{ $folder->full_location }}
                                             </option>
                                     @endforeach
                                     </optgroup>
                                 @endif
                             </select>
-                            @error('slot_id')
+                            @error('folder_location_id')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
@@ -385,7 +385,7 @@
             this.value = this.value.replace(/[^0-9]/g, '');
         });
 
-        // Update Folder Code input when Slot selection changes
+        // Update Folder Code input when Folder selection changes
         document.getElementById('locationSelectForm').addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             const folderCode = selectedOption.getAttribute('data-code');
