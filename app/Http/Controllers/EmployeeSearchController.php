@@ -27,6 +27,7 @@ class EmployeeSearchController extends Controller
                       $sq->where('folder_code', 'LIKE', $query . '%');
                   });
             })
+            ->where('status', '!=', 'resigned')
             ->limit(10)
             ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'status', 'slot_id']);
 

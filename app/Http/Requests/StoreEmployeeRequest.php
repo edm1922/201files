@@ -35,7 +35,7 @@ class StoreEmployeeRequest extends FormRequest
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', 'unique:employees,barcode_id'],
-            'folder_code'  => ['required', 'string', 'max:255', 'unique:employees,folder_code'],
+            'folder_code'  => ['required', 'string', 'max:255', 'unique:slots,folder_code'],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'slot_id'      => ['nullable', 'integer', 'exists:slots,id'],
         ];
