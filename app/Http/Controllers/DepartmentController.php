@@ -13,12 +13,12 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Department::withCount(['documentTypes', 'documents']);
-
+        $query = Department::with(['folderLocation'])->withCount(['documentTypes', 'documents']);
 
         $departments = $query->orderBy('name')->paginate(15)->withQueryString();
+        $folders = \App\Models\FolderLocation::available()->get();
 
-        return view('departments.index', compact('departments'));
+        return view('departments.index', compact('departments', 'folders'));
     }
 
     /**

@@ -130,8 +130,9 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('settings/cabinets*') ? 'active' : '' }}" href="{{ route('settings.cabinets.index') }}">
-                        <i class="fas fa-archive"></i> Physical Locations
+                    <a class="nav-link {{ request()->routeIs('settings.folder-locations.*') ? 'active' : '' }}" href="{{ route('settings.folder-locations.index') }}">
+                        <i class="fas fa-folder-tree me-2"></i>
+                        <span>Folder Locations</span>
                     </a>
                 </li>
                 <li class="nav-item">

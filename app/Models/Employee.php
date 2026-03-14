@@ -24,7 +24,7 @@ class Employee extends Model
         'date_hired',
         'status',
         'company_id',
-        'slot_id',
+        'folder_location_id',
         'archive_date',
     ];
 
@@ -67,8 +67,8 @@ class Employee extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function slot(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function folderLocation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Slot::class);
+        return $this->belongsTo(FolderLocation::class);
     }
 }

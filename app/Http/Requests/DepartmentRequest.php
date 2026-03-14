@@ -30,6 +30,7 @@ class DepartmentRequest extends FormRequest
                 Rule::unique('departments', 'code')->ignore($departmentId),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
+            'folder_location_id' => ['nullable', 'integer', 'exists:folder_locations,id'],
         ];
     }
 

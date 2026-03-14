@@ -16,24 +16,24 @@ class EmployeeSearchController extends Controller
         $query = $request->get('query');
 
         $employees = Employee::query()
-            ->with('slot')
+            ->with('folderLocation')
             ->where(function ($q) use ($query) {
                 $q->where('first_name',  'LIKE', $query . '%')
                   ->orWhere('middle_name', 'LIKE', $query . '%')
                   ->orWhere('last_name',   'LIKE', $query . '%')
                   ->orWhere('barcode_id',  'LIKE', $query . '%')
                   ->orWhere('system_id',   'LIKE', $query . '%')
-                  ->orWhereHas('slot', function ($sq) use ($query) {
+                  ->orWhereHas('folderLocation', function ($sq) use ($query) {
                       $sq->where('folder_code', 'LIKE', $query . '%');
                   });
             })
             ->where('status', '!=', 'resigned')
             ->limit(10)
-            ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'status', 'slot_id']);
+            ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'status', 'folder_location_id']);
 
-        // Append folder_code from slot for the JSON response
+        // Append folder_code from folderLocation for the JSON response
         $employees->each(function ($emp) {
-            $emp->folder_code = $emp->slot?->folder_code;
+            $emp->folder_code = $emp->folderLocation?->folder_code;
         });
 
         return response()->json($employees);

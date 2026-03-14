@@ -7,7 +7,7 @@ use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Company;
 use App\Models\DocumentType;
 use App\Models\Employee;
-use App\Models\Slot;
+use App\Models\FolderLocation;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
 
@@ -19,13 +19,13 @@ class EmployeeController extends Controller
     public function create()
     {
         $companies = Company::where('is_active', true)->orderBy('name')->get();
-        $slots     = Slot::available()->with('rack.cabinet')->get();
-        $lastFolderCode = Slot::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
+        $folders   = FolderLocation::available()->get();
+        $lastFolderCode = FolderLocation::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
             'employee'       => null,
             'companies'      => $companies,
-            'slots'          => $slots,
+            'folders'        => $folders,
             'lastFolderCode' => $lastFolderCode,
         ]);
     }
@@ -39,14 +39,14 @@ class EmployeeController extends Controller
             $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id', 'slot_id',
+                'company_id', 'folder_location_id',
             ]);
 
             $employee = Employee::create($data);
 
-            // Update slot folder code
-            if ($employee->slot_id && $request->has('folder_code')) {
-                Slot::where('id', $employee->slot_id)->update(['folder_code' => $request->folder_code]);
+            // Update folder code
+            if ($employee->folder_location_id && $request->has('folder_code')) {
+                FolderLocation::where('id', $employee->folder_location_id)->update(['folder_code' => $request->folder_code]);
             }
 
             AuditService::log(
@@ -83,16 +83,16 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load(['company', 'slot.rack.cabinet']);
+        $employee->load(['company', 'folderLocation']);
 
         $companies = Company::where('is_active', true)->orderBy('name')->get();
-        $slots     = Slot::available()->with('rack.cabinet')->get();
-        $lastFolderCode = Slot::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
+        $folders   = FolderLocation::available()->get();
+        $lastFolderCode = FolderLocation::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
             'employee'       => $employee,
             'companies'      => $companies,
-            'slots'          => $slots,
+            'folders'        => $folders,
             'lastFolderCode' => $lastFolderCode,
         ]);
     }
@@ -113,12 +113,12 @@ class EmployeeController extends Controller
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id', 'slot_id',
+                'company_id', 'folder_location_id',
             ]));
 
-            // Update slot folder code
-            if ($employee->slot_id && $request->has('folder_code')) {
-                Slot::where('id', $employee->slot_id)->update(['folder_code' => $request->folder_code]);
+            // Update folder code
+            if ($employee->folder_location_id && $request->has('folder_code')) {
+                FolderLocation::where('id', $employee->folder_location_id)->update(['folder_code' => $request->folder_code]);
             }
 
             AuditService::log(
@@ -156,7 +156,7 @@ class EmployeeController extends Controller
     public function archiveIndex()
     {
         $employees = Employee::archived()
-            ->with('slot.rack.cabinet')
+            ->with('folderLocation')
             ->orderBy('deleted_at', 'desc')
             ->get();
 
@@ -199,9 +199,9 @@ class EmployeeController extends Controller
         $employee = Employee::onlyTrashed()->findOrFail($id);
 
         DB::transaction(function () use ($employee) {
-            // Free the slot if assigned
-            if ($employee->slot_id) {
-                Slot::where('id', $employee->slot_id)->update(['is_available' => true]);
+            // Free the folder if assigned
+            if ($employee->folder_location_id) {
+                FolderLocation::where('id', $employee->folder_location_id)->update(['is_available' => true]);
             }
 
             $name = $employee->full_name;
@@ -217,7 +217,7 @@ class EmployeeController extends Controller
 
         return redirect()
             ->route('employees.archive')
-            ->with('success', 'Employee permanently deleted. Folder slot is now available.');
+            ->with('success', 'Employee permanently deleted. Folder is now available.');
     }
     /**
      * Get employee details as JSON (for Archive modal).
@@ -225,15 +225,15 @@ class EmployeeController extends Controller
     public function details(int $id)
     {
         $employee = Employee::withTrashed()
-            ->with(['company', 'slot.rack.cabinet'])
+            ->with(['company', 'folderLocation'])
             ->findOrFail($id);
 
         return response()->json([
             'name'        => $employee->full_name,
             'system_id'   => $employee->system_id,
             'barcode_id'  => $employee->barcode_id ?: '—',
-            'folder_code' => $employee->slot?->folder_code ?: '—',
-            'location'    => $employee->slot?->full_location ?: '—',
+            'folder_code' => $employee->folderLocation?->folder_code ?: '—',
+            'location'    => $employee->folderLocation?->full_location ?: '—',
             'company'     => $employee->company?->name ?: '— Not Assigned —',
             'date_hired'  => $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—',
             'archive_date' => $employee->archive_date ? $employee->archive_date->format('F d, Y') : '—',
