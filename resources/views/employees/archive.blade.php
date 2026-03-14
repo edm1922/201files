@@ -37,9 +37,10 @@
                             <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Folder Code</th>
                             <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Full Name</th>
                             <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">System ID</th>
+                            <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Date Hired</th>
                             <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Location</th>
-                            <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Archived Date</th>
-                            <th class="border-0 text-uppercase text-muted text-center" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px; width: 180px;">Actions</th>
+                            <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Date Archived</th>
+                            <th class="border-0 text-uppercase text-muted text-center" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px; width: 220px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,6 +58,9 @@
                                     {{ $employee->system_id }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
+                                    {{ $employee->date_hired ? $employee->date_hired->format('M d, Y') : '—' }}
+                                </td>
+                                <td class="border-bottom-0" style="padding: 16px 24px;">
                                     {{ $employee->slot?->rack?->display_name ?? '—' }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
@@ -64,6 +68,16 @@
                                 </td>
                                 <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
                                     <div class="d-flex justify-content-center gap-2">
+                                        {{-- See Details Button --}}
+                                        <button type="button" class="btn btn-sm"
+                                                title="See Details"
+                                                style="border-radius: 6px; padding: 6px 12px; background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: 500; transition: all 0.2s;"
+                                                onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.2)'"
+                                                onmouseout="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'"
+                                                @click="fetchDetails({{ $employee->id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+
                                         {{-- Restore Button --}}
                                         <form action="{{ route('employees.restore', $employee->id) }}" method="POST" class="d-inline">
                                             @csrf
@@ -74,7 +88,7 @@
                                                     onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.2)'"
                                                     onmouseout="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'"
                                                     onclick="return confirm('Restore this employee to active status?')">
-                                                <i class="fas fa-undo me-1" style="font-size: 0.8rem;"></i> Restore
+                                                <i class="fas fa-undo"></i>
                                             </button>
                                         </form>
 
@@ -85,7 +99,7 @@
                                                 onmouseover="this.style.backgroundColor='#fee2e2'"
                                                 onmouseout="this.style.backgroundColor='#fef2f2'"
                                                 @click="openConfirmModal({{ $employee->id }}, '{{ addslashes($employee->full_name) }}', '{{ $employee->slot?->folder_code }}')">
-                                            <i class="fas fa-trash-alt me-1" style="font-size: 0.8rem;"></i> Delete
+                                            <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
                                 </td>
@@ -101,6 +115,78 @@
                 <p class="text-muted mb-0" style="font-size: 0.9rem;">Resigned employees will appear here automatically.</p>
             </div>
         @endif
+
+        {{-- ── Employee Details Modal ── --}}
+        <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 12px; border: none; overflow: hidden;">
+                    <div class="modal-header text-white" style="background-color: #2c3340;">
+                        <h5 class="modal-title fw-bold">
+                            <i class="fas fa-id-card me-2"></i>Employee Archive Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; border-left: 4px solid #dd270d;">
+                                    <label class="text-muted small text-uppercase fw-bold mb-1">Full Name</label>
+                                    <div class="h5 mb-0 text-dark fw-bold text-uppercase" x-text="selectedEmployee.name"></div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <div class="p-3 rounded-3" style="background-color: #f8fafc;">
+                                            <label class="text-muted small text-uppercase fw-bold mb-1">System ID</label>
+                                            <div class="mb-0 fw-semibold font-monospace" x-text="selectedEmployee.system_id"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-3 rounded-3" style="background-color: #f8fafc;">
+                                            <label class="text-muted small text-uppercase fw-bold mb-1">Barcode ID</label>
+                                            <div class="mb-0 fw-semibold font-monospace" x-text="selectedEmployee.barcode_id"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc;">
+                                    <label class="text-muted small text-uppercase fw-bold mb-1">Company</label>
+                                    <div class="h6 mb-0 text-dark fw-semibold" x-text="selectedEmployee.company"></div>
+                                </div>
+                                <div class="p-3 rounded-3" style="background-color: #f8fafc;">
+                                    <label class="text-muted small text-uppercase fw-bold mb-1">Folder Slot / Location</label>
+                                    <div class="mb-0 fw-semibold text-danger font-monospace" x-text="selectedEmployee.location"></div>
+                                </div>
+                            </div>
+                            <hr class="my-1 opacity-10">
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3" style="background-color: #f8fafc;">
+                                    <label class="text-muted small text-uppercase fw-bold mb-1">Date Hired</label>
+                                    <div class="mb-0 fw-semibold" x-text="selectedEmployee.date_hired"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3" style="background-color: #f8fafc;">
+                                    <label class="text-muted small text-uppercase fw-bold mb-1">Status</label>
+                                    <div class="mb-0 fw-semibold">
+                                        <span class="badge" :class="'bg-' + (selectedEmployee.status === 'Active' ? 'success' : 'secondary')" x-text="selectedEmployee.status"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3" style="background-color: #f0fdf4; border: 1px dashed #bbf7d0;">
+                                    <label class="text-muted small text-uppercase fw-bold mb-1">Date Resigned</label>
+                                    <div class="mb-0 fw-semibold text-success" x-text="selectedEmployee.archive_date"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 bg-light">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- ── Confirm Delete Modal ── --}}
         <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
@@ -144,6 +230,23 @@
                 confirmActionUrl: '',
                 confirmName: '',
                 confirmFolderCode: '',
+                selectedEmployee: {},
+                isLoading: false,
+
+                async fetchDetails(id) {
+                    this.isLoading = true;
+                    try {
+                        const response = await fetch(`/employees/${id}/details`);
+                        this.selectedEmployee = await response.json();
+                        var modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                        modal.show();
+                    } catch (error) {
+                        console.error('Error fetching employee details:', error);
+                        alert('Could not load employee details.');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
 
                 openConfirmModal(id, name, folderCode) {
                     this.confirmActionUrl = `/employees/${id}/force-delete`;

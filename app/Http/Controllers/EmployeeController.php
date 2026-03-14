@@ -56,6 +56,7 @@ class EmployeeController extends Controller
 
             // If created as resigned, auto-archive
             if ($employee->status === 'resigned') {
+                $employee->update(['archive_date' => now()]);
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
                     'employee_archived',
@@ -129,6 +130,7 @@ class EmployeeController extends Controller
 
             // Auto-archive if status changed to resigned
             if ($oldStatus !== 'resigned' && $employee->status === 'resigned') {
+                $employee->update(['archive_date' => now()]);
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
                     'employee_archived',
@@ -166,11 +168,16 @@ class EmployeeController extends Controller
      */
     public function restore(int $id)
     {
-        $employee = Employee::onlyTrashed()->findOrFail($id);
+        $employee = Employee::withTrashed()->findOrFail($id);
 
         DB::transaction(function () use ($employee) {
-            $employee->restore();
-            $employee->update(['status' => 'active']);
+            if ($employee->trashed()) {
+                $employee->restore();
+            }
+            $employee->update([
+                'status' => 'active',
+                'archive_date' => null,
+            ]);
 
             AuditService::log(
                 'employee_restored',
@@ -211,5 +218,27 @@ class EmployeeController extends Controller
         return redirect()
             ->route('employees.archive')
             ->with('success', 'Employee permanently deleted. Folder slot is now available.');
+    }
+    /**
+     * Get employee details as JSON (for Archive modal).
+     */
+    public function details(int $id)
+    {
+        $employee = Employee::withTrashed()
+            ->with(['company', 'slot.rack.cabinet'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'name'        => $employee->full_name,
+            'system_id'   => $employee->system_id,
+            'barcode_id'  => $employee->barcode_id ?: '—',
+            'folder_code' => $employee->slot?->folder_code ?: '—',
+            'location'    => $employee->slot?->full_location ?: '—',
+            'company'     => $employee->company?->name ?: '— Not Assigned —',
+            'date_hired'  => $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—',
+            'archive_date' => $employee->archive_date ? $employee->archive_date->format('F d, Y') : '—',
+            'archived_at' => $employee->deleted_at?->format('F d, Y h:i A'),
+            'status'      => ucfirst($employee->status)
+        ]);
     }
 }

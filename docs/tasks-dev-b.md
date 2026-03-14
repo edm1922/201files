@@ -44,8 +44,8 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 4.3 Update the UI design of the profile/partial/edit, take the picture below as reference
 
   ![1773285941495](image/tasks-dev-b/1773285941495.png)
-- [ ] 4.4. Change The Folder Code in 201files. Instead Of Auto Generated, user can input the code but it must cannot be dulpicated.
-- [ ] 4.5 Update the 201files add a last incoded number e.g. if user the last number is 0500, there must be small message underneat
+- [X] 4.4. Change The Folder Code in 201files. Instead Of Auto Generated, user can input the code but it must cannot be dulpicated.
+- [X] 4.5 Update the 201files add a last incoded number e.g. if user the last number is 0500, there must be small message underneat
   the folder code input that says last encoded number CSC-HR-XXXX :
 
   <divclass="col-md-4">
@@ -64,13 +64,17 @@ This document isolates all tasks assigned to **Developer B** across all developm
 
 ---
 
-## Phase 5: Reports & Dashboard (Week 9–10)
+## Phase 5: Reports & Dashboard & Archive (Week 9–10)
 
 - [X] 5.1 Dashboard widgets UI (summary cards, recent uploads frontend)
 - [X] 5.2 Add in the dashboard indicate the employee numbers, and add a graph in the that indicate the number of employees base on the date hired
 - [X] 5.3 Add a filter in the graph Year and Month.
-- [ ] 5.4 Add a piechart indicate how many employees in each companies, remov the "recent upload" section and replace it with the pie chart,
-- [ ] 5.5 Adjust the sizes of the chart and graph so it can fit in.
+- [X] 5.4 Add a piechart indicate how many employees in each companies, remov the "recent upload" section and replace it with the pie chart,
+- [X] 5.5 Adjust the sizes of the chart and graph so it can fit in.
+- [X] 5.6 Make a Archive page and all the resigned employee are there
+- [X] 5.7 Display in list form
+- [X] 5.8 In the archive it should display all employees that their status is 'resigned'
+- [X] 5.9 Add a Archive_date in the employee table
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
