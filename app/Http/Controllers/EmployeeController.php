@@ -44,6 +44,11 @@ class EmployeeController extends Controller
 
             $employee = Employee::create($data);
 
+            // Update slot folder code
+            if ($employee->slot_id && $request->has('folder_code')) {
+                Slot::where('id', $employee->slot_id)->update(['folder_code' => $request->folder_code]);
+            }
+
             AuditService::log(
                 'employee_created',
                 "Created employee: {$employee->full_name} (System ID: {$employee->system_id})"
@@ -109,6 +114,11 @@ class EmployeeController extends Controller
                 'suffix', 'date_hired', 'status', 'barcode_id',
                 'company_id', 'slot_id',
             ]));
+
+            // Update slot folder code
+            if ($employee->slot_id && $request->has('folder_code')) {
+                Slot::where('id', $employee->slot_id)->update(['folder_code' => $request->folder_code]);
+            }
 
             AuditService::log(
                 'employee_updated',

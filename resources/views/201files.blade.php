@@ -108,7 +108,7 @@
                                 <div class="profile-meta">
                                     <span class="text-gray-500 text-sm font-medium">Folder code:</span>
                                     <span class="profile-field__value profile-field__value--red profile-field__value--mono">
-                                    {{ $employee->folder_code ?? '—' }}
+                                    {{ $employee->slot?->folder_code ?? '—' }}
                                     </span>
                                     <span class="emp-status-badge emp-status-badge--{{ $employee->status }}">
                                         {{ ucfirst($employee->status) }}
@@ -269,9 +269,9 @@
                                 $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
                                 $dynamicMaxLength = max(4, strlen($numericPart));
                                 
-                                // For the value in the input, if we are editing an employee, use their code.
+                                // For the value in the input, if we are editing an employee, use their code from the slot.
                                 // If it's a new employee, we leave it empty for manual entry.
-                                $currentCodeValue = $employee ? str_replace('CSC-HR-', '', $employee->folder_code) : old('folder_code');
+                                $currentCodeValue = ($employee && $employee->slot) ? str_replace('CSC-HR-', '', $employee->slot->folder_code) : old('folder_code');
                             @endphp
                             <div class="input-group">
                                 <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500;">CSC-HR-</span>
@@ -346,7 +346,7 @@
                                 {{-- If employee already has a slot, show it first so it's not lost on edit --}}
                                 @if($employee?->slot)
                                     <optgroup label="Current Assignment">
-                                        <option value="{{ $employee->slot->id }}" selected>
+                                        <option value="{{ $employee->slot->id }}" data-code="{{ str_replace('CSC-HR-', '', $employee->slot->folder_code) }}" selected>
                                             {{ $employee->slot->full_location }}
                                         </option>
                                     </optgroup>
@@ -355,10 +355,10 @@
                                 @if(isset($slots) && count($slots) > 0)
                                     <optgroup label="Available Slots">
                                     @foreach($slots as $slot)
-                                        <option value="{{ $slot->id }}" 
-                                            {{ old('slot_id', $employee?->slot_id) == $slot->id ? 'selected' : '' }}>
-                                            {{ $slot->full_location }}
-                                        </option>
+                                            <option value="{{ $slot->id }}" data-code="{{ str_replace('CSC-HR-', '', $slot->folder_code) }}"
+                                                {{ old('slot_id', $employee?->slot_id) == $slot->id ? 'selected' : '' }}>
+                                                {{ $slot->full_location }}
+                                            </option>
                                     @endforeach
                                     </optgroup>
                                 @endif
@@ -383,6 +383,15 @@
         // Folder Code: Restrict to digits only
         document.getElementById('folderCodeInput').addEventListener('input', function (e) {
             this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Update Folder Code input when Slot selection changes
+        document.getElementById('locationSelectForm').addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const folderCode = selectedOption.getAttribute('data-code');
+            if (folderCode) {
+                document.getElementById('folderCodeInput').value = folderCode;
+            }
         });
 
     </script>
