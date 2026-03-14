@@ -58,20 +58,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/milli-search', [EmployeeSearchController::class, 'milliSearch'])
         ->name('employees.milliSearch');
 
-    Route::get('/201files',              [EmployeeController::class, 'create'])->name('201files');
-    Route::post('/employees',            [EmployeeController::class, 'store'])->name('employees.store');
-    Route::get('/employees/{employee}',  [EmployeeController::class, 'show'])->name('employees.show');
-    Route::put('/employees/{employee}',  [EmployeeController::class, 'update'])->name('employees.update');
-
     // ── Archive (admin only) ──
     Route::middleware('role:admin')->group(function () {
         Route::get('/employees/archive', [EmployeeController::class, 'archiveIndex'])
             ->name('employees.archive');
-        Route::patch('/employees/{employee}/restore', [EmployeeController::class, 'restore'])
+        Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
+            ->name('employees.details');
+        Route::patch('/employees/{id}/restore', [EmployeeController::class, 'restore'])
             ->name('employees.restore');
-        Route::delete('/employees/{employee}/force-delete', [EmployeeController::class, 'forceDestroy'])
+        Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDestroy'])
             ->name('employees.forceDestroy');
     });
+
+    Route::get('/201files',              [EmployeeController::class, 'create'])->name('201files');
+    Route::post('/employees',            [EmployeeController::class, 'store'])->name('employees.store');
+    Route::get('/employees/{employee}',  [EmployeeController::class, 'show'])->name('employees.show');
+    Route::put('/employees/{employee}',  [EmployeeController::class, 'update'])->name('employees.update');
 });
 
 require __DIR__.'/auth.php';

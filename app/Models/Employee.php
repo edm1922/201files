@@ -25,12 +25,14 @@ class Employee extends Model
         'status',
         'company_id',
         'slot_id',
+        'archive_date',
     ];
 
     protected function casts(): array
     {
         return [
-            'date_hired' => 'date',
+            'date_hired'   => 'date',
+            'archive_date' => 'date',
         ];
     }
 
@@ -53,11 +55,11 @@ class Employee extends Model
     }
 
     /**
-     * Scope: only archived (soft-deleted resigned) employees.
+     * Scope: only archived (resigned) employees.
      */
     public function scopeArchived($query)
     {
-        return $query->onlyTrashed()->where('status', 'resigned');
+        return $query->withTrashed()->where('status', 'resigned');
     }
 
     public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
