@@ -12,7 +12,8 @@ class FolderLocationController extends Controller
      */
     public function index()
     {
-        $rows = FolderLocation::orderBy('row_name')
+        $rows = FolderLocation::with(['employee', 'departments'])
+            ->orderBy('row_name')
             ->orderBy('column_code')
             ->get()
             ->groupBy('row_name');
@@ -21,20 +22,112 @@ class FolderLocationController extends Controller
     }
 
     /**
-     * Store a newly created folder location in storage.
+     * Store a newly created row with its first column.
      */
-    public function store(Request $request)
+    public function storeRow()
     {
-        $validated = $request->validate([
-            'row_name'    => 'required|string|max:10',
-            'column_code' => 'required|string|max:10',
-            'folder_code' => 'required|string|unique:folder_locations,folder_code',
+        $lastLocation = FolderLocation::select('row_name')
+            ->distinct()
+            ->orderByRaw('LENGTH(row_name) DESC')
+            ->orderBy('row_name', 'desc')
+            ->first();
+
+        if ($lastLocation) {
+            $nextRow = $lastLocation->row_name;
+            $nextRow++;
+        } else {
+            $nextRow = 'A';
+        }
+
+        FolderLocation::create([
+            'row_name' => $nextRow,
+            'column_code' => '1',
+            'folder_code' => $nextRow . '1',
+            'is_available' => true,
         ]);
 
-        FolderLocation::create($validated);
+        return redirect()->route('settings.folder-locations.index')
+            ->with('success', "Row {$nextRow} created successfully.");
+    }
+
+    /**
+     * Store a newly created column in a specific row.
+     */
+    public function storeColumn($rowName)
+    {
+        $maxColumn = FolderLocation::where('row_name', $rowName)
+            ->get()
+            ->max(function ($loc) {
+                return (int) $loc->column_code;
+            });
+
+        $nextColumnCode = ($maxColumn ?? 0) + 1;
+
+        FolderLocation::create([
+            'row_name' => $rowName,
+            'column_code' => (string) $nextColumnCode,
+            'folder_code' => $rowName . $nextColumnCode,
+            'is_available' => true,
+        ]);
 
         return redirect()->route('settings.folder-locations.index')
-            ->with('success', 'Folder location created successfully.');
+            ->with('success', "Column {$nextColumnCode} added to Row {$rowName}.");
+    }
+
+    /**
+     * Remove an entire row.
+     */
+    public function destroyRow($rowName)
+    {
+        $locations = FolderLocation::where('row_name', $rowName)->get();
+
+        if ($locations->isEmpty()) {
+            return redirect()->back()->with('error', 'Row not found.');
+        }
+
+        $hasOccupied = $locations->contains(function ($loc) {
+            return !$loc->is_available || $loc->employee()->exists() || $loc->departments()->exists();
+        });
+
+        if ($hasOccupied) {
+            return redirect()->back()
+                ->with('error', "Cannot delete Row {$rowName} because it contains occupied folders.");
+        }
+
+        FolderLocation::where('row_name', $rowName)->delete();
+
+        return redirect()->route('settings.folder-locations.index')
+            ->with('success', "Row {$rowName} deleted successfully.");
+    }
+
+    /**
+     * Remove a specific column from a row.
+     */
+    public function destroyColumn($rowName, $columnCode)
+    {
+        $locations = FolderLocation::where('row_name', $rowName)
+            ->where('column_code', $columnCode)
+            ->get();
+
+        if ($locations->isEmpty()) {
+            return redirect()->back()->with('error', 'Column not found.');
+        }
+
+        $hasOccupied = $locations->contains(function ($loc) {
+            return !$loc->is_available || $loc->employee()->exists() || $loc->departments()->exists();
+        });
+
+        if ($hasOccupied) {
+            return redirect()->back()
+                ->with('error', "Cannot delete Column {$columnCode} because it contains occupied folders.");
+        }
+
+        FolderLocation::where('row_name', $rowName)
+            ->where('column_code', $columnCode)
+            ->delete();
+
+        return redirect()->route('settings.folder-locations.index')
+            ->with('success', "Column {$columnCode} deleted successfully from Row {$rowName}.");
     }
 
     /**
@@ -61,9 +154,9 @@ class FolderLocationController extends Controller
     public function destroy(FolderLocation $folderLocation)
     {
         // Check if occupied
-        if ($folderLocation->employee()->exists()) {
+        if (!$folderLocation->is_available || $folderLocation->employee()->exists() || $folderLocation->departments()->exists()) {
             return redirect()->back()
-                ->with('error', 'Cannot delete a location that is currently occupied by an employee.');
+                ->with('error', 'Cannot delete a location that is currently occupied.');
         }
 
         $folderLocation->delete();
