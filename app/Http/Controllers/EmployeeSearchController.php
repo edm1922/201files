@@ -16,26 +16,28 @@ class EmployeeSearchController extends Controller
         $query = $request->get('query');
 
         $employees = Employee::query()
-            ->with('folderLocation')
+            ->with(['folderLocation', 'folder'])
             ->where(function ($q) use ($query) {
                 $q->where('first_name',  'LIKE', $query . '%')
                   ->orWhere('middle_name', 'LIKE', $query . '%')
                   ->orWhere('last_name',   'LIKE', $query . '%')
                   ->orWhere('barcode_id',  'LIKE', $query . '%')
                   ->orWhere('system_id',   'LIKE', $query . '%')
-                  ->orWhereHas('folderLocation', function ($sq) use ($query) {
+                  ->orWhereHas('folder', function ($sq) use ($query) {
                       $sq->where('folder_code', 'LIKE', $query . '%');
                   });
             })
             ->where('status', '!=', 'resigned')
             ->limit(10)
-            ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'status', 'folder_location_id']);
+            ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'status', 'folder_location_id', 'folder_id']);
 
-        // Append folder_code from folderLocation for the JSON response
-        $employees->each(function ($emp) {
-            $emp->folder_code = $emp->folderLocation?->folder_code;
+        // Explicitly map the results to include the folder_code for the frontend
+        $mappedEmployees = $employees->map(function ($emp) {
+            $data = $emp->toArray();
+            $data['folder_code'] = $emp->folder?->folder_code;
+            return $data;
         });
 
-        return response()->json($employees);
+        return response()->json($mappedEmployees);
     }
 }

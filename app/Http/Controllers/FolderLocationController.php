@@ -42,8 +42,6 @@ class FolderLocationController extends Controller
         FolderLocation::create([
             'row_name' => $nextRow,
             'column_code' => '1',
-            'folder_code' => $nextRow . '1',
-            'is_available' => true,
         ]);
 
         return redirect()->route('settings.folder-locations.index')
@@ -66,8 +64,6 @@ class FolderLocationController extends Controller
         FolderLocation::create([
             'row_name' => $rowName,
             'column_code' => (string) $nextColumnCode,
-            'folder_code' => $rowName . $nextColumnCode,
-            'is_available' => true,
         ]);
 
         return redirect()->route('settings.folder-locations.index')
@@ -86,7 +82,7 @@ class FolderLocationController extends Controller
         }
 
         $hasOccupied = $locations->contains(function ($loc) {
-            return !$loc->is_available || $loc->employee()->exists() || $loc->departments()->exists();
+            return $loc->employee()->exists() || $loc->departments()->exists();
         });
 
         if ($hasOccupied) {
@@ -114,7 +110,7 @@ class FolderLocationController extends Controller
         }
 
         $hasOccupied = $locations->contains(function ($loc) {
-            return !$loc->is_available || $loc->employee()->exists() || $loc->departments()->exists();
+            return $loc->employee()->exists() || $loc->departments()->exists();
         });
 
         if ($hasOccupied) {
@@ -138,8 +134,6 @@ class FolderLocationController extends Controller
         $validated = $request->validate([
             'row_name'    => 'required|string|max:10',
             'column_code' => 'required|string|max:10',
-            'folder_code' => 'required|string|unique:folder_locations,folder_code,' . $folderLocation->id,
-            'is_available'=> 'required|boolean',
         ]);
 
         $folderLocation->update($validated);
@@ -154,7 +148,7 @@ class FolderLocationController extends Controller
     public function destroy(FolderLocation $folderLocation)
     {
         // Check if occupied
-        if (!$folderLocation->is_available || $folderLocation->employee()->exists() || $folderLocation->departments()->exists()) {
+        if ($folderLocation->employee()->exists() || $folderLocation->departments()->exists()) {
             return redirect()->back()
                 ->with('error', 'Cannot delete a location that is currently occupied.');
         }

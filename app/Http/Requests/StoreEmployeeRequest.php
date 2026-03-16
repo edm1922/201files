@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
 
 class StoreEmployeeRequest extends FormRequest
 {
@@ -35,7 +37,8 @@ class StoreEmployeeRequest extends FormRequest
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', 'unique:employees,barcode_id'],
-            'folder_code'  => ['required', 'string', 'max:255', 'unique:folder_locations,folder_code'],
+            'folder_id'    => ['nullable', 'integer', 'exists:folders,id'],
+            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folders', 'folder_code')->ignore($this->folder_id)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'folder_location_id' => ['nullable', 'integer', 'exists:folder_locations,id'],
         ];

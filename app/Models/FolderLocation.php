@@ -11,15 +11,11 @@ class FolderLocation extends Model
     protected $fillable = [
         'row_name',
         'column_code',
-        'folder_code',
-        'is_available',
     ];
 
     protected function casts(): array
     {
-        return [
-            'is_available' => 'boolean',
-        ];
+        return [];
     }
 
     /**
@@ -47,26 +43,26 @@ class FolderLocation extends Model
     }
 
     /**
-     * Scope: only available folder locations.
+     * Scope a query to only include available folder locations.
      */
     public function scopeAvailable($query)
     {
-        return $query->where('is_available', true);
+        return $query->doesntHave('employee')->doesntHave('departments');
     }
 
     /**
-     * Full location path, e.g. "A1 › CSC-HR-0042"
+     * Full location path, e.g. "A1"
      */
     public function getFullLocationAttribute(): string
     {
-        return $this->row_name . $this->column_code . ' › ' . $this->folder_code;
+        return 'Row ' . $this->row_name . ' - Column ' . $this->column_code;
     }
 
     /**
-     * Display name, e.g. "A1"
+     * Display name, e.g. "Row A - Column 1"
      */
     public function getDisplayNameAttribute(): string
     {
-        return $this->row_name . $this->column_code;
+        return 'Row ' . $this->row_name . ' - Column ' . $this->column_code;
     }
 }

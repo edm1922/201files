@@ -71,7 +71,7 @@ $(document).ready(function () {
                             <div class="milli-item">
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="text-uppercase">${emp.last_name}, ${emp.first_name} ${middleName}</span>
-                                    <span class="milli-folder-code"> ${emp.folder_code || ''}</span>
+                                    <span class="milli-folder-code"> ${emp.folder?.folder_code || emp.folder_code || ''}</span>
                                 </div>
                             </div>
                         `);

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateEmployeeRequest;
 use App\Models\Company;
 use App\Models\DocumentType;
 use App\Models\Employee;
+use App\Models\Folder;
 use App\Models\FolderLocation;
 use App\Services\AuditService;
 use Illuminate\Support\Facades\DB;
@@ -19,13 +20,15 @@ class EmployeeController extends Controller
     public function create()
     {
         $companies = Company::where('is_active', true)->orderBy('name')->get();
-        $folders   = FolderLocation::available()->get();
-        $lastFolderCode = FolderLocation::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
+        $folders   = \App\Models\Folder::where('is_available', true)->get();
+        $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
+        $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
             'employee'       => null,
             'companies'      => $companies,
             'folders'        => $folders,
+            'locations'      => $locations,
             'lastFolderCode' => $lastFolderCode,
         ]);
     }
@@ -39,14 +42,26 @@ class EmployeeController extends Controller
             $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id', 'folder_location_id',
+                'company_id', 'folder_id', 'folder_location_id',
             ]);
 
             $employee = Employee::create($data);
 
-            // Update folder code
-            if ($employee->folder_location_id && $request->has('folder_code')) {
-                FolderLocation::where('id', $employee->folder_location_id)->update(['folder_code' => $request->folder_code]);
+            // Update or create folder
+            if ($request->has('folder_code')) {
+                if ($employee->folder_id) {
+                    \App\Models\Folder::where('id', $employee->folder_id)->update([
+                        'folder_code' => $request->folder_code,
+                        'is_available' => false,
+                    ]);
+                } else {
+                    $folder = \App\Models\Folder::create([
+                        'folder_code' => $request->folder_code,
+                        'is_available' => false,
+                    ]);
+                    $employee->folder_id = $folder->id;
+                    $employee->saveQuietly();
+                }
             }
 
             AuditService::log(
@@ -83,16 +98,18 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load(['company', 'folderLocation']);
+        $employee->load(['company', 'folder', 'folderLocation']);
 
         $companies = Company::where('is_active', true)->orderBy('name')->get();
-        $folders   = FolderLocation::available()->get();
-        $lastFolderCode = FolderLocation::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
+        $folders   = \App\Models\Folder::where('is_available', true)->get();
+        $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
+        $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
             'employee'       => $employee,
             'companies'      => $companies,
             'folders'        => $folders,
+            'locations'      => $locations,
             'lastFolderCode' => $lastFolderCode,
         ]);
     }
@@ -104,6 +121,7 @@ class EmployeeController extends Controller
     {
         DB::transaction(function () use ($request, $employee) {
             $oldStatus = $employee->status;
+            $oldFolderId = $employee->folder_id;
 
             $old = $employee->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
@@ -113,12 +131,34 @@ class EmployeeController extends Controller
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id', 'folder_location_id',
+                'company_id', 'folder_id', 'folder_location_id',
             ]));
 
-            // Update folder code
-            if ($employee->folder_location_id && $request->has('folder_code')) {
-                FolderLocation::where('id', $employee->folder_location_id)->update(['folder_code' => $request->folder_code]);
+            // Update or create folder
+            if ($request->has('folder_code')) {
+                if ($employee->folder_id) {
+                    // Return old folder if id changed
+                    if ($oldFolderId && $oldFolderId !== $employee->folder_id) {
+                        \App\Models\Folder::where('id', $oldFolderId)->update(['is_available' => true]);
+                    }
+                    
+                    \App\Models\Folder::where('id', $employee->folder_id)->update([
+                        'folder_code' => $request->folder_code,
+                        'is_available' => false,
+                    ]);
+                } else {
+                    // Return old folder if it existed and is being replaced by a new one
+                    if ($oldFolderId) {
+                        \App\Models\Folder::where('id', $oldFolderId)->update(['is_available' => true]);
+                    }
+
+                    $folder = \App\Models\Folder::create([
+                        'folder_code' => $request->folder_code,
+                        'is_available' => false,
+                    ]);
+                    $employee->folder_id = $folder->id;
+                    $employee->saveQuietly();
+                }
             }
 
             AuditService::log(
@@ -156,7 +196,7 @@ class EmployeeController extends Controller
     public function archiveIndex()
     {
         $employees = Employee::archived()
-            ->with('folderLocation')
+            ->with(['folder', 'folderLocation'])
             ->orderBy('deleted_at', 'desc')
             ->get();
 
@@ -200,8 +240,8 @@ class EmployeeController extends Controller
 
         DB::transaction(function () use ($employee) {
             // Free the folder if assigned
-            if ($employee->folder_location_id) {
-                FolderLocation::where('id', $employee->folder_location_id)->update(['is_available' => true]);
+            if ($employee->folder_id) {
+                \App\Models\Folder::where('id', $employee->folder_id)->update(['is_available' => true]);
             }
 
             $name = $employee->full_name;
@@ -225,14 +265,14 @@ class EmployeeController extends Controller
     public function details(int $id)
     {
         $employee = Employee::withTrashed()
-            ->with(['company', 'folderLocation'])
+            ->with(['company', 'folder', 'folderLocation'])
             ->findOrFail($id);
 
         return response()->json([
             'name'        => $employee->full_name,
             'system_id'   => $employee->system_id,
             'barcode_id'  => $employee->barcode_id ?: '—',
-            'folder_code' => $employee->folderLocation?->folder_code ?: '—',
+            'folder_code' => $employee->folder?->folder_code ?: '—',
             'location'    => $employee->folderLocation?->full_location ?: '—',
             'company'     => $employee->company?->name ?: '— Not Assigned —',
             'date_hired'  => $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—',

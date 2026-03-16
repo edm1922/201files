@@ -64,7 +64,7 @@ This document isolates all tasks assigned to **Developer B** across all developm
 
 ---
 
-## Phase 5: Reports & Dashboard & Archive (Week 9–10)
+## Phase 5: Reports, Dashboard & Archive (Week 9–10)
 
 - [X] 5.1 Dashboard widgets UI (summary cards, recent uploads frontend)
 - [X] 5.2 Add in the dashboard indicate the employee numbers, and add a graph in the that indicate the number of employees base on the date hired
@@ -75,6 +75,11 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 5.7 Display in list form
 - [X] 5.8 In the archive it should display all employees that their status is 'resigned'
 - [X] 5.9 Add a Archive_date in the employee table
+  ***Update the table	***
+- [X] 6.0 Remove the folder_code and is_avilable  folder_location table
+- [X] 6.1 Make a Folder table
+- [X] 6.2 Fix the search functionality in 201files
+- [X] 6.3 Update the millie search base on the table changes
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
