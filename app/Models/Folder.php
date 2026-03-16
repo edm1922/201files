@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Folder extends Model
+{
+    protected $fillable = [
+        'folder_code',
+        'is_available',
+    ];
+
+    protected $casts = [
+        'is_available' => 'boolean',
+    ];
+
+    public function employee(): HasOne
+    {
+        return $this->hasOne(Employee::class);
+    }
+}
