@@ -61,7 +61,8 @@
                                     {{ $employee->date_hired ? $employee->date_hired->format('M d, Y') : '—' }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
-                                    {{ $employee->folder?->full_location ?? '—' }}
+                                    {{ $employee->folder_location_id?->row_name ?? '—' }}
+                                    {{ $employee->folder_location_id?->column_code ?? '—' }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
                                     {{ $employee->deleted_at?->format('M d, Y h:i A') }}
@@ -153,9 +154,19 @@
                                     <label class="text-muted small text-uppercase fw-bold mb-1">Company</label>
                                     <div class="h6 mb-0 text-dark fw-semibold" x-text="selectedEmployee.company"></div>
                                 </div>
-                                <div class="p-3 rounded-3" style="background-color: #f8fafc;">
-                                    <label class="text-muted small text-uppercase fw-bold mb-1">Folder Slot / Location</label>
-                                    <div class="mb-0 fw-semibold text-danger font-monospace" x-text="selectedEmployee.location"></div>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <div class="p-3">
+                                            <label class="text-muted small text-uppercase fw-bold mb-1">Folder Code</label>
+                                            <div class="mb-0 fw-bold font-monospace" style="color: #dd270d;" x-text="selectedEmployee.folder_code"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-3">
+                                            <label class="text-muted small text-uppercase fw-bold mb-1">Slot / Location</label>
+                                            <div class="mb-0 fw-semibold font-monospace" style="color: #dd270d;" x-text="selectedEmployee.location"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <hr class="my-1 opacity-10">
@@ -200,7 +211,7 @@
                     </div>
                     <div class="modal-body" style="color: #4b5563;">
                         <p class="mb-2">Are you sure you want to <strong class="text-danger">permanently delete</strong> this employee?</p>
-                        <div class="p-3 rounded" style="background: #fef2f2;">
+                        <div class="p-3 rounded-3" style="background-color: #fef2f2;">
                             <div class="fw-semibold" style="color: #991b1b;" x-text="confirmName"></div>
                             <div class="text-muted" style="font-size: 0.85rem;">Folder Code: <span x-text="confirmFolderCode" style="font-family: 'Courier New', monospace; color: #dd270d;"></span></div>
                         </div>

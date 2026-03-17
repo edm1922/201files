@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Company;
 use App\Models\Employee;
-use App\Models\Slot;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class EmployeeFactory extends Factory
@@ -18,22 +17,24 @@ class EmployeeFactory extends Factory
      */
     public function definition(): array
     {
-        // Realistic PH typical suffixes or none
-        $suffixes = ['', '', '', 'Jr.', 'Sr.', 'II', 'III'];
+        // Realistic standard suffixes
+        $suffixes = [null, 'JR.', 'SR.', 'II', 'III', 'IV', 'V'];
 
         return [
-            'system_id'  => 'SYS-' . $this->faker->unique()->numerify('######'),
-            'barcode_id' => $this->faker->optional(0.8)->numerify('BC#########'),
-            'first_name'  => $this->faker->firstName(),
-            'middle_name' => $this->faker->optional(0.8)->lastName(),
-            'last_name'   => $this->faker->lastName(),
+            'system_id'  => $this->faker->unique()->numerify('#####'),
+            'barcode_id' => 'CSC-' . date('Y') . '-' . $this->faker->unique()->numerify('####'),
+            'first_name'  => strtoupper($this->faker->firstName()),
+            'middle_name' => strtoupper($this->faker->optional(0.8)->lastName()),
+            'last_name'   => strtoupper($this->faker->lastName()),
             'suffix'      => $this->faker->randomElement($suffixes),
             'date_hired'  => $this->faker->dateTimeBetween('-10 years', 'now')->format('Y-m-d'),
             'status'      => $this->faker->randomElement(['active', 'active', 'active', 'resigned', 'awol']),
             'company_id'  => function () {
                 return Company::inRandomOrder()->first()->id ?? null;
             },
-            'slot_id'     => null, // Handled primarily by the seeder to map to correct racks
+            'folder_id'          => null,
+            'folder_location_id' => null,
+            'archive_date'       => null,
         ];
     }
 }

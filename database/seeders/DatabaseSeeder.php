@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Cabinet;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\DocumentType;
-use App\Models\Rack;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +24,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Braveheart', 'code' => 'BH', 'folder_code' => 'CSC-BH-0000', 'description' => 'Braveheart division documents'],
         ];
         foreach ($departments as $dept) {
-            Department::create($dept);
+            Department::updateOrCreate(['code' => $dept['code']], $dept);
         }
 
         // ── Document Types ──
@@ -37,7 +35,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($documentTypes as $type) {
-            DocumentType::create($type);
+            DocumentType::updateOrCreate(['code' => $type['code']], $type);
         }
 
         // ── Sample Companies ──
@@ -46,23 +44,11 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Sample Company B', 'code' => 'COMP-B'],
         ];
         foreach ($companies as $company) {
-            Company::create($company);
+            Company::updateOrCreate(['code' => $company['code']], $company);
         }
 
-        // ── Cabinets & Racks ──
-        $cabinetData = ['Cabinet 1', 'Cabinet 2', 'Cabinet 3'];
-        $rackCodes   = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5'];
-
-        foreach ($cabinetData as $cabinetName) {
-            $cabinet = Cabinet::create(['name' => $cabinetName]);
-
-            foreach ($rackCodes as $rackCode) {
-                Rack::create([
-                    'cabinet_id' => $cabinet->id,
-                    'rack_code'  => $rackCode,
-                ]);
-            }
-        }
+        // ── Digital Folders ──
+        $this->call(FolderSeeder::class);
 
         // ── Test Employees ──
         $this->call(EmployeeSeeder::class);
