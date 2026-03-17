@@ -49,19 +49,12 @@ class EmployeeController extends Controller
 
             // Update or create folder
             if ($request->has('folder_code')) {
-                if ($employee->folder_id) {
-                    \App\Models\Folder::where('id', $employee->folder_id)->update([
-                        'folder_code' => $request->folder_code,
-                        'is_available' => false,
-                    ]);
-                } else {
-                    $folder = \App\Models\Folder::create([
-                        'folder_code' => $request->folder_code,
-                        'is_available' => false,
-                    ]);
-                    $employee->folder_id = $folder->id;
-                    $employee->saveQuietly();
-                }
+                $folder = \App\Models\Folder::updateOrCreate(
+                    ['folder_code' => $request->folder_code],
+                    ['is_available' => false]
+                );
+                $employee->folder_id = $folder->id;
+                $employee->saveQuietly();
             }
 
             AuditService::log(
@@ -136,28 +129,35 @@ class EmployeeController extends Controller
 
             // Update or create folder
             if ($request->has('folder_code')) {
-                if ($employee->folder_id) {
-                    // Return old folder if id changed
-                    if ($oldFolderId && $oldFolderId !== $employee->folder_id) {
+                $newCode = $request->folder_code;
+                $folder = \App\Models\Folder::where('folder_code', $newCode)->first();
+
+                if ($folder) {
+                    // If it's a different folder than currently assigned, free the old one
+                    if ($oldFolderId && $oldFolderId !== $folder->id) {
                         \App\Models\Folder::where('id', $oldFolderId)->update(['is_available' => true]);
                     }
                     
-                    \App\Models\Folder::where('id', $employee->folder_id)->update([
-                        'folder_code' => $request->folder_code,
-                        'is_available' => false,
-                    ]);
-                } else {
-                    // Return old folder if it existed and is being replaced by a new one
-                    if ($oldFolderId) {
-                        \App\Models\Folder::where('id', $oldFolderId)->update(['is_available' => true]);
-                    }
-
-                    $folder = \App\Models\Folder::create([
-                        'folder_code' => $request->folder_code,
-                        'is_available' => false,
-                    ]);
+                    $folder->update(['is_available' => false]);
                     $employee->folder_id = $folder->id;
                     $employee->saveQuietly();
+                } else {
+                    // Code doesn't exist. 
+                    if ($employee->folder_id) {
+                        // If employee has a folder, just update its code
+                        \App\Models\Folder::where('id', $employee->folder_id)->update([
+                            'folder_code' => $newCode,
+                            'is_available' => false,
+                        ]);
+                    } else {
+                        // Create new folder
+                        $folder = \App\Models\Folder::create([
+                            'folder_code' => $newCode,
+                            'is_available' => false,
+                        ]);
+                        $employee->folder_id = $folder->id;
+                        $employee->saveQuietly();
+                    }
                 }
             }
 
