@@ -108,7 +108,7 @@
                                 <div class="profile-meta">
                                     <span class="text-gray-500 text-sm font-medium">Folder code:</span>
                                     <span class="profile-field__value profile-field__value--red profile-field__value--mono">
-                                    {{ $employee->folderLocation?->folder_code ?? '—' }}
+                                    {{ $employee->folder?->folder_code ?? '—' }}
                                     </span>
                                     <span class="emp-status-badge emp-status-badge--{{ $employee->status }}">
                                         {{ ucfirst($employee->status) }}
@@ -135,7 +135,7 @@
                                         </span>
                                     </div>
                                     <div class="profile-field">
-                                        <span class="profile-field__label">Document Location</span>
+                                        <span class="profile-field__label">Physical Location</span>
                                         <span class="profile-field__value profile-field__value--red profile-field__value--mono">
                                             {{ $employee->folderLocation?->full_location ?? '—' }}
                                         </span>
@@ -271,7 +271,7 @@
                                 
                                 // For the value in the input, if we are editing an employee, use their code from the folder.
                                 // If it's a new employee, we leave it empty for manual entry.
-                                $currentCodeValue = ($employee && $employee->folderLocation) ? str_replace('CSC-HR-', '', $employee->folderLocation->folder_code) : old('folder_code');
+                                $currentCodeValue = ($employee && $employee->folder) ? str_replace('CSC-HR-', '', $employee->folder->folder_code) : old('folder_code');
                             @endphp
                             <div class="input-group">
                                 <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500;">CSC-HR-</span>
@@ -337,27 +337,26 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="locationSelectForm">Folder/Location</label>
+                            <label class="form-label" for="locationSelectForm">Folder Location</label>
                             <select id="locationSelectForm" name="folder_location_id" 
                                 class="form-control basic-select field-input @error('folder_location_id') is-invalid @enderror"
-                                data-placeholder="- Choose Folder -">
+                                data-placeholder="- Choose Location -">
                                 <option value=""></option>
                                 
-                                {{-- If employee already has a folder, show it first so it's not lost on edit --}}
                                 @if($employee?->folderLocation)
                                     <optgroup label="Current Assignment">
-                                        <option value="{{ $employee->folderLocation->id }}" data-code="{{ str_replace('CSC-HR-', '', $employee->folderLocation->folder_code) }}" selected>
+                                        <option value="{{ $employee->folderLocation->id }}" selected>
                                             {{ $employee->folderLocation->full_location }}
                                         </option>
                                     </optgroup>
                                 @endif
 
-                                @if(isset($folders) && count($folders) > 0)
+                                @if(isset($locations) && count($locations) > 0)
                                     <optgroup label="Available Locations">
-                                    @foreach($folders as $folder)
-                                            <option value="{{ $folder->id }}" data-code="{{ str_replace('CSC-HR-', '', $folder->folder_code) }}"
-                                                {{ old('folder_location_id', $employee?->folder_location_id) == $folder->id ? 'selected' : '' }}>
-                                                {{ $folder->full_location }}
+                                    @foreach($locations as $loc)
+                                            <option value="{{ $loc->id }}"
+                                                {{ old('folder_location_id', $employee?->folder_location_id) == $loc->id ? 'selected' : '' }}>
+                                                {{ $loc->full_location }}
                                             </option>
                                     @endforeach
                                     </optgroup>
@@ -386,7 +385,7 @@
         });
 
         // Update Folder Code input when Folder selection changes
-        document.getElementById('locationSelectForm').addEventListener('change', function () {
+        document.getElementById('folderSelectForm').addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             const folderCode = selectedOption.getAttribute('data-code');
             if (folderCode) {

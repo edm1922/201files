@@ -38,7 +38,8 @@ class UpdateEmployeeRequest extends FormRequest
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employeeId)],
-            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folder_locations', 'folder_code')->ignore($this->folder_location_id)],
+            'folder_id'    => ['nullable', 'integer', 'exists:folders,id'],
+            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folders', 'folder_code')->ignore($this->folder_id)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'folder_location_id' => ['nullable', 'integer', 'exists:folder_locations,id'],
         ];
