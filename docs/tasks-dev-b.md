@@ -80,7 +80,7 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 6.1 Make a Folder table
 - [X] 6.2 Fix the search functionality in 201files
 - [X] 6.3 Update the millie search base on the table changes
-- [ ] 6.4 Update the resigned functionality if the user click the resigned it should move  to the archive page
+- [X] 6.4 Update the resigned functionality if the user click the resigned it should move  to the archive page
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
@@ -88,6 +88,7 @@ This document isolates all tasks assigned to **Developer B** across all developm
 
 ## Phase 6: Polish & Security (Week 11–12)
 
+- [ ] 6.5 In 201files folder code add small text left side of last encoded code "Available code..." Then show the available folder code.
 - [ ] Data Privacy Settings UI (privacy policy, consent logs viewer)
 - [ ] Error handling UI (user-friendly error pages: 404, 403, 500)
 - [ ] Performance Testing & Optimization (with Dev A)
