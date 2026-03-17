@@ -84,7 +84,7 @@ class EmployeeController extends Controller
 
         if ($employee->trashed()) {
             return redirect()
-                ->route('201files')
+                ->route('employees.archive')
                 ->with('success', 'Employee created and automatically archived (resigned).');
         }
 
@@ -181,7 +181,7 @@ class EmployeeController extends Controller
 
         if ($employee->trashed()) {
             return redirect()
-                ->route('201files')
+                ->route('employees.archive')
                 ->with('success', 'Employee has been resigned and moved to the archive.');
         }
 

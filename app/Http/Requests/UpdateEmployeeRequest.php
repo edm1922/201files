@@ -27,19 +27,20 @@ class UpdateEmployeeRequest extends FormRequest
 
     public function rules(): array
     {
-        $employeeId = $this->route('employee');
+        $employee = $this->route('employee');
+        $folderId = $this->input('folder_id') ?? ($employee ? $employee->folder_id : null);
 
         return [
-            'system_id'    => ['required', 'string', 'max:100', Rule::unique('employees', 'system_id')->ignore($employeeId)],
+            'system_id'    => ['required', 'string', 'max:100', Rule::unique('employees', 'system_id')->ignore($employee)],
             'first_name'   => ['required', 'string', 'max:100'],
             'middle_name'  => ['nullable', 'string', 'max:100'],
             'last_name'    => ['required', 'string', 'max:100'],
             'suffix'       => ['nullable', 'string', 'max:20'],
             'date_hired'   => ['nullable', 'date'],
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
-            'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employeeId)],
+            'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employee)],
             'folder_id'    => ['nullable', 'integer', 'exists:folders,id'],
-            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folders', 'folder_code')->ignore($this->folder_id)],
+            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folders', 'folder_code')->ignore($folderId)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'folder_location_id' => ['nullable', 'integer', 'exists:folder_locations,id'],
         ];
