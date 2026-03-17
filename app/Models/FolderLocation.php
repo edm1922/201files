@@ -19,11 +19,11 @@ class FolderLocation extends Model
     }
 
     /**
-     * The employee currently occupying this folder location.
+     * The employees occupying this folder location.
      */
-    public function employee(): HasOne
+    public function employees(): HasMany
     {
-        return $this->hasOne(Employee::class);
+        return $this->hasMany(Employee::class);
     }
 
     /**
@@ -47,7 +47,7 @@ class FolderLocation extends Model
      */
     public function scopeAvailable($query)
     {
-        return $query->doesntHave('employee')->doesntHave('departments');
+        return $query->doesntHave('employees')->doesntHave('departments');
     }
 
     /**

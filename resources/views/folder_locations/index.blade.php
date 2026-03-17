@@ -62,7 +62,7 @@
                                     
                                     @php
                                         $isRowOccupied = $locations->contains(function($loc) {
-                                            return !$loc->is_available || $loc->employee !== null || $loc->departments->isNotEmpty();
+                                            return $loc->employees_count > 0 || $loc->departments->isNotEmpty();
                                         });
                                     @endphp
                                     <button type="button" class="btn btn-sm btn-outline-danger bg-white" 
@@ -91,9 +91,9 @@
                                         @endphp
                                         @foreach($columnCounts as $columnCode => $colLocations)
                                             @php
-                                                $total = $colLocations->count();
+                                                $totalEmployees = $colLocations->sum('employees_count');
                                                 $isColOccupied = $colLocations->contains(function($loc) {
-                                                    return !$loc->is_available || $loc->employee !== null || $loc->departments->isNotEmpty();
+                                                    return $loc->employees_count > 0 || $loc->departments->isNotEmpty();
                                                 });
                                             @endphp
                                             <tr>
@@ -101,7 +101,9 @@
                                                     <span class="fw-bold" style="color: #4b5563;">{{ $columnCode }}</span>
                                                 </td>
                                                 <td class="px-4 py-3">
-                                                    <span class="fw-semibold">{{ $total }}</span>
+                                                    <span class="fw-bold" style="color: {{ $totalEmployees > 0 ? '#10b981' : '#dd270d' }};">
+                                                        {{ $totalEmployees }}
+                                                    </span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <button type="button" class="btn btn-sm btn-outline-danger border-0"
