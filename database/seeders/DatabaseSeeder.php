@@ -47,6 +47,9 @@ class DatabaseSeeder extends Seeder
             Company::updateOrCreate(['code' => $company['code']], $company);
         }
 
+        // ── Physical Storage ──
+        $this->call(FolderLocationSeeder::class);
+
         // ── Digital Folders ──
         $this->call(FolderSeeder::class);
 

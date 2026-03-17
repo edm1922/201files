@@ -12,7 +12,8 @@ class FolderLocationController extends Controller
      */
     public function index()
     {
-        $rows = FolderLocation::with(['employee', 'departments'])
+        $rows = FolderLocation::withCount('employees')
+            ->with(['departments'])
             ->orderBy('row_name')
             ->orderBy('column_code')
             ->get()
@@ -82,7 +83,7 @@ class FolderLocationController extends Controller
         }
 
         $hasOccupied = $locations->contains(function ($loc) {
-            return $loc->employee()->exists() || $loc->departments()->exists();
+            return $loc->employees()->exists() || $loc->departments()->exists();
         });
 
         if ($hasOccupied) {
@@ -110,7 +111,7 @@ class FolderLocationController extends Controller
         }
 
         $hasOccupied = $locations->contains(function ($loc) {
-            return $loc->employee()->exists() || $loc->departments()->exists();
+            return $loc->employees()->exists() || $loc->departments()->exists();
         });
 
         if ($hasOccupied) {
@@ -148,7 +149,7 @@ class FolderLocationController extends Controller
     public function destroy(FolderLocation $folderLocation)
     {
         // Check if occupied
-        if ($folderLocation->employee()->exists() || $folderLocation->departments()->exists()) {
+        if ($folderLocation->employees()->exists() || $folderLocation->departments()->exists()) {
             return redirect()->back()
                 ->with('error', 'Cannot delete a location that is currently occupied.');
         }
