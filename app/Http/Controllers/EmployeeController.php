@@ -171,6 +171,7 @@ class EmployeeController extends Controller
             // Auto-archive if status changed to resigned
             if ($oldStatus !== 'resigned' && $employee->status === 'resigned') {
                 $employee->update(['archive_date' => now()]);
+                
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
                     'employee_archived',
@@ -218,6 +219,8 @@ class EmployeeController extends Controller
                 'status' => 'active',
                 'archive_date' => null,
             ]);
+
+            // Folder remains occupied (is_available stays false) during archive/restore cycle.
 
             AuditService::log(
                 'employee_restored',
