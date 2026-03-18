@@ -81,6 +81,10 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 6.2 Fix the search functionality in 201files
 - [X] 6.3 Update the millie search base on the table changes
 - [X] 6.4 Update the resigned functionality if the user click the resigned it should move  to the archive page
+- [X] 6.5 Add in resigned in the 201files page, if user click the Resign in the status, It Should display warning message
+  ""The employee's record is currently being moved to the archive. These files will remain in the archive until an administrator reviews and permanently deletes them. **Are you sure you want to proceed with this action? "**
+  Then if user click cancel the action will be cancel and if procedd the action will be taken
+- [X] 6.6 Make the message modal
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
