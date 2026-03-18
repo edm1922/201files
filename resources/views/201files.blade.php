@@ -42,7 +42,7 @@
         $formMethod = $isNew ? 'POST' : 'PUT';
     @endphp
 
-    <form id="employeeForm" action="{{ $formAction }}" method="POST">
+    <form id="employeeForm" action="{{ $formAction }}" method="POST" x-data="statusManager()">
         @csrf
         @if(!$isNew)
             @method('PUT')
@@ -352,7 +352,7 @@
                             </div>
                             @if($folders && $folders->count() > 0)
                                 <small class="mt-1 d-block" style="color: rgb(221, 39, 13); line-height: 1.2;">
-                                    <strong>Note:</strong> Update the folder location based on the folder code current location.
+                                    <strong>Note:</strong> Update the folder location based on the selected folder code.
                                 </small>
                             @endif
                             @error('folder_code')
@@ -393,10 +393,50 @@
                 </div>
             </div>{{-- end tab-content --}}
         </div>{{-- end file-panel --}}
+        @include('employees.partials.resigned_modal')
     </form>
+
 
     @push('scripts')
     <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('statusManager', () => ({
+                currentStatus: '{{ old('status', $employee?->status ?? '') }}',
+                previousStatus: '{{ old('status', $employee?->status ?? '') }}',
+                modal: null,
+
+                init() {
+                    this.modal = new bootstrap.Modal(document.getElementById('resignedWarningModal'));
+                    
+                    // Listen for Select2 change
+                    $('#statusSelect').on('change', (e) => {
+                        this.handleStatusChange(e.target.value);
+                    });
+                },
+
+                handleStatusChange(newStatus) {
+                    if (newStatus === 'resigned') {
+                        this.modal.show();
+                    } else {
+                        this.previousStatus = newStatus;
+                        this.currentStatus = newStatus;
+                    }
+                },
+
+                proceedWithResignation() {
+                    // Just submit the form - the server handles the archive logic
+                    document.getElementById('employeeForm').submit();
+                },
+
+                cancelResignation() {
+                    // Revert the Select2 value
+                    this.currentStatus = this.previousStatus;
+                    $('#statusSelect').val(this.previousStatus).trigger('change.select2');
+                    this.modal.hide();
+                }
+            }));
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             // Sync toolbar company dropdown → hidden form field
             const companySelect = document.getElementById('companySelect');
