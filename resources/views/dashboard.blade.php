@@ -76,42 +76,25 @@
                     <h3 class="dashboard-section-title mb-0">
                         <i class="fas fa-chart-line text-primary"></i> Hiring Trends
                     </h3>
-                    <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0" id="yearFilterForm">
-                        <select name="year" 
-                                id="yearSelect"
-                                class="form-select form-select-sm" 
-                                style="width: 140px;" 
-                                onchange="handleYearSelectChange(this)">
-                            @php
-                                $yearsRange = $availableYears ?? [date('Y')];
-                                $selYear = (int)$year;
-                                $displayLimit = 5;
-                                
-                                // Years to show initially
-                                $visibleYears = array_slice($yearsRange, 0, $displayLimit);
-                                
-                                // Ensure current selection is visible if not in top 5
-                                if ($selYear && !in_array($selYear, $visibleYears) && in_array($selYear, $yearsRange)) {
-                                    $visibleYears[] = $selYear;
-                                    sort($visibleYears);
-                                    $visibleYears = array_reverse($visibleYears);
-                                }
-                                
-                                $hasMore = count($yearsRange) > count($visibleYears);
-                            @endphp
-
-                            @foreach($visibleYears as $y)
-                                <option value="{{ $y }}" {{ $selYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                    <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0" id="yearFilterForm" x-data="{ open: false }">
+                        <input type="hidden" name="year" id="selectedYear" value="{{ $year }}">
+                        <div class="custom-dropdown" @click.away="open = false">
+                            <button type="button" class="dropdown-trigger" @click="open = !open">
+                                <span>{{ $year }}</span>
+                                <i class="fas fa-chevron-down ms-2" :class="open ? 'rotate-180' : ''"></i>
+                            </button>
+                            <div class="dropdown-menu-custom" x-show="open" x-transition x-cloak>
+                                @php
+                                    $yearsRange = $availableYears ?? [date('Y')];
+                                @endphp
+                                @foreach($yearsRange as $y)
+                                    <div class="dropdown-item-custom {{ (int)$year == (int)$y ? 'active' : '' }}" 
+                                         @click="document.getElementById('selectedYear').value = '{{ $y }}'; document.getElementById('yearFilterForm').submit()">
+                                        {{ $y }}
+                                    </div>
                                 @endforeach
-
-                            @if($hasMore)
-                                <option value="more">See More...</option>
-                                @endif
-                        </select>
-                        {{-- Store all years for JS expansion --}}
-                        <script>
-                            window.allAvailableYears = @json($yearsRange);
-                        </script>
+                            </div>
+                        </div>
                         <input type="hidden" name="month" value="{{ $month }}">
                     </form>
                 </div>
@@ -161,6 +144,69 @@
             color: #fff;
             box-shadow: 0 4px 6px -1px rgba(221, 39, 13, 0.2);
         }
+
+        /* Custom Dropdown Styles */
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+            width: 140px;
+        }
+
+        .dropdown-trigger {
+            width: 100%;
+            background: #fff;
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .dropdown-trigger:hover {
+            border-color: #dd270d;
+        }
+
+        .dropdown-menu-custom {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1050;
+            width: 100%;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            margin-top: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-height: 240px; /* Approx 6 items (40px each) */
+            overflow-y: auto;
+        }
+
+        .dropdown-item-custom {
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dropdown-item-custom:hover {
+            background: #f8f9fa;
+            color: #dd270d;
+        }
+
+        .dropdown-item-custom.active {
+            background: #dd270d;
+            color: #fff;
+        }
+
+        .rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        [x-cloak] { display: none !important; }
     </style>
 
     @push('scripts')
@@ -181,34 +227,6 @@
             form.submit();
         }
 
-        function handleYearSelectChange(select) {
-            const value = select.value;
-            if (value === 'more') {
-                // Expand the select with all available years
-                const allYears = window.allAvailableYears || [];
-                const currentSelection = "{{ $year }}";
-                
-                // Clear current options
-                select.innerHTML = '';
-                
-                // Add all years
-                allYears.forEach(y => {
-                    const option = document.createElement('option');
-                    option.value = y;
-                    option.text = y;
-                    if (y.toString() === currentSelection.toString()) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                });
-                
-                // Focus and "click" to show the user the new options? 
-                // Hard to trigger open state, but at least the list is now full.
-                // We'll leave it to the user to click again if it closes.
-            } else {
-                select.form.submit();
-            }
-        }
 
         document.addEventListener('DOMContentLoaded', function() {
             // Hiring Trends Line Chart
