@@ -667,11 +667,13 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
+/* Status Card Header */
 .stat-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
+    align-items: center;
+    /* Changed to center for better alignment with circle */
+    margin-bottom: 8px;
 }
 
 .stat-title {
@@ -681,8 +683,22 @@
 }
 
 .stat-icon-wrap {
+    display: none;
+    /* Hide old icon style */
+}
+
+.stat-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
     font-size: 1.25rem;
-    opacity: 0.8;
+    box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3);
+    flex-shrink: 0;
 }
 
 .stat-body {
@@ -692,8 +708,8 @@
 }
 
 .stat-value-large {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.25rem;
+    font-weight: 800;
     color: #111827;
     line-height: 1;
 }
@@ -718,11 +734,46 @@
     color: #dc2626;
 }
 
-.stat-footer {
-    margin-top: 8px;
+.year-selection-pill {
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 4px 12px;
     font-size: 0.8rem;
-    color: #6b7280;
-    font-weight: 500;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.year-selection-pill:hover {
+    background-color: rgba(221, 39, 13, 0.1);
+    color: var(--primary-red, rgb(221, 39, 13));
+    border-color: rgba(221, 39, 13, 0.3);
+}
+
+.year-selection-pill.active {
+    background-color: rgb(221, 39, 13);
+    border-color: rgb(221, 39, 13);
+    color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(221, 39, 13, 0.2), 0 2px 4px -1px rgba(221, 39, 13, 0.1);
+}
+
+.see-more-pill {
+    background: transparent;
+    border: none;
+    color: rgb(221, 39, 13);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.see-more-pill:hover {
+    opacity: 0.7;
+    text-decoration: underline;
 }
 
 .dashboard-section-title {

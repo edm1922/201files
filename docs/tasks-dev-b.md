@@ -86,6 +86,12 @@ This document isolates all tasks assigned to **Developer B** across all developm
   Then if user click cancel the action will be cancel and if procedd the action will be taken
 - [X] 6.6 Make the message modal
 
+**Phase 5 Modification:**
+
+* [X] 6.5 Fix the chart in the dashboard because it only show 1 hires only even there are more hired in the spefic month
+* [x] 6.7 Fix the hover in the year selection and the bg coloer in selection also, color: rgb(221, 39, 13).
+* [x] 6.8 Change the summary cards icon (red circle style)
+
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
 ---

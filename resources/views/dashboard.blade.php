@@ -15,52 +15,52 @@
                 <div class="col-md-3">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Total Employees</span>
-                            <div class="stat-icon-wrap text-primary">
+                            <div>
+                                <span class="stat-title d-block mb-1">Total Employees</span>
+                                <span class="stat-value-large">{{ number_format($totalEmployees) }}</span>
+                            </div>
+                            <div class="stat-icon-circle">
                                 <i class="fas fa-users"></i>
                             </div>
                         </div>
-                        <div class="stat-body">
-                            <span class="stat-value-large">{{ number_format($totalEmployees) }}</span>
-                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Total Companies</span>
-                            <div class="stat-icon-wrap text-success">
+                            <div>
+                                <span class="stat-title d-block mb-1">Total Companies</span>
+                                <span class="stat-value-large">{{ $totalCompanies }}</span>
+                            </div>
+                            <div class="stat-icon-circle">
                                 <i class="fas fa-building"></i>
                             </div>
                         </div>
-                        <div class="stat-body">
-                            <span class="stat-value-large">{{ $totalCompanies }}</span>
-                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Total Documents</span>
-                            <div class="stat-icon-wrap text-info">
+                            <div>
+                                <span class="stat-title d-block mb-1">Total Documents</span>
+                                <span class="stat-value-large">{{ number_format($totalDocuments) }}</span>
+                            </div>
+                            <div class="stat-icon-circle">
                                 <i class="fas fa-file-alt"></i>
                             </div>
                         </div>
-                        <div class="stat-body">
-                            <span class="stat-value-large">{{ number_format($totalDocuments) }}</span>
-                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Total Users</span>
-                            <div class="stat-icon-wrap text-warning">
+                            <div>
+                                <span class="stat-title d-block mb-1">Total Users</span>
+                                <span class="stat-value-large">{{ number_format($totalUsers) }}</span>
+                            </div>
+                            <div class="stat-icon-circle">
                                 <i class="fas fa-user-shield"></i>
                             </div>
-                        </div>
-                        <div class="stat-body">
-                            <span class="stat-value-large">{{ number_format($totalUsers) }}</span>
                         </div>
                     </div>
                 </div>
@@ -76,24 +76,43 @@
                     <h3 class="dashboard-section-title mb-0">
                         <i class="fas fa-chart-line text-primary"></i> Hiring Trends
                     </h3>
-                    <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0">
-                        <!-- <select name="month" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
-                            <option value="">All Months</option>
-                            @foreach(range(1, 12) as $m)
-                                <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                </option>
-                            @endforeach
-                        </select> -->
-                        <select name="year" class="form-select form-select-sm" style="width: 100px;" onchange="this.form.submit()">
+                    <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0" id="yearFilterForm">
+                        <select name="year" 
+                                id="yearSelect"
+                                class="form-select form-select-sm" 
+                                style="width: 140px;" 
+                                onchange="handleYearSelectChange(this)">
                             @php
-                                $currentYear = date('Y');
-                                $startYear = 2020;
+                                $yearsRange = $availableYears ?? [date('Y')];
+                                $selYear = (int)$year;
+                                $displayLimit = 5;
+                                
+                                // Years to show initially
+                                $visibleYears = array_slice($yearsRange, 0, $displayLimit);
+                                
+                                // Ensure current selection is visible if not in top 5
+                                if ($selYear && !in_array($selYear, $visibleYears) && in_array($selYear, $yearsRange)) {
+                                    $visibleYears[] = $selYear;
+                                    sort($visibleYears);
+                                    $visibleYears = array_reverse($visibleYears);
+                                }
+                                
+                                $hasMore = count($yearsRange) > count($visibleYears);
                             @endphp
-                            @foreach(range($currentYear, $startYear) as $y)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endforeach
+
+                            @foreach($visibleYears as $y)
+                                <option value="{{ $y }}" {{ $selYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+
+                            @if($hasMore)
+                                <option value="more">See More...</option>
+                                @endif
                         </select>
+                        {{-- Store all years for JS expansion --}}
+                        <script>
+                            window.allAvailableYears = @json($yearsRange);
+                        </script>
+                        <input type="hidden" name="month" value="{{ $month }}">
                     </form>
                 </div>
                 <div style="height: 300px;">
@@ -115,9 +134,82 @@
         </div>
     </div>
 
+    <style>
+        .x-small { font-size: 0.75rem; }
+
+        .year-pill {
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .year-pill:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .year-pill.active {
+            background: #dd270d;
+            border-color: #dd270d;
+            color: #fff;
+            box-shadow: 0 4px 6px -1px rgba(221, 39, 13, 0.2);
+        }
+    </style>
+
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        function updateYear(year) {
+            if (!year) return;
+            const form = document.getElementById('yearFilterForm');
+            // Ensure there's a hidden year input if we're calling this from somewhere else
+            let yearInput = form.querySelector('input[name="year"]');
+            if (!yearInput) {
+                yearInput = document.createElement('input');
+                yearInput.type = 'hidden';
+                yearInput.name = 'year';
+                form.appendChild(yearInput);
+            }
+            yearInput.value = year;
+            form.submit();
+        }
+
+        function handleYearSelectChange(select) {
+            const value = select.value;
+            if (value === 'more') {
+                // Expand the select with all available years
+                const allYears = window.allAvailableYears || [];
+                const currentSelection = "{{ $year }}";
+                
+                // Clear current options
+                select.innerHTML = '';
+                
+                // Add all years
+                allYears.forEach(y => {
+                    const option = document.createElement('option');
+                    option.value = y;
+                    option.text = y;
+                    if (y.toString() === currentSelection.toString()) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+                
+                // Focus and "click" to show the user the new options? 
+                // Hard to trigger open state, but at least the list is now full.
+                // We'll leave it to the user to click again if it closes.
+            } else {
+                select.form.submit();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Hiring Trends Line Chart
             const ctx = document.getElementById('hiringChart').getContext('2d');
@@ -128,8 +220,14 @@
             let counts = [];
 
             if ("{{ $month }}") {
-                labels = [months[{{ (int)$month - 1 }}]];
-                counts = [rawData.length > 0 ? rawData[0].count : 0];
+                const daysInMonth = {{ $daysInMonth }};
+                labels = Array.from({length: daysInMonth}, (_, i) => (i + 1).toString());
+                counts = new Array(daysInMonth).fill(0);
+                rawData.forEach(item => {
+                    if (item.day) {
+                        counts[item.day - 1] = item.count;
+                    }
+                });
             } else {
                 labels = months;
                 counts = new Array(12).fill(0);
@@ -225,8 +323,4 @@
         });
     </script>
     @endpush
-
-    <style>
-        .x-small { font-size: 0.75rem; }
-    </style>
 </x-app-layout>

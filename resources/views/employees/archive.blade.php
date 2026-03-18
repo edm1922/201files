@@ -6,7 +6,7 @@
             <h2 class="h4 mb-1 fw-bold">Employee Archive</h2>
             <p class="text-muted mb-0" style="font-size: 0.85rem;">Resigned employees that have been archived. Only admins can restore or permanently delete.</p>
         </div>
-        <a href="{{ route('201files') }}" class="btn btn-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px;">
+        <a href="{{ route('201files') }}" class="btn btn-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px; background-color: #dd270d;">
             <i class="fas fa-arrow-left"></i> Back to 201 Files
         </a>
     </div>
