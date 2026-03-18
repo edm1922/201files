@@ -82,6 +82,12 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 6.3 Update the millie search base on the table changes
 - [X] 6.4 Update the resigned functionality if the user click the resigned it should move  to the archive page
 
+**Phase 5 Modification:**
+
+* [X] 6.5 Fix the chart in the dashboard because it only show 1 hires only even there are more hired in the spefic month
+* [x] 6.7 Fix the hover in the year selection and the bg coloer in selection also, color: rgb(221, 39, 13).
+* [x] 6.8 Change the summary cards icon (red circle style)
+
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
 ---
