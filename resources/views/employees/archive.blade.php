@@ -6,7 +6,7 @@
             <h2 class="h4 mb-1 fw-bold">Employee Archive</h2>
             <p class="text-muted mb-0" style="font-size: 0.85rem;">Resigned employees that have been archived. Only admins can restore or permanently delete.</p>
         </div>
-        <a href="{{ route('201files') }}" class="btn btn-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px; background-color: #dd270d;">
+        <a href="{{ route('201files') }}" class="btn btn-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px; background-color: #dd270d; color: white;">
             <i class="fas fa-arrow-left"></i> Back to 201 Files
         </a>
     </div>
@@ -47,22 +47,21 @@
                         @foreach($employees as $employee)
                             <tr>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
-                                    <span class="fw-semibold" style="color: #dd270d; font-family: 'Courier New', monospace;">
+                                    <span class="fw-semibold" style="color: #dd270d; monospace;">
                                         {{ $employee->folder?->folder_code ?? '—' }}
                                     </span>
                                 </td>
                                 <td class="border-bottom-0 text-uppercase" style="padding: 16px 24px;">
                                     {{ $employee->full_name }}
                                 </td>
-                                <td class="border-bottom-0" style="padding: 16px 24px; font-family: 'Courier New', monospace;">
+                                <td class="border-bottom-0" style="padding: 16px 24px; monospace;">
                                     {{ $employee->system_id }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
                                     {{ $employee->date_hired ? $employee->date_hired->format('M d, Y') : '—' }}
                                 </td>
-                                <td class="border-bottom-0" style="padding: 16px 24px;">
-                                    {{ $employee->folder_location_id?->row_name ?? '—' }}
-                                    {{ $employee->folder_location_id?->column_code ?? '—' }}
+                                <td class="fw-semibold" style="padding: 16px 24px; color: #dd270d; monospace;">
+                                    {{ $employee->folderLocation?->full_location ?? '—' }}
                                 </td>
                                 <td class="border-bottom-0" style="padding: 16px 24px;">
                                     {{ $employee->deleted_at?->format('M d, Y h:i A') }}

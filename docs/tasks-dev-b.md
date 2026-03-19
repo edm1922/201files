@@ -89,8 +89,9 @@ This document isolates all tasks assigned to **Developer B** across all developm
 **Phase 5 Modification:**
 
 * [X] 6.5 Fix the chart in the dashboard because it only show 1 hires only even there are more hired in the spefic month
-* [x] 6.7 Fix the hover in the year selection and the bg coloer in selection also, color: rgb(221, 39, 13).
-* [x] 6.8 Change the summary cards icon (red circle style)
+* [X] 6.7 Fix the hover in the year selection and the bg coloer in selection also, color: rgb(221, 39, 13).
+* [X] 6.8 Change the summary cards icon (red circle style)
+* [X] 6.9 Hide the Personal Tab in the 201files if the role is not admin and encoder
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
