@@ -75,13 +75,6 @@
             </ul>
         </li>
 
-        {{-- Search --}}
-        <li class="nav-item">
-            <a class="nav-link {{ request()->is('search*') ? 'active' : '' }}" href="{{ url('/search') }}">
-                <i class="fas fa-search"></i> Search Documents
-            </a>
-        </li>
-
         <!-- @if(Auth::user()->hasRole('admin', 'encoder'))
         {{-- ═══ ENCODING ═══ --}}
         <li class="sidebar-section-label">ENCODING</li>
@@ -161,13 +154,8 @@
             </a>
             <ul class="nav flex-column ms-3" x-show="open" x-transition x-cloak>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/reports/missing-documents') }}">
-                        <i class="fas fa-exclamation-triangle"></i> Missing Documents
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/reports/expiry-alerts') }}">
-                        <i class="fas fa-clock"></i> Expiry Alerts
+                    <a class="nav-link" href="{{ url('/reports/generate') }}">
+                        <i class="fas fa-file-export"></i> Generate Reports
                     </a>
                 </li>
                 <li class="nav-item">
