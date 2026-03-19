@@ -285,6 +285,9 @@
                                         data-placeholder="- Choose -">
                                     <option value=""></option>
                                     @foreach(['active' => 'Active', 'awol' => 'AWOL', 'resigned' => 'Resigned'] as $val => $label)
+                                        @if($isNew && $val === 'resigned')
+                                            @continue
+                                        @endif
                                         <option value="{{ $val }}"
                                             {{ old('status', $employee?->status) === $val ? 'selected' : '' }}>
                                             {{ $label }}
