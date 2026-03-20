@@ -54,9 +54,12 @@
 
         <!-- Login Card -->
         <div class="w-full max-w-md bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">
-            <div class="mb-8">
-                <h2 class="text-xl font-bold text-gray-800">Welcome Back</h2>
-                <p class="text-sm text-gray-500 mt-1">Please enter your details to sign in</p>
+            <div class="mb-8 flex flex-col items-center">
+                <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" class="h-20 mb-4">
+                <div class="text-center">
+                    <h2 class="text-xl font-bold text-gray-800">Welcome Back</h2>
+                    <p class="text-sm text-gray-500 mt-1">Please enter your details to sign in</p>
+                </div>
             </div>
 
             <!-- Session Status -->

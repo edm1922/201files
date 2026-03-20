@@ -6,6 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="milli-search-url" content="{{ route('employees.milliSearch') }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo2.png') }}">
+
 
 
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
@@ -45,7 +47,10 @@
             <button class="btn btn-dark me-2 px-2" id="sidebar-toggle" title="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="{{ route('dashboard') }}">CSC-DMS</a>
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
+                <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" height="35" class="me-2">
+                CSC-DMS
+            </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
