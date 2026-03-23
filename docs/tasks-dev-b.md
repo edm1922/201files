@@ -64,7 +64,7 @@ This document isolates all tasks assigned to **Developer B** across all developm
 
 ---
 
-## Phase 5: Reports, Dashboard & Archive (Week 9–10)
+## Phase 5: Reports, Dashboard & Archive & Activity Logs (Week 9–10)
 
 - [X] 5.1 Dashboard widgets UI (summary cards, recent uploads frontend)
 - [X] 5.2 Add in the dashboard indicate the employee numbers, and add a graph in the that indicate the number of employees base on the date hired
@@ -85,19 +85,21 @@ This document isolates all tasks assigned to **Developer B** across all developm
   ""The employee's record is currently being moved to the archive. These files will remain in the archive until an administrator reviews and permanently deletes them. **Are you sure you want to proceed with this action? "**
   Then if user click cancel the action will be cancel and if procedd the action will be taken
 - [X] 6.6 Make the message modal
+- [X] 6.7 In Audit logs it must show the activity logs of the user (adding,updating, archiving and deleting)
+- [X] 6.8 Add a activity logs table
+- [X] 6.9 Make the table data text small just like in the user management
 
 **Phase 5 Modification:**
 
-* [X] 6.5 Fix the chart in the dashboard because it only show 1 hires only even there are more hired in the spefic month
-* [X] 6.7 Fix the hover in the year selection and the bg coloer in selection also, color: rgb(221, 39, 13).
-* [X] 6.8 Change the summary cards icon (red circle style)
-* [X] 6.9 Hide the Personal Tab in the 201files if the role is not admin and encoder
-* [X] 7.1 In The 201files hide the "resign" if the user adding a new user no employee data displayed or user is not selecting employee
-* [X] 7.2 Add the logo in the navbar next to the CSC-DMS
-* [X] 7.3 Change the App logo to the logo i provided public/logo2.png
-* [ ] 
-
-*Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
+* [X] 6.5.1 Fix the chart in the dashboard because it only show 1 hires only even there are more hired in the spefic month
+* [X] 6.5.2 Fix the hover in the year selection and the bg coloer in selection also, color: rgb(221, 39, 13).
+* [X] 6.5.3 Change the summary cards icon (red circle style)
+* [X] 6.5.4 Hide the Personal Tab in the 201files if the role is not admin and encoder
+* [X] 6.5.5In The 201files hide the "resign" if the user adding a new user no employee data displayed or user is not selecting employee
+* [X] 6.5.6 Add the logo in the navbar next to the CSC-DMS
+* [X] 6.5.6 Change the App logo to the logo i provided public/logo2.png
+* [X] 6.5.7 Remove the activity_logs since there is a audit logs
+* [ ] *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
 ---
 

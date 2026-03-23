@@ -58,8 +58,9 @@ class EmployeeController extends Controller
             }
 
             AuditService::log(
-                'employee_created',
-                "Created employee: {$employee->full_name} (System ID: {$employee->system_id})"
+                'created',
+                "Added new employee: {$employee->full_name}",
+                $employee
             );
 
             // If created as resigned, auto-archive
@@ -67,8 +68,9 @@ class EmployeeController extends Controller
                 $employee->update(['archive_date' => now()]);
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
-                    'employee_archived',
-                    "Auto-archived employee: {$employee->full_name} (status: resigned)"
+                    'archived',
+                    "Auto-archived employee: {$employee->full_name} (status: resigned)",
+                    $employee
                 );
             }
 
@@ -162,9 +164,9 @@ class EmployeeController extends Controller
             }
 
             AuditService::log(
-                'employee_updated',
-                "Updated employee: {$employee->full_name}",
-                null,
+                'updated',
+                "Updated employee profile: {$employee->full_name}",
+                $employee,
                 ['before' => $old, 'after' => $employee->fresh()->toArray()]
             );
 
@@ -174,8 +176,9 @@ class EmployeeController extends Controller
                 
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
-                    'employee_archived',
-                    "Auto-archived employee: {$employee->full_name} (status changed to resigned)"
+                    'archived',
+                    "Archived employee: {$employee->full_name} (status changed to resigned)",
+                    $employee
                 );
             }
         });
@@ -223,8 +226,9 @@ class EmployeeController extends Controller
             // Folder remains occupied (is_available stays false) during archive/restore cycle.
 
             AuditService::log(
-                'employee_restored',
-                "Restored employee: {$employee->full_name} from archive (status set to active)"
+                'restored',
+                "Restored employee: {$employee->full_name} from archive",
+                $employee
             );
         });
 
@@ -253,8 +257,8 @@ class EmployeeController extends Controller
             $employee->forceDelete();
 
             AuditService::log(
-                'employee_deleted',
-                "Permanently deleted employee: {$name} (System ID: {$systemId}). Slot freed."
+                'deleted',
+                "Permanently deleted employee: {$name} (System ID: {$systemId})"
             );
         });
 
