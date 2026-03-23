@@ -93,8 +93,9 @@ This document isolates all tasks assigned to **Developer B** across all developm
 * [X] 6.8 Change the summary cards icon (red circle style)
 * [X] 6.9 Hide the Personal Tab in the 201files if the role is not admin and encoder
 * [X] 7.1 In The 201files hide the "resign" if the user adding a new user no employee data displayed or user is not selecting employee
-* [ ] 7.2 Add the logo in the navbar next to the CSC-DMS
-* [ ] 7.3 Change the App logo to the logo i provided public/logo2.png
+* [X] 7.2 Add the logo in the navbar next to the CSC-DMS
+* [X] 7.3 Change the App logo to the logo i provided public/logo2.png
+* [ ] 
 
 *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
@@ -102,7 +103,6 @@ This document isolates all tasks assigned to **Developer B** across all developm
 
 ## Phase 6: Polish & Security (Week 11–12)
 
-- [ ] 6.5 In 201files folder code add small text left side of last encoded code "Available code..." Then show the available folder code.
 - [ ] Data Privacy Settings UI (privacy policy, consent logs viewer)
 - [ ] Error handling UI (user-friendly error pages: 404, 403, 500)
 - [ ] Performance Testing & Optimization (with Dev A)
