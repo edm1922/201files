@@ -28,42 +28,6 @@
             </div>
         @endif
 
-        {{-- ── Filters Card ── --}}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body py-3">
-                <form method="GET" action="{{ route('settings.companies.index') }}" class="row g-3 align-items-end">
-                    <div class="col-md-6 col-lg-5">
-                        <label for="search" class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Search</label>
-                        <div class="search-wrapper">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text"
-                                   id="search"
-                                   name="search"
-                                   class="search-input"
-                                   placeholder="Search by name or code…"
-                                   value="{{ request('search') }}">
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-lg-2">
-                        <label for="status" class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Status</label>
-                        <select id="status" name="status" class="form-select field-input">
-                            <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All</option>
-                            <option value="active" {{ request('status', 'active') === 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 col-lg-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-brand flex-grow-1">
-                            <i class="fas fa-filter me-1"></i> Filter
-                        </button>
-                        <a href="{{ route('settings.companies.index') }}" class="btn btn-outline-secondary" title="Clear filters">
-                            <i class="fas fa-times"></i>
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         {{-- ── Companies Table ── --}}
         <div class="card shadow-sm">
             <div class="doc-table-wrapper" style="border: none;">
