@@ -7,18 +7,33 @@
                     <h2 class="h4 mb-1 fw-bold">Audit & Activity Logs</h2>
                     <p class="text-muted mb-0" style="font-size: 0.85rem;">Track system activities and administrative actions.</p>
                 </div>
-                <form action="{{ route('reports.audit-log') }}" method="GET" class="d-flex">
-                    <select name="action" class="form-select form-select-sm me-2" onchange="this.form.submit()" style="width: 150px;">
-                        <option value="all">All Actions</option>
-                        <option value="created" {{ request('action') == 'created' ? 'selected' : '' }}>Created</option>
-                        <option value="updated" {{ request('action') == 'updated' ? 'selected' : '' }}>Updated</option>
-                        <option value="deleted" {{ request('action') == 'deleted' ? 'selected' : '' }}>Deleted</option>
-                        <option value="archived" {{ request('action') == 'archived' ? 'selected' : '' }}>Archived</option>
-                        <option value="restored" {{ request('action') == 'restored' ? 'selected' : '' }}>Restored</option>
-                        <option value="login" {{ request('action') == 'login' ? 'selected' : '' }}>Login</option>
-                        <option value="logout" {{ request('action') == 'logout' ? 'selected' : '' }}>Logout</option>
-                    </select>
+                <form id="filterForm" action="{{ route('reports.audit-log') }}" method="GET" class="d-flex align-items-center">
+                    <input type="hidden" name="action" id="actionInput" value="{{ request('action', 'all') }}">
+                    <div class="dropdown">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: rgb(221, 39, 13); width: 160px; border-radius: 6px; font-weight: 500;">
+                            <i class="fas fa-filter me-2 opacity-75"></i>
+                            {{ request('action') ? ucfirst(request('action')) : 'All Actions' }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownMenuButton" style="border-radius: 8px; padding: 5px; min-width: 160px;">
+                            <li><a class="dropdown-item rounded {{ request('action', 'all') == 'all' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('all')">All Actions</a></li>
+                            <li><hr class="dropdown-divider opacity-50"></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'created' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('created')">Created</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'updated' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('updated')">Updated</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'deleted' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('deleted')">Deleted</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'archived' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('archived')">Archived</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'restored' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('restored')">Restored</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'login' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('login')">Login</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'logout' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('logout')">Logout</a></li>
+                        </ul>
+                    </div>
                 </form>
+
+                <script>
+                    function applyFilter(action) {
+                        document.getElementById('actionInput').value = action;
+                        document.getElementById('filterForm').submit();
+                    }
+                </script>
             </div>
 
             <div class="card shadow-sm">
@@ -131,6 +146,18 @@
         .card {
             border: 1px solid #e5e7eb;
             border-radius: 12px;
+        }
+
+        .dropdown-item {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            color: #4b5563;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover, .active-filter {
+            background-color: rgb(221, 39, 13) !important;
+            color: white !important;
         }
     </style>
 </x-app-layout>
