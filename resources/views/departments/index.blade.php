@@ -14,10 +14,8 @@
 
         {{-- ── Flash Messages ── --}}
         @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert" style="border-left: 4px solid #27ae60; border-radius: 8px;">
-                <i class="fas fa-check-circle"></i>
-                <span>{{ session('success') }}</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="alert-flash alert-flash--success">
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
             </div>
         @endif
 

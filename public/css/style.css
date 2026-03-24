@@ -382,25 +382,47 @@
 /* ─── Flash Alert Messages ────────────────────────────────────────── */
 
 .alert-flash {
-    padding: 12px 18px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 0.875rem;
+    position: fixed;
+    top: 70px;
+    right: 24px;
+    z-index: 9999;
+    padding: 14px 22px;
+    border-radius: 12px;
+    font-size: 0.9rem;
     font-weight: 500;
     display: flex;
     align-items: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    min-width: 320px;
+    max-width: 450px;
+    animation: flashSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
+    cursor: default;
+    border-left-width: 5px !important;
+}
+
+@keyframes flashSlideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.alert-flash:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .alert-flash--success {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #6ee7b7;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-left: 5px solid #22c55e !important;
 }
 
 .alert-flash--error {
-    background: #fee2e2;
+    background: #fef2f2;
     color: #991b1b;
-    border: 1px solid #fca5a5;
+    border: 1px solid #fecaca;
+    border-left: 5px solid #ef4444 !important;
 }
 
 /* ─── New Button (tab bar) ─────────────────────────────────────────── */
