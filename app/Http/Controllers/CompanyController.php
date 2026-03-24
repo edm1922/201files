@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class CompanyController extends Controller
@@ -51,11 +52,13 @@ class CompanyController extends Controller
      */
     public function store(CompanyRequest $request)
     {
-        Company::create([
+        $company = Company::create([
             'name'      => $request->validated('name'),
             'code'      => strtoupper($request->validated('code')),
             'is_active' => $request->boolean('is_active', true),
         ]);
+
+        AuditService::log('created', "Created new company: {$company->name}", $company);
 
         return redirect()
             ->route('settings.companies.index')
@@ -81,6 +84,8 @@ class CompanyController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
+        AuditService::log('updated', "Updated company: {$company->name}", $company);
+
         return redirect()
             ->route('settings.companies.index')
             ->with('success', 'Company updated successfully.');
@@ -92,6 +97,9 @@ class CompanyController extends Controller
     public function toggleActive(Company $company)
     {
         $company->update(['is_active' => !$company->is_active]);
+
+        $status = $company->is_active ? 'activated' : 'deactivated';
+        AuditService::log('updated', "Company {$company->name} was {$status}", $company);
 
         $status = $company->is_active ? 'activated' : 'deactivated';
 
@@ -110,7 +118,10 @@ class CompanyController extends Controller
                 ->with('error', 'Cannot delete a company that has employees assigned to it. Deactivate it instead.');
         }
 
+        $name = $company->name;
         $company->delete();
+
+        AuditService::log('deleted', "Deleted company: {$name}");
 
         return redirect()
             ->route('settings.companies.index')

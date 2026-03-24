@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Cabinet;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\DocumentType;
-use App\Models\Rack;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +24,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Braveheart', 'code' => 'BH', 'folder_code' => 'CSC-BH-0000', 'description' => 'Braveheart division documents'],
         ];
         foreach ($departments as $dept) {
-            Department::create($dept);
+            Department::updateOrCreate(['code' => $dept['code']], $dept);
         }
 
         // ── Document Types ──
@@ -37,18 +35,18 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($documentTypes as $type) {
-            DocumentType::create($type);
+            DocumentType::updateOrCreate(['code' => $type['code']], $type);
         }
 
+        // ── Physical Storage ──
+        $this->call(FolderLocationSeeder::class);
+
+        // ── Digital Folders ──
+        $this->call(FolderSeeder::class);
+
         // ── Sample Companies ──
-        $companies = [
-            ['name' => 'Sample Company A', 'code' => 'COMP-A'],
-            ['name' => 'Sample Company B', 'code' => 'COMP-B'],
-        ];
-        foreach ($companies as $company) {
-            Company::create($company);
-        }
-        
+        $this->call(CompanySeeder::class);
+
         // ── Test Employees ──
         $this->call(EmployeeSeeder::class);
     }

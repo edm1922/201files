@@ -4,7 +4,7 @@
             {{ __('Profile Information') }}
         </h2>
         <p class="text-sm text-muted mb-0">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ __("Update your account's profile information and username.") }}
         </p>
     </header>
 
@@ -13,30 +13,34 @@
         @method('patch')
 
         <div class="row g-3">
-            <div class="col-md-6">
-                <x-input-label for="name" :value="__('Name')" class="fw-bold text-sm mb-1" />
-                <x-text-input id="name" name="name" type="text" class="form-control field-input" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            <div class="col-md-3">
+                <x-input-label for="first_name" :value="__('First Name')" class="fw-bold text-sm mb-1" />
+                <x-text-input id="first_name" name="first_name" type="text" class="form-control field-input" :value="old('first_name', $user->first_name)" required autofocus autocomplete="given-name" />
+                <x-input-error class="mt-2" :messages="$errors->get('first_name')" />
             </div>
 
-            <div class="col-md-6">
-                <x-input-label for="email" :value="__('Email')" class="fw-bold text-sm mb-1" />
-                <x-text-input id="email" name="email" type="email" class="form-control field-input" :value="old('email', $user->email)" required autocomplete="username" />
-                <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <div class="col-md-3">
+                <x-input-label for="middle_name" :value="__('Middle Name')" class="fw-bold text-sm mb-1" />
+                <x-text-input id="middle_name" name="middle_name" type="text" class="form-control field-input" :value="old('middle_name', $user->middle_name)" autocomplete="additional-name" />
+                <x-input-error class="mt-2" :messages="$errors->get('middle_name')" />
+            </div>
 
-                @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                    <div class="mt-2">
-                        <p class="text-sm text-gray-800">
-                            {{ __('Your email address is unverified.') }}
-                            <button form="send-verification" class="btn btn-link p-0 text-sm align-baseline">{{ __('Click here to re-send the verification email.') }}</button>
-                        </p>
-                        @if (session('status') === 'verification-link-sent')
-                            <p class="mt-2 font-medium text-sm text-green-600">
-                                {{ __('A new verification link has been sent to your email address.') }}
-                            </p>
-                        @endif
-                    </div>
-                @endif
+            <div class="col-md-3">
+                <x-input-label for="last_name" :value="__('Last Name')" class="fw-bold text-sm mb-1" />
+                <x-text-input id="last_name" name="last_name" type="text" class="form-control field-input" :value="old('last_name', $user->last_name)" required autocomplete="family-name" />
+                <x-input-error class="mt-2" :messages="$errors->get('last_name')" />
+            </div>
+
+            <div class="col-md-3">
+                <x-input-label for="suffix" :value="__('Suffix')" class="fw-bold text-sm mb-1" />
+                <x-text-input id="suffix" name="suffix" type="text" class="form-control field-input" :value="old('suffix', $user->suffix)" autocomplete="honorific-suffix" />
+                <x-input-error class="mt-2" :messages="$errors->get('suffix')" />
+            </div>
+
+            <div class="col-md-12">
+                <x-input-label for="username" :value="__('Username')" class="fw-bold text-sm mb-1" />
+                <x-text-input id="username" name="username" type="text" class="form-control field-input" :value="old('username', $user->username)" required autocomplete="username" />
+                <x-input-error class="mt-2" :messages="$errors->get('username')" />
             </div>
         </div>
 

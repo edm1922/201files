@@ -11,11 +11,13 @@ class AuditLog extends Model
 
     protected $fillable = [
         'user_id',
-        'document_id',
         'action',
+        'model_type',
+        'model_id',
         'description',
-        'ip_address',
         'changes',
+        'ip_address',
+        'user_agent',
     ];
 
     protected function casts(): array
@@ -31,8 +33,30 @@ class AuditLog extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function document(): BelongsTo
+    /**
+     * Get the parent loggable model (Employee, Document, etc.).
+     */
+    public function model()
     {
-        return $this->belongsTo(Document::class);
+        return $this->morphTo()->withTrashed();
+    }
+
+    /**
+     * Helper to get the name of the target entity.
+     */
+    public function getTargetNameAttribute()
+    {
+        if (!$this->model) {
+            return '—';
+        }
+
+        return match ($this->model_type) {
+            'App\Models\Employee' => $this->model->full_name,
+            'App\Models\User' => $this->model->name,
+            'App\Models\Company' => $this->model->name,
+            'App\Models\Department' => $this->model->name,
+            'App\Models\Document' => $this->model->original_filename,
+            default => 'ID: ' . $this->model_id
+        };
     }
 }

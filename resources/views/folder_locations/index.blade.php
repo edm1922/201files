@@ -48,7 +48,7 @@
                                 <span style="font-size: 1.05rem;">Row {{ $rowName }}</span>
                             </div>
                             
-                            <div class="d-flex gap-3 align-items-center me-4">
+                            <div class="d-flex gap-2 align-items-center me-4">
                                 <span class="badge rounded-pill bg-light text-dark border" style="font-size: 0.75rem; padding: 6px 12px;">
                                     Total: {{ count($locations) }}
                                 </span>
@@ -62,7 +62,7 @@
                                     
                                     @php
                                         $isRowOccupied = $locations->contains(function($loc) {
-                                            return !$loc->is_available || $loc->employee !== null || $loc->departments->isNotEmpty();
+                                            return $loc->employees_count > 0 || $loc->departments->isNotEmpty();
                                         });
                                     @endphp
                                     <button type="button" class="btn btn-sm btn-outline-danger bg-white" 
@@ -81,7 +81,7 @@
                                     <thead style="background-color: #f9fafb;">
                                         <tr>
                                             <th class="px-4 py-2 text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.025em;">Column</th>
-                                            <th class="px-4 py-2 text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.025em;">Total</th>
+                                            <th class="px-4 py-2 text-muted fw-bold" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.025em;">Total Employees</th>
                                             <th class="px-4 py-2 text-muted fw-bold text-center" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.025em; width: 120px;">Actions</th>
                                         </tr>
                                     </thead>
@@ -91,17 +91,19 @@
                                         @endphp
                                         @foreach($columnCounts as $columnCode => $colLocations)
                                             @php
-                                                $total = $colLocations->count();
+                                                $totalEmployees = $colLocations->sum('employees_count');
                                                 $isColOccupied = $colLocations->contains(function($loc) {
-                                                    return !$loc->is_available || $loc->employee !== null || $loc->departments->isNotEmpty();
+                                                    return $loc->employees_count > 0 || $loc->departments->isNotEmpty();
                                                 });
                                             @endphp
                                             <tr>
                                                 <td class="px-4 py-3">
-                                                    <span class="fw-bold" style="color: #4b5563;">{{ $columnCode }}</span>
+                                                    <span class="fw-bold" style="color: #4b5563; padding: 4px 8px;">{{ $columnCode }}</span>
                                                 </td>
-                                                <td class="px-4 py-3">
-                                                    <span class="fw-semibold">{{ $total }}</span>
+                                                <td class="px-5 py-3">
+                                                    <span class="fw-bold" style="color: {{ $totalEmployees > 0 ? '#10b981' : '#dd270d' }}; padding: 4px 8px;">
+                                                        {{ $totalEmployees }}
+                                                    </span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center">
                                                     <button type="button" class="btn btn-sm btn-outline-danger border-0"

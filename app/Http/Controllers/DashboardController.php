@@ -18,6 +18,18 @@ class DashboardController extends Controller
         $totalCompanies = Company::count();
         $totalDocuments = Document::count();
         $totalUsers = \App\Models\User::count();
+        
+        // Fetch all unique years from date_hired for the filter
+        $availableYears = Employee::whereNotNull('date_hired')
+            ->select(DB::raw('DISTINCT YEAR(date_hired) as year'))
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+        
+        // Ensure the current year is at least available if there's no data
+        if (!in_array(date('Y'), $availableYears)) {
+            array_unshift($availableYears, (int)date('Y'));
+        }
 
         // Hiring trends data
         $query = Employee::select(
@@ -31,8 +43,14 @@ class DashboardController extends Controller
             $query->whereYear('date_hired', $year);
         }
         
+        $daysInMonth = 0;
         if ($month) {
             $query->whereMonth('date_hired', $month);
+            $query->addSelect(DB::raw('DAY(date_hired) as day'))
+                  ->groupBy('day');
+            
+            // Calculate days in selected month
+            $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year ?: date('Y'));
         }
 
         $hiringTrends = $query->groupBy('year', 'month')
@@ -96,7 +114,9 @@ class DashboardController extends Controller
             'hiringTrends',
             'year',
             'month',
-            'calendarData'
+            'calendarData',
+            'availableYears',
+            'daysInMonth'
         ));
     }
 }

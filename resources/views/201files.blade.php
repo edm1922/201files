@@ -42,7 +42,7 @@
         $formMethod = $isNew ? 'POST' : 'PUT';
     @endphp
 
-    <form id="employeeForm" action="{{ $formAction }}" method="POST">
+    <form id="employeeForm" action="{{ $formAction }}" method="POST" x-data="statusManager()">
         @csrf
         @if(!$isNew)
             @method('PUT')
@@ -56,25 +56,27 @@
 
                     {{-- Employee (summary) tab — shown when a record is loaded --}}
                     <li class="nav-item" role="presentation">
-                        <button class="file-tab {{ $isNew ? '' : 'active' }}" id="tab-employee"
+                        <button class="file-tab {{ ($isNew && Auth::user()->hasRole('admin', 'encoder')) ? '' : 'active' }}" id="tab-employee"
                                 data-bs-toggle="tab" data-bs-target="#panel-employee"
                                 type="button" role="tab"
                                 aria-controls="panel-employee"
-                                aria-selected="{{ $isNew ? 'false' : 'true' }}">
+                                aria-selected="{{ ($isNew && Auth::user()->hasRole('admin', 'encoder')) ? 'false' : 'true' }}">
                             <i class="fas fa-id-card me-1"></i>Employee
                         </button>
                     </li>
 
-                    {{-- Personal tab --}}
-                    <li class="nav-item" role="presentation">
-                        <button class="file-tab {{ $isNew ? 'active' : '' }}" id="tab-personal"
-                                data-bs-toggle="tab" data-bs-target="#panel-personal"
-                                type="button" role="tab"
-                                aria-controls="panel-personal"
-                                aria-selected="{{ $isNew ? 'true' : 'false' }}">
-                            <i class="fas fa-user me-1"></i>Personal
-                        </button>
-                    </li>
+                    {{-- Personal tab (Admin/Encoder only) --}}
+                    @if(Auth::user()->hasRole('admin', 'encoder'))
+                        <li class="nav-item" role="presentation">
+                            <button class="file-tab {{ $isNew ? 'active' : '' }}" id="tab-personal"
+                                    data-bs-toggle="tab" data-bs-target="#panel-personal"
+                                    type="button" role="tab"
+                                    aria-controls="panel-personal"
+                                    aria-selected="{{ $isNew ? 'true' : 'false' }}">
+                                <i class="fas fa-user me-1"></i>Personal
+                            </button>
+                        </li>
+                    @endif
                 </ul>
 
                 <div class="file-panel__actions">
@@ -91,7 +93,7 @@
             <div class="tab-content file-panel__body" id="fileTabsContent">
 
                 {{-- ══ EMPLOYEE TAB (display-only summary) ══ --}}
-                <div class="tab-pane fade {{ $isNew ? '' : 'show active' }}" id="panel-employee"
+                <div class="tab-pane fade {{ ($isNew && Auth::user()->hasRole('admin', 'encoder')) ? '' : 'show active' }}" id="panel-employee"
                      role="tabpanel" aria-labelledby="tab-employee">
 
                     @if($employee)
@@ -170,229 +172,306 @@
                     @endif
                 </div>
 
-                {{-- ══ PERSONAL TAB (editable form) ══ --}}
-                <div class="tab-pane fade {{ $isNew ? 'show active' : '' }}" id="panel-personal"
-                     role="tabpanel" aria-labelledby="tab-personal">
+                {{-- ══ PERSONAL TAB (editable form) (Admin/Encoder only) ══ --}}
+                @if(Auth::user()->hasRole('admin', 'encoder'))
+                    <div class="tab-pane fade {{ $isNew ? 'show active' : '' }}" id="panel-personal"
+                         role="tabpanel" aria-labelledby="tab-personal">
 
-                    <h6 class="panel-section-title">Personal Information</h6>
-                    <div class="row g-3">
+                        <h6 class="panel-section-title">Personal Information</h6>
+                        <div class="row g-3">
 
-                        {{-- Row 1: Names + Suffix --}}
-                        <div class="col-md-3">
-                            <label class="form-label" for="firstNameInput">First Name <span class="text-danger">*</span></label>
-                            <input type="text" id="firstNameInput" name="first_name"
-                                   class="form-control field-input text-uppercase @error('first_name') is-invalid @enderror"
-                                   placeholder="Enter First Name"
-                                   value="{{ old('first_name', $employee?->first_name) }}">
-                            @error('first_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="middleNameInput">Middle Name</label>
-                            <input type="text" id="middleNameInput" name="middle_name"
-                                   class="form-control field-input text-uppercase @error('middle_name') is-invalid @enderror"
-                                   placeholder="Enter Middle Name"
-                                   value="{{ old('middle_name', $employee?->middle_name) }}">
-                            @error('middle_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="lastNameInput">Last Name <span class="text-danger">*</span></label>
-                            <input type="text" id="lastNameInput" name="last_name"
-                                   class="form-control field-input text-uppercase @error('last_name') is-invalid @enderror"
-                                   placeholder="Enter Last Name"
-                                   value="{{ old('last_name', $employee?->last_name) }}">
-                            @error('last_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="suffixSelect">Suffix</label>
-                            @php
-                                // Get existing value from old input or database
-                                $suffixRaw = old('suffix', $employee?->suffix ?? '');
-                                
-                                // Define standard suffixes
-                                $defaultSuffixes = ['JR.', 'SR.', 'II', 'III', 'IV', 'V'];
-                                $allSuffixes = $defaultSuffixes;
-
-                                // If the database has a suffix not in our list (e.g., "PhD"), 
-                                // add it to the options so it remains selected and visible.
-                                if ($suffixRaw && !in_array($suffixRaw, $defaultSuffixes)) {
-                                    $allSuffixes[] = $suffixRaw;
-                                }
-                            @endphp
-
-                            <select id="suffixSelect" name="suffix"
-                                class="form-control basic-select field-input" 
-                                data-placeholder="- Choose Suffix -">
-                                <option value=""></option>
-                                @foreach($allSuffixes as $suffix)
-                                    <option value="{{ $suffix }}" {{ $suffixRaw === $suffix ? 'selected' : '' }}>
-                                        {{ $suffix }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- Row 2: IDs --}}
-                        <div class="col-md-4">
-                            <label class="form-label" for="barcodeInput">Barcode ID</label>
-                            <input type="text" id="barcodeInput" name="barcode_id"
-                                   class="form-control field-input @error('barcode_id') is-invalid @enderror"
-                                   placeholder="Enter Barcode ID"
-                                   value="{{ old('barcode_id', $employee?->barcode_id) }}">
-                            @error('barcode_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="systemIdInput">System ID <span class="text-danger">*</span></label>
-                            <input type="text" id="systemIdInput" name="system_id"
-                                   class="form-control field-input @error('system_id') is-invalid @enderror"
-                                   placeholder="Enter System ID"
-                                   value="{{ old('system_id', $employee?->system_id) }}">
-                            @error('system_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="folderCodeInput">Folder Code <span class="text-danger">*</span></label>
-                            @php
-                                $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
-                                $dynamicMaxLength = max(4, strlen($numericPart));
-                                
-                                // For the value in the input, if we are editing an employee, use their code from the folder.
-                                // If it's a new employee, we leave it empty for manual entry.
-                                $currentCodeValue = ($employee && $employee->folder) ? str_replace('CSC-HR-', '', $employee->folder->folder_code) : old('folder_code');
-                            @endphp
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500;">CSC-HR-</span>
-                                <input type="text" id="folderCodeInput" name="folder_code"
-                                       class="form-control field-input @error('folder_code') is-invalid @enderror"
-                                       placeholder="{{ str_pad('', $dynamicMaxLength, '0') }}"
-                                       maxlength="{{ $dynamicMaxLength }}"
-                                       value="{{ $currentCodeValue }}">
+                            {{-- Row 1: Names + Suffix --}}
+                            <div class="col-md-3">
+                                <label class="form-label" for="firstNameInput">First Name <span class="text-danger">*</span></label>
+                                <input type="text" id="firstNameInput" name="first_name"
+                                       class="form-control field-input text-uppercase @error('first_name') is-invalid @enderror"
+                                       placeholder="Enter First Name"
+                                       value="{{ old('first_name', $employee?->first_name) }}">
+                                @error('first_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <small class="text-muted mt-1 d-block">
-                                Last encoded number: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
-                            </small>
-                            @error('folder_code')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label" for="dateHiredInput">Date Hired</label>
-                            <input type="date" id="dateHiredInput" name="date_hired"
-                                   class="form-control field-input @error('date_hired') is-invalid @enderror"
-                                   value="{{ old('date_hired', $employee?->date_hired?->format('Y-m-d')) }}">
-                            @error('date_hired')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="middleNameInput">Middle Name</label>
+                                <input type="text" id="middleNameInput" name="middle_name"
+                                       class="form-control field-input text-uppercase @error('middle_name') is-invalid @enderror"
+                                       placeholder="Enter Middle Name"
+                                       value="{{ old('middle_name', $employee?->middle_name) }}">
+                                @error('middle_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label" for="statusSelect">Status <span class="text-danger">*</span></label>
-                            <select id="statusSelect" name="status"
-                                    class="form-control basic-select field-input @error('status') is-invalid @enderror"
-                                    data-placeholder="- Choose -">
-                                <option value=""></option>
-                                @foreach(['active' => 'Active', 'awol' => 'AWOL', 'resigned' => 'Resigned'] as $val => $label)
-                                    <option value="{{ $val }}"
-                                        {{ old('status', $employee?->status) === $val ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="lastNameInput">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" id="lastNameInput" name="last_name"
+                                       class="form-control field-input text-uppercase @error('last_name') is-invalid @enderror"
+                                       placeholder="Enter Last Name"
+                                       value="{{ old('last_name', $employee?->last_name) }}">
+                                @error('last_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
+                            <div class="col-md-3">
+                                <label class="form-label" for="suffixSelect">Suffix</label>
+                                @php
+                                    // Get existing value from old input or database
+                                    $suffixRaw = old('suffix', $employee?->suffix ?? '');
+                                    
+                                    // Define standard suffixes
+                                    $defaultSuffixes = ['JR.', 'SR.', 'II', 'III', 'IV', 'V'];
+                                    $allSuffixes = $defaultSuffixes;
 
-                        <div class="col-md-4">
-                            <label class="form-label" for="companySelectForm">Company <span class="text-danger">*</span></label>
-                            <select id="companySelectForm" name="company_id" 
-                                class="form-control basic-select field-input @error('company_id') is-invalid @enderror"
-                                data-placeholder="- Choose -">
-                                <option value=""></option>
-                                @foreach($companies as $company)
-                                    <option value="{{ $company->id }}" 
-                                        {{ old('company_id', $employee?->company_id) == $company->id ? 'selected' : '' }}>
-                                        {{ $company->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('company_id')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                    // If the database has a suffix not in our list (e.g., "PhD"), 
+                                    // add it to the options so it remains selected and visible.
+                                    if ($suffixRaw && !in_array($suffixRaw, $defaultSuffixes)) {
+                                        $allSuffixes[] = $suffixRaw;
+                                    }
+                                @endphp
 
-                        <div class="col-md-4">
-                            <label class="form-label" for="locationSelectForm">Folder Location</label>
-                            <select id="locationSelectForm" name="folder_location_id" 
-                                class="form-control basic-select field-input @error('folder_location_id') is-invalid @enderror"
-                                data-placeholder="- Choose Location -">
-                                <option value=""></option>
-                                
-                                @if($employee?->folderLocation)
-                                    <optgroup label="Current Assignment">
-                                        <option value="{{ $employee->folderLocation->id }}" selected>
-                                            {{ $employee->folderLocation->full_location }}
+                                <select id="suffixSelect" name="suffix"
+                                    class="form-control basic-select field-input" 
+                                    data-placeholder="- Choose Suffix -">
+                                    <option value=""></option>
+                                    @foreach($allSuffixes as $suffix)
+                                        <option value="{{ $suffix }}" {{ $suffixRaw === $suffix ? 'selected' : '' }}>
+                                            {{ $suffix }}
                                         </option>
-                                    </optgroup>
-                                @endif
-
-                                @if(isset($locations) && count($locations) > 0)
-                                    <optgroup label="Available Locations">
-                                    @foreach($locations as $loc)
-                                            <option value="{{ $loc->id }}"
-                                                {{ old('folder_location_id', $employee?->folder_location_id) == $loc->id ? 'selected' : '' }}>
-                                                {{ $loc->full_location }}
-                                            </option>
                                     @endforeach
-                                    </optgroup>
+                                </select>
+                            </div>
+
+                            {{-- Row 2: IDs --}}
+                            <div class="col-md-4">
+                                <label class="form-label" for="barcodeInput">Barcode ID</label>
+                                <input type="text" id="barcodeInput" name="barcode_id"
+                                       class="form-control field-input @error('barcode_id') is-invalid @enderror"
+                                       placeholder="Enter Barcode ID"
+                                       value="{{ old('barcode_id', $employee?->barcode_id) }}">
+                                @error('barcode_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="systemIdInput">System ID <span class="text-danger">*</span></label>
+                                <input type="text" id="systemIdInput" name="system_id"
+                                       class="form-control field-input @error('system_id') is-invalid @enderror"
+                                       placeholder="Enter System ID"
+                                       value="{{ old('system_id', $employee?->system_id) }}">
+                                @error('system_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="dateHiredInput">Date Hired</label>
+                                <input type="date" id="dateHiredInput" name="date_hired"
+                                       class="form-control field-input @error('date_hired') is-invalid @enderror"
+                                       value="{{ old('date_hired', $employee?->date_hired?->format('Y-m-d')) }}">
+                                @error('date_hired')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                    
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="statusSelect">Status <span class="text-danger">*</span></label>
+                                <select id="statusSelect" name="status"
+                                        class="form-control basic-select field-input @error('status') is-invalid @enderror"
+                                        data-placeholder="- Choose -">
+                                    <option value=""></option>
+                                    @foreach(['active' => 'Active', 'awol' => 'AWOL', 'resigned' => 'Resigned'] as $val => $label)
+                                        @if($isNew && $val === 'resigned')
+                                            @continue
+                                        @endif
+                                        <option value="{{ $val }}"
+                                            {{ old('status', $employee?->status) === $val ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="companySelectForm">Company <span class="text-danger">*</span></label>
+                                <select id="companySelectForm" name="company_id" 
+                                    class="form-control basic-select field-input @error('company_id') is-invalid @enderror"
+                                    data-placeholder="- Choose -">
+                                    <option value=""></option>
+                                    @foreach($companies as $company)
+                                        <option value="{{ $company->id }}" 
+                                            {{ old('company_id', $employee?->company_id) == $company->id ? 'selected' : '' }}>
+                                            {{ $company->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('company_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <h6 class="panel-section-title mt-4">Document Location Information</h6>
+
+                             <div class="col-md-4">
+                                <label class="form-label" for="folderCodeInput">Folder Code <span class="text-danger">*</span></label>
+                                @php
+                                    $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
+                                    $dynamicMaxLength = max(4, strlen($numericPart));
+                                    
+                                    // For the value in the input, if we are editing an employee, use their code from the folder.
+                                    // If it's a new employee, we leave it empty for manual entry.
+                                    $currentCodeValue = ($employee && $employee->folder) ? str_replace('CSC-HR-', '', $employee->folder->folder_code) : old('folder_code');
+                                @endphp
+                                <div class="input-group">
+                                    <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500; color: rgb(221, 39, 13);">CSC-HR-</span>
+                                    <input type="text" id="folderCodeInput" name="folder_code"
+                                           class="form-control field-input @error('folder_code') is-invalid @enderror"
+                                           placeholder="{{ str_pad('', $dynamicMaxLength, '0') }}"
+                                           maxlength="{{ $dynamicMaxLength }}"
+                                           value="{{ $currentCodeValue }}">
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                            <small class="text-muted">
+                                        Last encoded: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
+                                    </small>
+                                    
+                                    @if($folders && $folders->count() > 0)
+                                        <div class="d-flex align-items-center gap-2">
+                                            <small class="fw-bold" style="color: rgb(221, 39, 13);">Available Code:</small>
+                                            <select id="availableCodeSelect" class="form-select form-select-sm py-0" style="width: auto; height: 24px; font-size: 0.75rem; color: rgb(221, 39, 13); border-color: rgb(221, 39, 13);">
+                                                <option value="">- Select -</option>
+                                                @foreach($folders as $folder)
+                                                    @php $code = str_replace('CSC-HR-', '', $folder->folder_code); @endphp
+                                                    <option value="{{ $code }}">{{ $code }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    @endif
+                                </div>
+                                @if($folders && $folders->count() > 0)
+                                    <small class="mt-1 d-block" style="color: rgb(221, 39, 13); line-height: 1.2;">
+                                        <strong>Note:</strong> Update the folder location based on the selected folder code.
+                                    </small>
                                 @endif
-                            </select>
-                            @error('folder_location_id')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
+                                @error('folder_code')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="locationSelectForm">Folder Location</label>
+                                <select id="locationSelectForm" name="folder_location_id" 
+                                    class="form-control basic-select field-input @error('folder_location_id') is-invalid @enderror"
+                                    data-placeholder="- Choose Location -">
+                                    <option value=""></option>
+                                    
+                                    @if($employee?->folderLocation)
+                                        <optgroup label="Current Assignment">
+                                            <option value="{{ $employee->folderLocation->id }}" selected>
+                                                {{ $employee->folderLocation->full_location }}
+                                            </option>
+                                        </optgroup>
+                                    @endif
+
+                                    @if(isset($locations) && count($locations) > 0)
+                                        <optgroup label="Available Locations">
+                                        @foreach($locations as $loc)
+                                                <option value="{{ $loc->id }}"
+                                                    {{ old('folder_location_id', $employee?->folder_location_id) == $loc->id ? 'selected' : '' }}>
+                                                    {{ $loc->full_location }}
+                                                </option>
+                                        @endforeach
+                                        </optgroup>
+                                    @endif
+                                </select>
+                                @error('folder_location_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
             </div>{{-- end tab-content --}}
         </div>{{-- end file-panel --}}
+        @include('employees.partials.resigned_modal')
     </form>
+
 
     @push('scripts')
     <script>
-        // Sync toolbar company dropdown → hidden form field
-        document.getElementById('companySelect').addEventListener('change', function () {
-            document.getElementById('companyIdHidden').value = this.value;
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('statusManager', () => ({
+                currentStatus: '{{ old('status', $employee?->status ?? '') }}',
+                previousStatus: '{{ old('status', $employee?->status ?? '') }}',
+                modal: null,
+
+                init() {
+                    this.modal = new bootstrap.Modal(document.getElementById('resignedWarningModal'));
+                    
+                    // Listen for Select2 change
+                    $('#statusSelect').on('change', (e) => {
+                        this.handleStatusChange(e.target.value);
+                    });
+                },
+
+                handleStatusChange(newStatus) {
+                    if (newStatus === 'resigned') {
+                        this.modal.show();
+                    } else {
+                        this.previousStatus = newStatus;
+                        this.currentStatus = newStatus;
+                    }
+                },
+
+                proceedWithResignation() {
+                    // Just submit the form - the server handles the archive logic
+                    document.getElementById('employeeForm').submit();
+                },
+
+                cancelResignation() {
+                    // Revert the Select2 value
+                    this.currentStatus = this.previousStatus;
+                    $('#statusSelect').val(this.previousStatus).trigger('change.select2');
+                    this.modal.hide();
+                }
+            }));
         });
 
-        // Folder Code: Restrict to digits only
-        document.getElementById('folderCodeInput').addEventListener('input', function (e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sync toolbar company dropdown → hidden form field
+            const companySelect = document.getElementById('companySelect');
+            if (companySelect) {
+                companySelect.addEventListener('change', function () {
+                    const hiddenField = document.getElementById('companyIdHidden');
+                    if (hiddenField) hiddenField.value = this.value;
+                });
+            }
 
-        // Update Folder Code input when Folder selection changes
-        document.getElementById('folderSelectForm').addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const folderCode = selectedOption.getAttribute('data-code');
-            if (folderCode) {
-                document.getElementById('folderCodeInput').value = folderCode;
+            // Folder Code: Restrict to digits only
+            const folderCodeInput = document.getElementById('folderCodeInput');
+            if (folderCodeInput) {
+                folderCodeInput.addEventListener('input', function (e) {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
+
+            // Update Folder Code input when Available Code Select changes
+            const availableSelect = document.getElementById('availableCodeSelect');
+            if (availableSelect && folderCodeInput) {
+                availableSelect.addEventListener('change', function () {
+                    if (this.value) {
+                        folderCodeInput.value = this.value;
+                    }
+                });
             }
         });
-
     </script>
     @endpush
 

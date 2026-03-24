@@ -32,6 +32,7 @@ class DocumentTypeController extends Controller
 
         return view('document-types.index', compact('documentTypes', 'departments'));
     }
+    
 
 
 

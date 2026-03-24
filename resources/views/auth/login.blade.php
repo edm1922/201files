@@ -10,128 +10,62 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Styles -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            red: '#dd270d',
-                            dark: '#1f2937',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-
-    <style>
-        body {
-            background-color: #ffffff;
-            font-family: 'Inter', sans-serif;
-        }
-        .login-card {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-        }
-        .form-input:focus {
-            border-color: #dd270d;
-            box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
-<body class="antialiased text-gray-900 bg-white">
-    <div class="min-h-screen flex flex-col items-center justify-center p-6">
+<body class="login-page-wrapper">
 
-        <!-- Login Card -->
-        <div class="w-full max-w-md bg-white p-8 rounded-3xl border border-gray-100 shadow-xl">
-            <div class="mb-8">
-                <h2 class="text-xl font-bold text-gray-800">Welcome Back</h2>
-                <p class="text-sm text-gray-500 mt-1">Please enter your details to sign in</p>
-            </div>
+    <div class="login-container">
+        <!-- Left Side: Overlay (Welcome) -->
+        <div class="overlay-panel">
+            <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" style="height: 150px; margin-bottom: 2px;">
 
-            <!-- Session Status -->
-            @if (session('status'))
-                <div class="mb-6 p-4 bg-green-50 border border-green-100 text-green-700 text-sm rounded-xl">
-                    {{ session('status') }}
-                </div>
-            @endif
+            <h2>Welcome back</h2>
+            <p>Enter your credentials to access the Document Management System.</p>
+        </div>
 
-            <form method="POST" action="{{ route('login') }}">
+        <!-- Right Side: Sign In Form -->
+        <div class="form-panel">
+            <!-- <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" style="height: 80px; margin-bottom: 20px;"> -->
+            
+            <form method="POST" action="{{ route('login') }}" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
                 @csrf
+                
+                <h1>Sign in</h1>
+                
+                <span>Please enter your credentials.</span>
 
-                <!-- Username -->
-                <div class="mb-5">
-                    <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">Username</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-user text-gray-400 text-xs"></i>
-                        </div>
-                        <input id="username" type="text" name="username" value="{{ old('username') }}" 
-                               required autofocus autocomplete="username"
-                               class="block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-brand-red focus:border-brand-red transition duration-200 outline-none"
-                               placeholder="Enter your username">
+                <!-- Session Status -->
+                @if (session('status'))
+                    <div style="margin-bottom: 15px; color: #1fb355; font-size: 0.85rem; font-weight: 600;">
+                        {{ session('status') }}
                     </div>
-                    @error('username')
-                        <p class="mt-2 text-xs text-brand-red font-medium">{{ $message }}</p>
-                    @enderror
-                </div>
+                @endif
 
-                <!-- Password -->
-                <div class="mb-6">
-                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400 text-xs"></i>
-                        </div>
-                        <input id="password" type="password" name="password" 
-                               required autocomplete="current-password"
-                               class="block w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-brand-red focus:border-brand-red transition duration-200 outline-none"
-                               placeholder="••••••••">
+                <!-- Errors -->
+                @if ($errors->any())
+                    <div style="margin-bottom: 15px; color: #dd270d; font-size: 0.8rem; font-weight: 600; text-align: center;">
+                        @foreach ($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
                     </div>
-                    @error('password')
-                        <p class="mt-2 text-xs text-brand-red font-medium">{{ $message }}</p>
-                    @enderror
-                </div>
+                @endif
 
-                <!-- Remember Me -->
-                <div class="flex items-center justify-between mb-8">
-                    <label for="remember_me" class="flex items-center cursor-pointer group">
-                        <div class="relative">
-                            <input id="remember_me" type="checkbox" name="remember" class="sr-only">
-                            <div class="block w-10 h-6 bg-gray-200 rounded-full group-hover:bg-gray-300 transition"></div>
-                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform"></div>
-                        </div>
-                        <span class="ml-3 text-sm font-medium text-gray-600 select-none">Remember Me</span>
-                    </label>
-                </div>
-
-                <style>
-                    #remember_me:checked ~ .dot {
-                        transform: translateX(100%);
-                        background-color: #ffffff;
-                    }
-                    #remember_me:checked ~ div:first-of-type {
-                        background-color: #dd270d;
-                    }
-                </style>
-
-                <!-- Actions -->
-                <button type="submit" 
-                        class="w-full py-4 bg-brand-red hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition duration-300 transform active:scale-[0.98]">
-                    Sign In
-                </button>
+                <input type="text" name="username" placeholder="Username" value="{{ old('username') }}" required autofocus autocomplete="username" />
+                
+                <input type="password" name="password" placeholder="Password" required autocomplete="current-password" />
+                
+                <!-- <a href="#">Forgot your password?</a> -->
+                
+                <button type="submit" class="btn-signin">Sign In</button>
             </form>
         </div>
     </div>
+
 </body>
 </html>
