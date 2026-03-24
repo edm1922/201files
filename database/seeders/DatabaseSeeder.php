@@ -48,22 +48,7 @@ class DatabaseSeeder extends Seeder
         foreach ($companies as $company) {
             Company::create($company);
         }
-
-        // ── Cabinets & Racks ──
-        $cabinetData = ['Cabinet 1', 'Cabinet 2', 'Cabinet 3'];
-        $rackCodes   = ['A1', 'A2', 'A3', 'A4', 'A5', 'B1', 'B2', 'B3', 'B4', 'B5'];
-
-        foreach ($cabinetData as $cabinetName) {
-            $cabinet = Cabinet::create(['name' => $cabinetName]);
-
-            foreach ($rackCodes as $rackCode) {
-                Rack::create([
-                    'cabinet_id' => $cabinet->id,
-                    'rack_code'  => $rackCode,
-                ]);
-            }
-        }
-
+        
         // ── Test Employees ──
         $this->call(EmployeeSeeder::class);
     }
