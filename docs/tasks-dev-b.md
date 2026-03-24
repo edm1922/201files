@@ -99,6 +99,8 @@ This document isolates all tasks assigned to **Developer B** across all developm
 * [X] 6.5.6 Add the logo in the navbar next to the CSC-DMS
 * [X] 6.5.6 Change the App logo to the logo i provided public/logo2.png
 * [X] 6.5.7 Remove the activity_logs since there is a audit logs
+* [X] 6.5.8 Add a Time (5sec) for the sucessfull and error message
+* [X] 6.5.9 Modify the successfull and error message instead of displaying to the page make it float
 * [ ] *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
 ---
