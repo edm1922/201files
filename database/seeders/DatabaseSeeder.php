@@ -38,20 +38,14 @@ class DatabaseSeeder extends Seeder
             DocumentType::updateOrCreate(['code' => $type['code']], $type);
         }
 
-        // ── Sample Companies ──
-        $companies = [
-            ['name' => 'Sample Company A', 'code' => 'COMP-A'],
-            ['name' => 'Sample Company B', 'code' => 'COMP-B'],
-        ];
-        foreach ($companies as $company) {
-            Company::updateOrCreate(['code' => $company['code']], $company);
-        }
-
         // ── Physical Storage ──
         $this->call(FolderLocationSeeder::class);
 
         // ── Digital Folders ──
         $this->call(FolderSeeder::class);
+
+        // ── Sample Companies ──
+        $this->call(CompanySeeder::class);
 
         // ── Test Employees ──
         $this->call(EmployeeSeeder::class);
