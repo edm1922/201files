@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\DepartmentRequest;
 use App\Models\Department;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
@@ -38,7 +39,9 @@ class DepartmentController extends Controller
         $code = strtoupper($data['code']);
         $data['folder_code'] = 'CSC-' . $code . '-0000';
         
-        Department::create($data);
+        $department = Department::create($data);
+
+        AuditService::log('created', "Created new department: {$department->name}", $department);
 
         return redirect()
             ->route('settings.departments.index')
@@ -64,6 +67,8 @@ class DepartmentController extends Controller
         
         $department->update($data);
 
+        AuditService::log('updated', "Updated department: {$department->name}", $department);
+
         return redirect()
             ->route('settings.departments.index')
             ->with('success', 'Department updated successfully.');
@@ -79,6 +84,8 @@ class DepartmentController extends Controller
         ]);
 
         $status = $department->is_active ? 'reactivated' : 'deactivated';
+        
+        AuditService::log('updated', "Department {$department->name} was {$status}", $department);
         return redirect()->route('settings.departments.index')
             ->with('success', "Department has been {$status}.");
     }
@@ -103,7 +110,10 @@ class DepartmentController extends Controller
                 ->with('error', 'Cannot delete a department that has documents attached. Deactivate it instead.');
         }
 
+        $name = $department->name;
         $department->delete();
+
+        AuditService::log('deleted', "Deleted department: {$name}");
 
         return redirect()
             ->route('settings.departments.index')

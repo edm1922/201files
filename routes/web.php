@@ -73,6 +73,10 @@ Route::middleware('auth')->group(function () {
             ->name('employees.restore');
         Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDestroy'])
             ->name('employees.forceDestroy');
+
+        // Audit & Activity Logs
+        Route::get('/reports/audit-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])
+            ->name('reports.audit-log');
     });
 
     Route::get('/201files',              [EmployeeController::class, 'create'])->name('201files');

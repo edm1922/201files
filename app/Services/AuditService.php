@@ -14,16 +14,18 @@ class AuditService
     public static function log(
         string $action,
         ?string $description = null,
-        ?int $documentId = null,
+        $model = null,
         ?array $changes = null
     ): AuditLog {
         return AuditLog::create([
             'user_id' => Auth::id(),
-            'document_id' => $documentId,
             'action' => $action,
+            'model_type' => $model ? get_class($model) : null,
+            'model_id' => $model ? $model->id : null,
             'description' => $description,
-            'ip_address' => Request::ip(),
             'changes' => $changes,
+            'ip_address' => Request::ip(),
+            'user_agent' => Request::userAgent(),
         ]);
     }
 
@@ -32,7 +34,8 @@ class AuditService
      */
     public static function logDocument(string $action, int $documentId, ?string $description = null, ?array $changes = null): AuditLog
     {
-        return self::log($action, $description, $documentId, $changes);
+        $document = \App\Models\Document::find($documentId);
+        return self::log($action, $description, $document, $changes);
     }
 
     /**
@@ -40,7 +43,7 @@ class AuditService
      */
     public static function logLogin(): AuditLog
     {
-        return self::log('login', 'User logged in');
+        return self::log('login', 'User logged in', Auth::user());
     }
 
     /**
@@ -48,6 +51,6 @@ class AuditService
      */
     public static function logLogout(): AuditLog
     {
-        return self::log('logout', 'User logged out');
+        return self::log('logout', 'User logged out', Auth::user());
     }
 }

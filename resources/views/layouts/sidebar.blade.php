@@ -160,7 +160,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url('/reports/audit-log') }}">
-                        <i class="fas fa-history"></i> Audit Log
+                        <i class="fas fa-history"></i> Activity Logs
                     </a>
                 </li>
             </ul>
