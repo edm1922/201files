@@ -183,4 +183,9 @@ $(document).ready(function () {
         allowClear: true,
         minimumResultsForSearch: 0
     });
+
+    // Auto-hide success and error messages after 5 seconds
+    setTimeout(function () {
+        $('.alert, .alert-flash').fadeOut('slow');
+    }, 3000);
 });
