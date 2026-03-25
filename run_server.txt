@@ -1,0 +1,30 @@
+
+:: Change the file name from run_server.txt to run_server.bat
+
+@echo off
+title Laravel Server - CSC-DMS
+
+:: Automatically switch to the folder where this .bat file is located
+cd /d "%~dp0"
+
+echo ---------------------------------------------------
+echo  Starting CSC-Document-Management-System
+echo  Access locally at: http://localhost:8000
+echo  Access on Network: http://MyIP:8000
+echo ---------------------------------------------------
+
+:: Using 0.0.0.0 ensures it broadcasts to your static IP automatically
+php artisan serve --host=0.0.0.0 --port=8000
+
+pause
+
+
+:: How to use this updated script:
+
+    :: Save it in the root folder: Place this file directly inside C:\xampp\htdocs\CSC-Document-Management-System (next to your .env file).
+    :: Update your Startup Shortcut: * If you previously put a shortcut in shell:startup, delete the old one.
+        :: Right-click this new .bat file inside your project folder and select Create Shortcut.
+        :: Move that new shortcut into the shell:startup folder.
+
+    :: Check your .gitignore: Since you are keeping this inside the project, open your .gitignore file and add *.bat to the bottom. 
+    :: This prevents your local network settings from being pushed to a code repository if you ever use Git.
