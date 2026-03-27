@@ -77,6 +77,16 @@ Route::middleware('auth')->group(function () {
         // Audit & Activity Logs
         Route::get('/reports/audit-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])
             ->name('reports.audit-log');
+
+        // Reports & Exporting
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/generate', [\App\Http\Controllers\ReportController::class, 'index'])->name('generate');
+            Route::get('/export/employees', [\App\Http\Controllers\ReportController::class, 'exportEmployees'])->name('export-employees');
+            Route::get('/export/audit-logs', [\App\Http\Controllers\ReportController::class, 'exportAuditLogs'])->name('export-audit-logs');
+            Route::get('/export/company-summary', [\App\Http\Controllers\ReportController::class, 'exportCompanySummary'])->name('export-company-summary');
+            Route::get('/export/storage-utilization', [\App\Http\Controllers\ReportController::class, 'exportStorageUtilization'])->name('export-storage-utilization');
+            Route::get('/export/available-folders', [\App\Http\Controllers\ReportController::class, 'exportAvailableFolders'])->name('export-available-folders');
+        });
     });
 
     Route::get('/201files',              [EmployeeController::class, 'create'])->name('201files');
