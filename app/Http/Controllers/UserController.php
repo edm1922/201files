@@ -42,7 +42,7 @@ class UserController extends Controller
         
         $user = User::create($validated);
         
-        AuditService::log('created', "Created new user: {$user->username}", $user);
+        AuditService::log('created', "Created new user", $user);
 
         return redirect()->route('settings.users.index')
                          ->with('success', 'User created successfully. Default password is: ' . $defaultPassword);
@@ -73,7 +73,7 @@ class UserController extends Controller
         
         $user->update($validated);
 
-        AuditService::log('updated', "Updated user: {$user->username}", $user);
+        AuditService::log('updated', "Updated user", $user);
 
         return redirect()->route('settings.users.index')
                          ->with('success', 'User updated successfully.');
@@ -92,7 +92,7 @@ class UserController extends Controller
         $username = $user->username;
         $user->delete();
 
-        AuditService::log('deleted', "Deleted user: {$username}");
+        AuditService::log('deleted', "Deleted user");
         return redirect()->route('settings.users.index')
                          ->with('success', 'User deleted successfully.');
     }
@@ -115,7 +115,7 @@ class UserController extends Controller
             'must_change_password' => true,
         ]);
 
-        AuditService::log('updated', "Reset password for user: {$user->username}", $user);
+        AuditService::log('updated', "Reset password", $user);
 
         return redirect()->route('settings.users.index')
                          ->with('success', 'Password reset successfully for ' . $user->name . '. Their new password is: ' . $defaultPassword);

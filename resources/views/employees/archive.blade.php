@@ -4,7 +4,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="h4 mb-1 fw-bold">Employee Archive</h2>
-            <p class="text-muted mb-0" style="font-size: 0.85rem;">Resigned employees that have been archived. Only admins can restore or permanently delete.</p>
+            <p class="text-muted mb-0" style="font-size: 0.85rem;">Resigned employees that have been archived. You can view details and restore them to active status.</p>
         </div>
         <a href="{{ route('201files') }}" class="btn btn-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px; background-color: #dd270d; color: white;">
             <i class="fas fa-arrow-left"></i> Back to 201 Files
@@ -88,15 +88,17 @@
                                             </button>
                                         </form>
 
-                                        {{-- Permanently Delete Button --}}
-                                        <button type="button" class="btn btn-sm"
-                                                title="Permanently Delete"
-                                                style="border-radius: 6px; padding: 6px 12px; background-color: #fef2f2; color: #ef4444; font-weight: 500; transition: all 0.2s;"
-                                                onmouseover="this.style.backgroundColor='#fee2e2'"
-                                                onmouseout="this.style.backgroundColor='#fef2f2'"
-                                                @click="openConfirmModal({{ $employee->id }}, '{{ addslashes($employee->full_name) }}', '{{ $employee->folder?->folder_code }}')">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        {{-- Permanently Delete Button (Admin only) --}}
+                                        @if(Auth::user()->isAdmin())
+                                            <button type="button" class="btn btn-sm"
+                                                    title="Permanently Delete"
+                                                    style="border-radius: 6px; padding: 6px 12px; background-color: #fef2f2; color: #ef4444; font-weight: 500; transition: all 0.2s;"
+                                                    onmouseover="this.style.backgroundColor='#fee2e2'"
+                                                    onmouseout="this.style.backgroundColor='#fef2f2'"
+                                                    @click="openConfirmModal({{ $employee->id }}, '{{ addslashes($employee->full_name) }}', '{{ $employee->folder?->folder_code }}')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

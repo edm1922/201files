@@ -68,25 +68,61 @@
                                                 $log->action === 'created' ? 'bg-success-subtle text-success' : 
                                                 ($log->action === 'updated' ? 'bg-info-subtle text-info' : 
                                                 ($log->action === 'deleted' ? 'bg-danger-subtle text-danger' : 
-                                                ($log->action === 'archived' ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary'))) 
+                                                ($log->action === 'archived' ? 'bg-warning-subtle text-warning' : 
+                                                ($log->action === 'restored' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary')))) 
                                             }}" style="font-size: 0.7rem; padding: 4px 10px; border: 1px solid currentColor;">
                                                 <i class="fas {{ 
                                                     $log->action === 'created' ? 'fa-plus-circle' : 
                                                     ($log->action === 'updated' ? 'fa-edit' : 
                                                     ($log->action === 'deleted' ? 'fa-trash-alt' : 
-                                                    ($log->action === 'archived' ? 'fa-archive' : 'fa-history'))) 
+                                                    ($log->action === 'archived' ? 'fa-archive' : 
+                                                    ($log->action === 'restored' ? 'fa-undo' : 'fa-history')))) 
                                                 }} me-1"></i>
                                                 {{ strtoupper($log->action) }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <div class="text-dark fw-medium">{{ $log->description }}</div>
-                                            @if($log->model_type)
-                                                <div class="text-muted" style="font-size: 0.75rem;">
+                                        <td style="min-width: 250px;">
+                                            <div class="text-dark fw-medium">{{ $log->clean_description }}</div>
+                                            
+                                            {{-- Field-level changes --}}
+                                            @if($log->changes && isset($log->changes['before']) && isset($log->changes['after']))
+                                                <div class="mt-2 pt-2 border-top" style="border-top-color: #f3f4f6 !important;">
+                                                    @php
+                                                        $ignoreKeys = ['id', 'created_at', 'updated_at', 'deleted_at', 'remember_token', 'password', 'folder_id', 'is_available'];
+                                                        $relevantKeys = array_keys($log->changes['before']);
+                                                        $hasChanges = false;
+                                                    @endphp
+                                                    
+                                                    @foreach($relevantKeys as $key)
+                                                        @if(!in_array($key, $ignoreKeys))
+                                                            @php
+                                                                $before = $log->changes['before'][$key] ?? '';
+                                                                $after = $log->changes['after'][$key] ?? '';
+                                                                
+                                                                $bStr = ($before === null || $before === '') ? 'NONE' : (is_scalar($before) ? $before : json_encode($before));
+                                                                $aStr = ($after === null || $after === '') ? 'NONE' : (is_scalar($after) ? $after : json_encode($after));
+                                                            @endphp
+                                                            
+                                                            @if($bStr != $aStr)
+                                                                @php $hasChanges = true; @endphp
+                                                                <div class="mb-1 d-flex align-items-center flex-wrap" style="font-size: 0.72rem;">
+                                                                    <span class="text-secondary text-uppercase fw-bold me-1" style="font-size: 0.62rem; letter-spacing: 0.02em;">{{ str_replace('_', ' ', $key) }}:</span>
+                                                                    <span class="text-muted text-decoration-line-through small">{{ $bStr }}</span>
+                                                                    <i class="fas fa-arrow-right mx-1 text-danger opacity-50" style="font-size: 0.6rem;"></i>
+                                                                    <span class="text-danger fw-bold">{{ $aStr }}</span>
+                                                                </div>
+                                                            @endif
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
+
+                                            <!-- @if($log->model_type)
+                                                <div class="text-muted mt-2" style="font-size: 0.75rem;">
                                                     <i class="fas fa-tag me-1 text-secondary opacity-50"></i>
                                                     {{ class_basename($log->model_type) }} #{{ $log->model_id }}
                                                 </div>
-                                            @endif
+                                            @endif -->
                                         <td>
                                             <div class="fw-bold text-dark">{{ $log->target_name }}</div>
                                             @if($log->model_type)

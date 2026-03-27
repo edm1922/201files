@@ -164,6 +164,23 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- LAST UPDATED LOG --}}
+                        @if(isset($latestUpdate) && $latestUpdate)
+                            <div class="mt-4 p-2 rounded-2 d-flex align-items-center shadow-sm" style="background-color: #f3f4f6; border-left: 5px solid #dc2626;">
+                                <div class="ps-3 py-1">
+                                    <span style="font-size: 0.82rem; color: #374151;">
+                                        <span class="fw-bold text-danger text-uppercase">{{ $employee->full_name }}</span>'s data was last updated by 
+                                        <span class="fw-bold text-danger text-uppercase">{{ $latestUpdate->user?->name ?: 'System' }}</span> on 
+                                        <span class="fw-bold text-danger">{{ $latestUpdate->created_at->format('M d, Y') }}</span> at 
+                                        <span class="fw-bold text-danger">{{ $latestUpdate->created_at->format('h:i A') }}</span>.
+                                        <a href="javascript:void(0)" onclick="showUpdateHistory({{ $employee->id }})" class="text-primary fw-bold text-decoration-none ms-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                            SEE MORE <i class="fas fa-chevron-right ms-1" style="font-size: 0.65rem;"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
                     @else
                         <div class="text-center py-5 text-muted">
                             <i class="fas fa-user-slash fa-2x mb-3"></i>
@@ -401,6 +418,7 @@
             </div>{{-- end tab-content --}}
         </div>{{-- end file-panel --}}
         @include('employees.partials.resigned_modal')
+        @include('employees.partials.update_history_modal')
     </form>
 
 
@@ -413,6 +431,12 @@
                 modal: null,
 
                 init() {
+                    // Universal uppercase for inputs with .text-uppercase
+                    document.querySelectorAll('.text-uppercase').forEach(input => {
+                        input.addEventListener('input', function() {
+                            this.value = this.value.toUpperCase();
+                        });
+                    });
                     this.modal = new bootstrap.Modal(document.getElementById('resignedWarningModal'));
                     
                     // Listen for Select2 change
@@ -472,6 +496,95 @@
                 });
             }
         });
+
+        function formatChanges(changes) {
+            if (!changes || typeof changes !== 'object' || !changes.before || !changes.after) {
+                return '<div class="text-muted small" style="font-style: italic;">No specific field changes recorded.</div>';
+            }
+            
+            const relevantKeys = Object.keys(changes.before);
+            let html = '<div class="mt-2" style="font-size: 0.75rem; border-left: 2px solid #fecaca; padding-left: 12px; margin-left: 4px;">';
+            let changedCount = 0;
+            
+            relevantKeys.forEach(key => {
+                const beforeVal = changes.before[key];
+                const afterVal = changes.after[key];
+                
+                const bStr = (beforeVal === null || beforeVal === '') ? 'NONE' : String(beforeVal);
+                const aStr = (afterVal === null || afterVal === '') ? 'NONE' : String(afterVal);
+                
+                if (bStr !== aStr) {
+                    const label = key.replace(/_/g, ' ').toUpperCase();
+                    html += `
+                        <div class="mb-1">
+                            <span class="fw-semibold text-secondary" style="font-size: 0.65rem;">${label}:</span> 
+                            <span class="text-decoration-line-through text-muted small">${bStr}</span> 
+                            <i class="fas fa-arrow-right mx-1 text-danger opacity-50" style="font-size: 0.6rem;"></i> 
+                            <span class="text-danger fw-semibold">${aStr}</span>
+                        </div>`;
+                    changedCount++;
+                }
+            });
+            
+            html += '</div>';
+            return changedCount > 0 ? html : '';
+        }
+
+        function showUpdateHistory(employeeId) {
+            const modalElement = document.getElementById('updateHistoryModal');
+            const modal = new bootstrap.Modal(modalElement);
+            const content = document.getElementById('updateHistoryContent');
+            
+            content.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                        <div class="spinner-border spinner-border-sm me-2 text-danger" role="status"></div>
+                        Loading history...
+                    </td>
+                </tr>
+            `;
+            
+            modal.show();
+            
+            fetch(`/employees/${employeeId}/update-history`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        content.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No update history found.</td></tr>';
+                        return;
+                    }
+                    
+                    content.innerHTML = data.map(log => `
+                        <tr>
+                            <td class="ps-3" style="width: 15%; vertical-align: top;">
+                                <div class="d-flex align-items-center">
+                                    <div class="history-user-avatar me-2" style="width: 28px; height: 28px; flex-shrink: 0;">
+                                        <i class="fas fa-user" style="font-size: 0.7rem;"></i>
+                                    </div>
+                                    <div style="min-width: 0;">
+                                        <div class="fw-semibold text-dark text-truncate" style="font-size: 0.8rem;" title="${log.user_name}">${log.user_name}</div>
+                                        <div class="text-muted text-uppercase" style="font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px;">${log.user_role}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="width: 30%; vertical-align: top;">
+                                <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${log.description}</div>
+                            </td>
+                            <td style="width: 35%; vertical-align: top;">
+                                ${formatChanges(log.changes)}
+                            </td>
+                            <td class="pe-3 text-end" style="width: 20%; vertical-align: top;">
+                                <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${log.date}</div>
+                                <div class="small text-muted" style="font-size: 0.7rem;">${log.time}</div>
+                            </td>
+                        </tr>
+                    `).join('');
+                })
+                .catch(err => {
+                    content.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading history.</td></tr>';
+                    console.error(err);
+                });
+        }
     </script>
     @endpush
 
