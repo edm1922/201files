@@ -32,4 +32,9 @@ class DocumentType extends Model
     {
         return $this->hasMany(Document::class);
     }
+
+    public function scopeForDepartment($query, int $departmentId)
+    {
+        return $query->where('department_id', $departmentId);
+    }
 }

@@ -15,6 +15,7 @@ class Document extends Model
         'department_id',
         'document_type_id',
         'folder_location_id',
+        'document_folder_id',
         'uploaded_by',
         'file_path',
         'original_filename',
@@ -22,11 +23,13 @@ class Document extends Model
         'page_count',
         'file_size_bytes',
         'mime_type',
+        'upload_mode',
         'status',
         'date_received',
         'expiry_date',
         'ocr_text',
         'metadata',
+        'source_filenames',
     ];
 
     protected function casts(): array
@@ -35,6 +38,7 @@ class Document extends Model
             'date_received' => 'date',
             'expiry_date' => 'date',
             'metadata' => 'array',
+            'source_filenames' => 'array',
         ];
     }
 
@@ -69,6 +73,11 @@ class Document extends Model
     public function folderLocation(): BelongsTo
     {
         return $this->belongsTo(FolderLocation::class);
+    }
+
+    public function documentFolder(): BelongsTo
+    {
+        return $this->belongsTo(DocumentFolder::class);
     }
 
     public function uploader(): BelongsTo

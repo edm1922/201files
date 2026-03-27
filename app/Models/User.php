@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -106,5 +107,19 @@ class User extends Authenticatable
     public function uploadedDocuments()
     {
         return $this->hasMany(Document::class, 'uploaded_by');
+    }
+
+    public function authorizedDepartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_user_access')->withTimestamps();
+    }
+
+    public function canAccessDepartment(int $departmentId): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return $this->authorizedDepartments()->whereKey($departmentId)->exists();
     }
 }
