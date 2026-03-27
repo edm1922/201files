@@ -64,14 +64,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/milli-search', [EmployeeSearchController::class, 'milliSearch'])
         ->name('employees.milliSearch');
 
-    // ── Archive (admin only) ──
-    Route::middleware('role:admin')->group(function () {
+    Route::get('/employees/{id}/update-history', [EmployeeController::class, 'updateHistory'])
+        ->name('employees.update-history');
+
+    // ── Archive (admin and encoder) ──
+    Route::middleware('role:admin,encoder')->group(function () {
         Route::get('/employees/archive', [EmployeeController::class, 'archiveIndex'])
             ->name('employees.archive');
         Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
             ->name('employees.details');
         Route::patch('/employees/{id}/restore', [EmployeeController::class, 'restore'])
             ->name('employees.restore');
+    });
+
+    // ── Admin Only ──
+    Route::middleware('role:admin')->group(function () {
         Route::delete('/employees/{id}/force-delete', [EmployeeController::class, 'forceDestroy'])
             ->name('employees.forceDestroy');
 

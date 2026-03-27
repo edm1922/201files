@@ -58,7 +58,7 @@ class CompanyController extends Controller
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        AuditService::log('created', "Created new company: {$company->name}", $company);
+        AuditService::log('created', "Created new company", $company);
 
         return redirect()
             ->route('settings.companies.index')
@@ -84,7 +84,7 @@ class CompanyController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        AuditService::log('updated', "Updated company: {$company->name}", $company);
+        AuditService::log('updated', "Updated company", $company);
 
         return redirect()
             ->route('settings.companies.index')
@@ -99,7 +99,7 @@ class CompanyController extends Controller
         $company->update(['is_active' => !$company->is_active]);
 
         $status = $company->is_active ? 'activated' : 'deactivated';
-        AuditService::log('updated', "Company {$company->name} was {$status}", $company);
+        AuditService::log('updated', "Company status updated to {$status}", $company);
 
         $status = $company->is_active ? 'activated' : 'deactivated';
 
@@ -121,7 +121,7 @@ class CompanyController extends Controller
         $name = $company->name;
         $company->delete();
 
-        AuditService::log('deleted', "Deleted company: {$name}");
+        AuditService::log('deleted', "Deleted company");
 
         return redirect()
             ->route('settings.companies.index')

@@ -18,9 +18,6 @@ class FolderLocationSeeder extends Seeder
 
         $locations = [
             ['id' => 1, 'row_name' => 'A', 'column_code' => '1', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'row_name' => 'A', 'column_code' => '2', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 3, 'row_name' => 'B', 'column_code' => '1', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 4, 'row_name' => 'B', 'column_code' => '2', 'created_at' => now(), 'updated_at' => now()],
         ];
 
         DB::table('folder_locations')->insert($locations);

@@ -59,7 +59,7 @@ class EmployeeController extends Controller
 
             AuditService::log(
                 'created',
-                "Added new employee: {$employee->full_name}",
+                "Added new employee",
                 $employee
             );
 
@@ -69,7 +69,7 @@ class EmployeeController extends Controller
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
                     'archived',
-                    "Auto-archived employee: {$employee->full_name} (status: resigned)",
+                    "Auto-archived employee (status: resigned)",
                     $employee
                 );
             }
@@ -95,6 +95,13 @@ class EmployeeController extends Controller
     {
         $employee->load(['company', 'folder', 'folderLocation']);
 
+        $latestUpdate = \App\Models\AuditLog::where('model_type', Employee::class)
+            ->where('model_id', $employee->id)
+            ->whereIn('action', ['updated', 'restored'])
+            ->with('user')
+            ->latest()
+            ->first();
+
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
         $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
@@ -102,6 +109,7 @@ class EmployeeController extends Controller
 
         return view('201files', [
             'employee'       => $employee,
+            'latestUpdate'   => $latestUpdate,
             'companies'      => $companies,
             'folders'        => $folders,
             'locations'      => $locations,
@@ -165,7 +173,7 @@ class EmployeeController extends Controller
 
             AuditService::log(
                 'updated',
-                "Updated employee profile: {$employee->full_name}",
+                "Updated employee profile",
                 $employee,
                 ['before' => $old, 'after' => $employee->fresh()->toArray()]
             );
@@ -177,7 +185,7 @@ class EmployeeController extends Controller
                 $employee->delete(); // soft-delete = archive
                 AuditService::log(
                     'archived',
-                    "Archived employee: {$employee->full_name} (status changed to resigned)",
+                    "Archived employee (status: resigned)",
                     $employee
                 );
             }
@@ -227,7 +235,7 @@ class EmployeeController extends Controller
 
             AuditService::log(
                 'restored',
-                "Restored employee: {$employee->full_name} from archive",
+                "Restored employee from archive",
                 $employee
             );
         });
@@ -243,6 +251,10 @@ class EmployeeController extends Controller
      */
     public function forceDestroy(int $id)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $employee = Employee::onlyTrashed()->findOrFail($id);
 
         DB::transaction(function () use ($employee) {
@@ -258,7 +270,7 @@ class EmployeeController extends Controller
 
             AuditService::log(
                 'deleted',
-                "Permanently deleted employee: {$name} (System ID: {$systemId})"
+                "Permanently deleted employee (System ID: {$systemId})"
             );
         });
 
@@ -287,5 +299,29 @@ class EmployeeController extends Controller
             'archived_at' => $employee->deleted_at?->format('F d, Y h:i A'),
             'status'      => ucfirst($employee->status)
         ]);
+    }
+
+    /**
+     * Get employee update history as JSON (for History modal).
+     */
+    public function updateHistory(int $id)
+    {
+        $logs = \App\Models\AuditLog::where('model_type', Employee::class)
+            ->where('model_id', $id)
+            ->whereIn('action', ['updated', 'restored'])
+            ->with('user')
+            ->latest('created_at')
+            ->get();
+
+        return response()->json($logs->map(function ($log) {
+            return [
+                'user_name' => $log->user?->name ?: 'System',
+                'user_role' => $log->user?->role ?: 'System',
+                'date'      => $log->created_at->format('M d, Y'),
+                'time'      => $log->created_at->format('h:i A'),
+                'description' => $log->description,
+                'changes'   => $log->changes
+            ];
+        }));
     }
 }

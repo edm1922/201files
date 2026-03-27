@@ -17,6 +17,14 @@ class ActivityLogController extends Controller
             $query->where('action', $request->action);
         }
 
+        if ($request->has('model_id')) {
+            $query->where('model_id', $request->model_id);
+        }
+
+        if ($request->has('model_type')) {
+            $query->where('model_type', $request->model_type);
+        }
+
         $logs = $query->paginate(20)->withQueryString();
 
         return view('reports.audit-log', compact('logs'));

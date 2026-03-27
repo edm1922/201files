@@ -52,11 +52,34 @@ class AuditLog extends Model
 
         return match ($this->model_type) {
             'App\Models\Employee' => $this->model->full_name,
-            'App\Models\User' => $this->model->name,
+            'App\Models\User' => $this->model->username ?? $this->model->name,
             'App\Models\Company' => $this->model->name,
             'App\Models\Department' => $this->model->name,
             'App\Models\Document' => $this->model->original_filename,
             default => 'ID: ' . $this->model_id
         };
+    }
+
+    /**
+     * Helper to get a description without the redundant target name.
+     */
+    public function getCleanDescriptionAttribute()
+    {
+        $target = $this->target_name;
+        if ($target === '—') {
+            return $this->description;
+        }
+
+        $desc = $this->description;
+        
+        // Remove ": Name" or " Name" 
+        $desc = str_replace(": " . $target, "", $desc);
+        $desc = str_replace($target, "", $desc);
+        
+        // Clean up any double spaces or trailing punctuation
+        $desc = preg_replace('/\s+/', ' ', $desc);
+        $desc = rtrim(trim($desc), ':');
+        
+        return $desc ?: $this->description;
     }
 }

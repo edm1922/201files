@@ -38,7 +38,7 @@
             </a>
         </li>
 
-        @if(Auth::user()->isAdmin())
+        @if(Auth::user()->isAdmin() || Auth::user()->isEncoder())
         {{-- Archive (admin only) --}}
         <li class="nav-item">
             <a class="nav-link {{ request()->is('employees/archive*') ? 'active' : '' }}" href="{{ route('employees.archive') }}">
