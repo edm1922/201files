@@ -51,24 +51,34 @@
         <li class="sidebar-section-label">DOCUMENT MANAGEMENT</li>
 
         {{-- Department Dropdown --}}
-        <li class="nav-item" x-data="{ open: {{ request()->is('departments*') ? 'true' : 'false' }} }">
-            <a class="nav-link {{ request()->is('departments*') ? 'active' : '' }}"
-               href="javascript:void(0)"
-               @click="open = !open"
+        <li class="nav-item" x-data="{ open: {{ request()->is('department-documents*') ? 'true' : 'false' }} }">
+            <a class="nav-link {{ request()->is('department-documents*') ? 'active' : '' }}"
+               href="{{ route('department-documents.index') }}"
+               @click.prevent="open = !open"
                style="display: flex; justify-content: space-between; align-items: center;">
                 <span>
                     <i class="fas fa-building"></i> Departments
                 </span>
-                <i class="fas" :class="open ? 'fa-chevron-down' : 'fa-chevron-right'" style="font-size: 0.7rem;"></i>
+                <div @click.stop="window.location.href='{{ route('department-documents.index') }}'" style="cursor: pointer; padding: 0 5px;">
+                     <i class="fas" :class="open ? 'fa-chevron-down' : 'fa-chevron-right'" style="font-size: 0.7rem;"></i>
+                </div>
             </a>
             <ul class="nav flex-column ms-3" x-show="open" x-transition x-cloak>
-                @php
-                    $departments = \App\Models\Department::all();
-                @endphp
-                @foreach($departments as $dept)
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/departments/' . $dept->id) }}">
-                        <i class="fas fa-folder"></i> {{ $dept->name }}
+                    <a class="nav-link {{ !request('department_id') && request()->is('department-documents*') ? 'active' : '' }}" href="{{ route('department-documents.index') }}">
+                        <i class="fas fa-layer-group"></i> All Departments
+                    </a>
+                </li>
+                @php
+                    $sidebarUser = Auth::user();
+                    $sidebarDepartments = $sidebarUser->isAdmin()
+                        ? \App\Models\Department::query()->where('is_active', true)->orderBy('name')->get()
+                        : $sidebarUser->authorizedDepartments()->where('is_active', true)->orderBy('departments.name')->get();
+                @endphp
+                @foreach($sidebarDepartments as $sidebarDept)
+                <li class="nav-item">
+                    <a class="nav-link {{ request('department_id') == $sidebarDept->id ? 'active' : '' }}" href="{{ route('department-documents.index', ['department_id' => $sidebarDept->id]) }}">
+                        <i class="fas fa-folder"></i> {{ $sidebarDept->name }}
                     </a>
                 </li>
                 @endforeach

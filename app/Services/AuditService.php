@@ -38,6 +38,11 @@ class AuditService
         return self::log($action, $description, $document, $changes);
     }
 
+    public static function logDepartmentDocumentLifecycle(string $action, \App\Models\Document $document, array $changes = []): AuditLog
+    {
+        return self::log($action, "Department document {$action}: {$document->system_filename}", $document, $changes);
+    }
+
     /**
      * Log user login.
      */

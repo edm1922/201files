@@ -1,0 +1,248 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Document;
+use App\Models\DocumentType;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class DepartmentDocumentUploadService
+{
+    public function __construct(
+        private readonly DocumentMergeService $mergeService
+    ) {}
+
+    public function upload(array $validatedData, User $user): Document
+    {
+        $departmentId = (int) $validatedData['department_id'];
+        $docTypeId = (int) $validatedData['document_type_id'];
+        $folderLocId = (int) $validatedData['folder_location_id'];
+        $uploadMode = $validatedData['upload_mode'] ?? 'standard';
+        $dateReceived = Carbon::parse($validatedData['date_received']);
+        $expiryDate = isset($validatedData['expiry_date']) ? Carbon::parse($validatedData['expiry_date']) : null;
+        $files = $validatedData['files'];
+
+        $documentType = DocumentType::findOrFail($docTypeId);
+        $documentFolderId = $this->resolveDocumentFolderId($validatedData['document_folder_id'] ?? null);
+
+        if ($uploadMode === 'scan_packet') {
+            return $this->storeScanPacket(
+                files: $files,
+                departmentId: $departmentId,
+                documentType: $documentType,
+                folderLocationId: $folderLocId,
+                documentFolderId: $documentFolderId,
+                user: $user,
+                dateReceived: $dateReceived,
+                expiryDate: $expiryDate,
+                validatedData: $validatedData
+            );
+        }
+
+        /** @var UploadedFile $file */
+        $file = $files[0];
+        return $this->storeStandardFile(
+            file: $file,
+            departmentId: $departmentId,
+            documentType: $documentType,
+            folderLocationId: $folderLocId,
+            documentFolderId: $documentFolderId,
+            user: $user,
+            dateReceived: $dateReceived,
+            expiryDate: $expiryDate,
+            validatedData: $validatedData
+        );
+    }
+
+    private function storeScanPacket(
+        array $files,
+        int $departmentId,
+        DocumentType $documentType,
+        int $folderLocationId,
+        ?int $documentFolderId,
+        User $user,
+        Carbon $dateReceived,
+        ?Carbon $expiryDate,
+        array $validatedData
+    ): Document {
+        $mergedData = $this->mergeService->buildPdf($files);
+        $tempPath = $mergedData['temp_path'];
+        $pageCount = $mergedData['page_count'];
+        $sourceNames = $mergedData['source_names'];
+
+        $baseFilename = $this->buildBaseFilename($departmentId, $documentType->code, $dateReceived, 'pdf');
+        $directory = "documents/departments/{$departmentId}";
+        $resolvedFilename = $this->resolveUniqueFilename($directory, $baseFilename, 'pdf');
+        $relativePath = "{$directory}/{$resolvedFilename}";
+
+        try {
+            return DB::transaction(function () use (
+                $tempPath,
+                $relativePath,
+                $departmentId,
+                $documentType,
+                $folderLocationId,
+                $documentFolderId,
+                $user,
+                $sourceNames,
+                $resolvedFilename,
+                $pageCount,
+                $dateReceived,
+                $expiryDate,
+                $validatedData,
+                $baseFilename
+            ) {
+                $fileSize = filesize($tempPath);
+                Storage::disk('local')->put($relativePath, file_get_contents($tempPath));
+
+                $document = Document::create([
+                    'department_id' => $departmentId,
+                    'document_type_id' => $documentType->id,
+                    'folder_location_id' => $folderLocationId,
+                    'document_folder_id' => $documentFolderId,
+                    'uploaded_by' => $user->id,
+                    'file_path' => $relativePath,
+                    'original_filename' => substr($baseFilename, 0, 255),
+                    'system_filename' => $resolvedFilename,
+                    'page_count' => $pageCount,
+                    'file_size_bytes' => $fileSize,
+                    'mime_type' => 'application/pdf',
+                    'upload_mode' => 'scan_packet',
+                    'status' => 'active',
+                    'date_received' => $dateReceived,
+                    'expiry_date' => $expiryDate,
+                    'source_filenames' => $sourceNames,
+                ]);
+
+                AuditService::logDepartmentDocumentLifecycle('uploaded', $document);
+
+                if (!empty($validatedData['force_fail_after_store'])) {
+                    throw new \RuntimeException('Forced failure for integrity test');
+                }
+
+                @unlink($tempPath);
+                return $document;
+            });
+        } catch (\Throwable $e) {
+            @unlink($tempPath);
+
+            $deleted = Storage::disk('local')->delete($relativePath);
+
+            if (! $deleted) {
+                AuditService::log('cleanup_failed', 'Department upload cleanup failed', null, ['path' => $relativePath]);
+            }
+
+            throw $e;
+        }
+    }
+
+    private function storeStandardFile(
+        UploadedFile $file,
+        int $departmentId,
+        DocumentType $documentType,
+        int $folderLocationId,
+        ?int $documentFolderId,
+        User $user,
+        Carbon $dateReceived,
+        ?Carbon $expiryDate,
+        array $validatedData
+    ): Document {
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'bin');
+        $baseFilename = $this->buildBaseFilename($departmentId, $documentType->code, $dateReceived, $extension);
+        $directory = "documents/departments/{$departmentId}";
+        $resolvedFilename = $this->resolveUniqueFilename($directory, $baseFilename, $extension);
+        $relativePath = "{$directory}/{$resolvedFilename}";
+
+        try {
+            return DB::transaction(function () use (
+                $file,
+                $relativePath,
+                $departmentId,
+                $documentType,
+                $folderLocationId,
+                $documentFolderId,
+                $user,
+                $resolvedFilename,
+                $dateReceived,
+                $expiryDate,
+                $validatedData
+            ) {
+                $storageSuccess = Storage::disk('local')->put($relativePath, file_get_contents($file->getRealPath()));
+                if (! $storageSuccess) {
+                    throw new \RuntimeException('Unable to store uploaded file.');
+                }
+
+                $document = Document::create([
+                    'department_id' => $departmentId,
+                    'document_type_id' => $documentType->id,
+                    'folder_location_id' => $folderLocationId,
+                    'document_folder_id' => $documentFolderId,
+                    'uploaded_by' => $user->id,
+                    'file_path' => $relativePath,
+                    'original_filename' => substr($file->getClientOriginalName(), 0, 255),
+                    'system_filename' => $resolvedFilename,
+                    'page_count' => 1,
+                    'file_size_bytes' => (int) $file->getSize(),
+                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+                    'upload_mode' => 'standard',
+                    'status' => 'active',
+                    'date_received' => $dateReceived,
+                    'expiry_date' => $expiryDate,
+                    'source_filenames' => [$file->getClientOriginalName()],
+                ]);
+
+                AuditService::logDepartmentDocumentLifecycle('uploaded', $document);
+
+                if (!empty($validatedData['force_fail_after_store'])) {
+                    throw new \RuntimeException('Forced failure for integrity test');
+                }
+
+                return $document;
+            });
+        } catch (\Throwable $e) {
+            $deleted = Storage::disk('local')->delete($relativePath);
+
+            if (! $deleted) {
+                AuditService::log('cleanup_failed', 'Department upload cleanup failed', null, ['path' => $relativePath]);
+            }
+
+            throw $e;
+        }
+    }
+
+    private function buildBaseFilename(int $departmentId, string $docTypeCode, Carbon $date, string $extension): string
+    {
+        $prefix = sprintf('DEPT-%d_%s_%s', $departmentId, strtoupper($docTypeCode), $date->format('YmdHis'));
+        return Str::of($prefix)->append('.')->append($extension)->toString();
+    }
+
+    private function resolveUniqueFilename(string $directory, string $baseName, string $extension): string
+    {
+        if (!Storage::disk('local')->exists("{$directory}/{$baseName}")) {
+            return $baseName;
+        }
+
+        $nameWithoutExtension = pathinfo($baseName, PATHINFO_FILENAME);
+        $counter = 1;
+        while (true) {
+            $formattedCounter = sprintf('%02d', $counter);
+            $newName = "{$nameWithoutExtension}_{$formattedCounter}.{$extension}";
+            if (!Storage::disk('local')->exists("{$directory}/{$newName}")) {
+                return $newName;
+            }
+            $counter++;
+        }
+    }
+
+    private function resolveDocumentFolderId(mixed $folderIdInput): ?int
+    {
+        $folderId = (int) ($folderIdInput ?? 0);
+
+        return $folderId > 0 ? $folderId : null;
+    }
+}

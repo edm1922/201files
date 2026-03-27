@@ -4,6 +4,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FolderLocationController;
 use App\Http\Controllers\DocumentTypeController;
+use App\Http\Controllers\DepartmentDocumentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeSearchController;
@@ -90,6 +91,32 @@ Route::middleware('auth')->group(function () {
     Route::post('/employees',            [EmployeeController::class, 'store'])->name('employees.store');
     Route::get('/employees/{employee}',  [EmployeeController::class, 'show'])->name('employees.show');
     Route::put('/employees/{employee}',  [EmployeeController::class, 'update'])->name('employees.update');
+
+    Route::prefix('department-documents')->name('department-documents.')->group(function () {
+        Route::get('/', [DepartmentDocumentController::class, 'index'])
+            ->middleware('can:viewAny,App\Models\Document')
+            ->name('index');
+
+        Route::post('/folders', [DepartmentDocumentController::class, 'storeFolder'])
+            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->name('folders.store');
+
+        Route::post('/', [DepartmentDocumentController::class, 'store'])
+            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->name('store');
+
+        Route::patch('/{document}/archive', [DepartmentDocumentController::class, 'archive'])
+            ->middleware(['role:admin,encoder', 'can:archive,document'])
+            ->name('archive');
+
+        Route::patch('/{id}/restore', [DepartmentDocumentController::class, 'restore'])
+            ->middleware('role:admin')
+            ->name('restore');
+
+        Route::get('/{document}/download', [DepartmentDocumentController::class, 'download'])
+            ->middleware('can:download,document')
+            ->name('download');
+    });
 });
 
 require __DIR__.'/auth.php';

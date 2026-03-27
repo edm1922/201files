@@ -25,7 +25,7 @@ class UserFactory extends Factory
             'suffix' => fake()->optional()->suffix(),
             'username' => fake()->unique()->userName(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= password_hash('password', PASSWORD_BCRYPT),
+            'password' => static::$password ??= Hash::make('password'),
             'must_change_password' => false,
             'role' => 'viewer',
             'remember_token' => Str::random(10),
