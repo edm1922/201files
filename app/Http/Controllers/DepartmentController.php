@@ -41,7 +41,7 @@ class DepartmentController extends Controller
         
         $department = Department::create($data);
 
-        AuditService::log('created', "Created new department: {$department->name}", $department);
+        AuditService::log('created', "Created new department", $department);
 
         return redirect()
             ->route('settings.departments.index')
@@ -67,7 +67,7 @@ class DepartmentController extends Controller
         
         $department->update($data);
 
-        AuditService::log('updated', "Updated department: {$department->name}", $department);
+        AuditService::log('updated', "Updated department", $department);
 
         return redirect()
             ->route('settings.departments.index')
@@ -85,7 +85,7 @@ class DepartmentController extends Controller
 
         $status = $department->is_active ? 'reactivated' : 'deactivated';
         
-        AuditService::log('updated', "Department {$department->name} was {$status}", $department);
+        AuditService::log('updated', "Department status updated to {$status}", $department);
         return redirect()->route('settings.departments.index')
             ->with('success', "Department has been {$status}.");
     }
@@ -113,7 +113,7 @@ class DepartmentController extends Controller
         $name = $department->name;
         $department->delete();
 
-        AuditService::log('deleted', "Deleted department: {$name}");
+        AuditService::log('deleted', "Deleted department");
 
         return redirect()
             ->route('settings.departments.index')

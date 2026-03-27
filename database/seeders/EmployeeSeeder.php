@@ -18,7 +18,7 @@ class EmployeeSeeder extends Seeder
         DB::table('employees')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        $csvFile = base_path('temporary file/EMPLOYEE - 1.csv');
+        $csvFile = base_path('temporary file/ALL_EMPLOYEE.csv');
         if (!file_exists($csvFile)) {
             return;
         }
