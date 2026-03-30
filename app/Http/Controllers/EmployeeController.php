@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEmployeeRequest;
 use App\Http\Requests\UpdateEmployeeRequest;
+use App\Models\BankType;
 use App\Models\Company;
 use App\Models\DocumentType;
 use App\Models\Employee;
@@ -20,6 +21,7 @@ class EmployeeController extends Controller
     public function create()
     {
         $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
         $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
         $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
@@ -27,6 +29,7 @@ class EmployeeController extends Controller
         return view('201files', [
             'employee'       => null,
             'companies'      => $companies,
+            'bankTypes'      => $bankTypes,
             'folders'        => $folders,
             'locations'      => $locations,
             'lastFolderCode' => $lastFolderCode,
@@ -42,7 +45,7 @@ class EmployeeController extends Controller
             $data = $request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id', 'folder_id', 'folder_location_id',
+                'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]);
 
             $employee = Employee::create($data);
@@ -93,7 +96,7 @@ class EmployeeController extends Controller
      */
     public function show(Employee $employee)
     {
-        $employee->load(['company', 'folder', 'folderLocation']);
+        $employee->load(['company', 'folder', 'folderLocation', 'bankType']);
 
         $latestUpdate = \App\Models\AuditLog::where('model_type', Employee::class)
             ->where('model_id', $employee->id)
@@ -103,6 +106,7 @@ class EmployeeController extends Controller
             ->first();
 
         $companies = Company::where('is_active', true)->orderBy('name')->get();
+        $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
         $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
         $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
@@ -111,6 +115,7 @@ class EmployeeController extends Controller
             'employee'       => $employee,
             'latestUpdate'   => $latestUpdate,
             'companies'      => $companies,
+            'bankTypes'      => $bankTypes,
             'folders'        => $folders,
             'locations'      => $locations,
             'lastFolderCode' => $lastFolderCode,
@@ -134,7 +139,7 @@ class EmployeeController extends Controller
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
-                'company_id', 'folder_id', 'folder_location_id',
+                'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]));
 
             // Update or create folder

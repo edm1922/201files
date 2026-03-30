@@ -27,6 +27,8 @@ class Employee extends Model
         'folder_id',
         'folder_location_id',
         'archive_date',
+        'atm_status',
+        'bank_type_id',
     ];
 
     protected function casts(): array
@@ -91,5 +93,10 @@ class Employee extends Model
     public function folderLocation(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(FolderLocation::class);
+    }
+
+    public function bankType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(BankType::class);
     }
 }

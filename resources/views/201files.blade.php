@@ -1,4 +1,7 @@
 <x-app-layout>
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('css/201files.css') }}">
+    @endpush
 
     {{-- ── Flash Messages ── --}}
     @if(session('success'))
@@ -42,7 +45,7 @@
         $formMethod = $isNew ? 'POST' : 'PUT';
     @endphp
 
-    <form id="employeeForm" action="{{ $formAction }}" method="POST" x-data="statusManager()">
+    <form id="employeeForm" action="{{ $formAction }}" method="POST" x-data="statusManager('{{ old('status', $employee?->status ?? '') }}')">
         @csrf
         @if(!$isNew)
             @method('PUT')
@@ -159,6 +162,33 @@
                                         <span class="profile-field__label">Date Hired</span>
                                         <span class="profile-field__value">
                                             {{ $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- BANK INFORMATION CARD --}}
+                            <div class="profile-card">
+                                <div class="profile-card__header">Bank Information</div>
+                                <div class="profile-card__body">
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">ATM Status</span>
+                                        <span class="profile-field__value atm-status--{{ str_replace('_', '-', $employee->atm_status ?: 'none') }}">
+                                            @if($employee->atm_status === 'on_process')
+                                                On Process
+                                            @elseif($employee->atm_status === 'for_releasing')
+                                                For Releasing
+                                            @elseif($employee->atm_status === 'received')
+                                                Received
+                                            @else
+                                                —
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="profile-field">
+                                        <span class="profile-field__label">Bank Name</span>
+                                        <span class="profile-field__value">
+                                            {{ $employee->bankType?->name ?? '—' }}
                                         </span>
                                     </div>
                                 </div>
@@ -316,6 +346,38 @@
                                 @enderror
                             </div>
 
+                            <div class="col-md-2">
+                                <label class="form-label" for="atmStatusSelect">ATM Status</label>
+                                <select id="atmStatusSelect" name="atm_status"
+                                        class="form-control basic-select field-input @error('atm_status') is-invalid @enderror"
+                                        data-placeholder="- Choose ATM Status -">
+                                    <option value=""></option>
+                                    <option value="on_process" {{ old('atm_status', $employee?->atm_status) === 'on_process' ? 'selected' : '' }}>On Process</option>
+                                    <option value="for_releasing" {{ old('atm_status', $employee?->atm_status) === 'for_releasing' ? 'selected' : '' }}>For Releasing</option>
+                                    <option value="received" {{ old('atm_status', $employee?->atm_status) === 'received' ? 'selected' : '' }}>Received</option>
+                                </select>
+                                @error('atm_status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label" for="bankTypeSelect">Bank Type</label>
+                                <select id="bankTypeSelect" name="bank_type_id"
+                                        class="form-control basic-select field-input @error('bank_type_id') is-invalid @enderror"
+                                        data-placeholder="- Choose Bank Type -">
+                                    <option value=""></option>
+                                    @foreach($bankTypes as $bankType)
+                                        <option value="{{ $bankType->id }}" {{ old('bank_type_id', $employee?->bank_type_id) == $bankType->id ? 'selected' : '' }}>
+                                            {{ $bankType->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('bank_type_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
 
                             <div class="col-md-4">
                                 <label class="form-label" for="companySelectForm">Company <span class="text-danger">*</span></label>
@@ -420,174 +482,4 @@
         @include('employees.partials.resigned_modal')
         @include('employees.partials.update_history_modal')
     </form>
-
-
-    @push('scripts')
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('statusManager', () => ({
-                currentStatus: '{{ old('status', $employee?->status ?? '') }}',
-                previousStatus: '{{ old('status', $employee?->status ?? '') }}',
-                modal: null,
-
-                init() {
-                    // Universal uppercase for inputs with .text-uppercase
-                    document.querySelectorAll('.text-uppercase').forEach(input => {
-                        input.addEventListener('input', function() {
-                            this.value = this.value.toUpperCase();
-                        });
-                    });
-                    this.modal = new bootstrap.Modal(document.getElementById('resignedWarningModal'));
-                    
-                    // Listen for Select2 change
-                    $('#statusSelect').on('change', (e) => {
-                        this.handleStatusChange(e.target.value);
-                    });
-                },
-
-                handleStatusChange(newStatus) {
-                    if (newStatus === 'resigned') {
-                        this.modal.show();
-                    } else {
-                        this.previousStatus = newStatus;
-                        this.currentStatus = newStatus;
-                    }
-                },
-
-                proceedWithResignation() {
-                    // Just submit the form - the server handles the archive logic
-                    document.getElementById('employeeForm').submit();
-                },
-
-                cancelResignation() {
-                    // Revert the Select2 value
-                    this.currentStatus = this.previousStatus;
-                    $('#statusSelect').val(this.previousStatus).trigger('change.select2');
-                    this.modal.hide();
-                }
-            }));
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sync toolbar company dropdown → hidden form field
-            const companySelect = document.getElementById('companySelect');
-            if (companySelect) {
-                companySelect.addEventListener('change', function () {
-                    const hiddenField = document.getElementById('companyIdHidden');
-                    if (hiddenField) hiddenField.value = this.value;
-                });
-            }
-
-            // Folder Code: Restrict to digits only
-            const folderCodeInput = document.getElementById('folderCodeInput');
-            if (folderCodeInput) {
-                folderCodeInput.addEventListener('input', function (e) {
-                    this.value = this.value.replace(/[^0-9]/g, '');
-                });
-            }
-
-            // Update Folder Code input when Available Code Select changes
-            const availableSelect = document.getElementById('availableCodeSelect');
-            if (availableSelect && folderCodeInput) {
-                availableSelect.addEventListener('change', function () {
-                    if (this.value) {
-                        folderCodeInput.value = this.value;
-                    }
-                });
-            }
-        });
-
-        function formatChanges(changes) {
-            if (!changes || typeof changes !== 'object' || !changes.before || !changes.after) {
-                return '<div class="text-muted small" style="font-style: italic;">No specific field changes recorded.</div>';
-            }
-            
-            const relevantKeys = Object.keys(changes.before);
-            let html = '<div class="mt-2" style="font-size: 0.75rem; border-left: 2px solid #fecaca; padding-left: 12px; margin-left: 4px;">';
-            let changedCount = 0;
-            
-            relevantKeys.forEach(key => {
-                const beforeVal = changes.before[key];
-                const afterVal = changes.after[key];
-                
-                const bStr = (beforeVal === null || beforeVal === '') ? 'NONE' : String(beforeVal);
-                const aStr = (afterVal === null || afterVal === '') ? 'NONE' : String(afterVal);
-                
-                if (bStr !== aStr) {
-                    const label = key.replace(/_/g, ' ').toUpperCase();
-                    html += `
-                        <div class="mb-1">
-                            <span class="fw-semibold text-secondary" style="font-size: 0.65rem;">${label}:</span> 
-                            <span class="text-decoration-line-through text-muted small">${bStr}</span> 
-                            <i class="fas fa-arrow-right mx-1 text-danger opacity-50" style="font-size: 0.6rem;"></i> 
-                            <span class="text-danger fw-semibold">${aStr}</span>
-                        </div>`;
-                    changedCount++;
-                }
-            });
-            
-            html += '</div>';
-            return changedCount > 0 ? html : '';
-        }
-
-        function showUpdateHistory(employeeId) {
-            const modalElement = document.getElementById('updateHistoryModal');
-            const modal = new bootstrap.Modal(modalElement);
-            const content = document.getElementById('updateHistoryContent');
-            
-            content.innerHTML = `
-                <tr>
-                    <td colspan="4" class="text-center py-5 text-muted">
-                        <div class="spinner-border spinner-border-sm me-2 text-danger" role="status"></div>
-                        Loading history...
-                    </td>
-                </tr>
-            `;
-            
-            modal.show();
-            
-            fetch(`/employees/${employeeId}/update-history`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        content.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No update history found.</td></tr>';
-                        return;
-                    }
-                    
-                    content.innerHTML = data.map(log => `
-                        <tr>
-                            <td class="ps-3" style="width: 15%; vertical-align: top;">
-                                <div class="d-flex align-items-center">
-                                    <div class="history-user-avatar me-2" style="width: 28px; height: 28px; flex-shrink: 0;">
-                                        <i class="fas fa-user" style="font-size: 0.7rem;"></i>
-                                    </div>
-                                    <div style="min-width: 0;">
-                                        <div class="fw-semibold text-dark text-truncate" style="font-size: 0.8rem;" title="${log.user_name}">${log.user_name}</div>
-                                        <div class="text-muted text-uppercase" style="font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px;">${log.user_role}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="width: 30%; vertical-align: top;">
-                                <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${log.description}</div>
-                            </td>
-                            <td style="width: 35%; vertical-align: top;">
-                                ${formatChanges(log.changes)}
-                            </td>
-                            <td class="pe-3 text-end" style="width: 20%; vertical-align: top;">
-                                <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${log.date}</div>
-                                <div class="small text-muted" style="font-size: 0.7rem;">${log.time}</div>
-                            </td>
-                        </tr>
-                    `).join('');
-                })
-                .catch(err => {
-                    content.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading history.</td></tr>';
-                    console.error(err);
-                });
-        }
-    </script>
-    @endpush
-
 </x-app-layout>
-
-
