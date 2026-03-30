@@ -144,6 +144,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->is('settings/bank-types*') ? 'active' : '' }}" href="{{ route('settings.bank-types.index') }}">
+                        <i class="fas fa-university"></i> Bank Types
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->is('settings/companies*') ? 'active' : '' }}" href="{{ route('settings.companies.index') }}">
                         <i class="fas fa-briefcase"></i> Companies
                     </a>
