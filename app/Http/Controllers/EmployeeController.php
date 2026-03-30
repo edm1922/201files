@@ -133,14 +133,37 @@ class EmployeeController extends Controller
 
             $old = $employee->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
-                'suffix', 'status', 'barcode_id',
+                'suffix', 'date_hired', 'status', 'barcode_id',
+                'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]);
+
+            // Resolve bank name for logging
+            if ($employee->bank_type_id) {
+                $old['bank_name'] = $employee->bankType?->name ?? 'N/A';
+            } else {
+                $old['bank_name'] = 'N/A';
+            }
+            unset($old['bank_type_id']);
 
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
                 'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]));
+
+            $fresh = $employee->fresh();
+            $after = $fresh->only([
+                'system_id', 'first_name', 'middle_name', 'last_name',
+                'suffix', 'date_hired', 'status', 'barcode_id',
+                'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
+            ]);
+
+            if ($fresh->bank_type_id) {
+                $after['bank_name'] = $fresh->bankType?->name ?? 'N/A';
+            } else {
+                $after['bank_name'] = 'N/A';
+            }
+            unset($after['bank_type_id']);
 
             // Update or create folder
             if ($request->has('folder_code')) {
@@ -180,7 +203,7 @@ class EmployeeController extends Controller
                 'updated',
                 "Updated employee profile",
                 $employee,
-                ['before' => $old, 'after' => $employee->fresh()->toArray()]
+                ['before' => $old, 'after' => $after]
             );
 
             // Auto-archive if status changed to resigned
