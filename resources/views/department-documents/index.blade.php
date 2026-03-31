@@ -3,7 +3,7 @@
         $selectedDepartment = $departments->firstWhere('id', $selectedDepartmentId);
         $rootFolders = $foldersByParent->get(0, collect());
         $canManageFolders = auth()->user()->hasRole('admin', 'encoder') && $selectedDepartmentId > 0;
-        
+
         $activePathIds = isset($folderBreadcrumbs) ? $folderBreadcrumbs->pluck('id')->toArray() : [];
         if ($currentFolderId) {
             $activePathIds[] = $currentFolderId;
@@ -75,19 +75,19 @@
                             </div>
                         </div>
                         <ul class="ui-tree m-0 p-0 text-dark">
-                        @forelse($rootFolders as $folder)
-                            @include('department-documents.partials.folder-tree-node', [
-                                'folder' => $folder,
-                                'foldersByParent' => $foldersByParent,
-                                'selectedDepartmentId' => $selectedDepartmentId,
-                                'currentFolderId' => $currentFolderId,
-                                'activePathIds' => $activePathIds,
-                                'depth' => 0,
-                                'canManageFolders' => $canManageFolders,
-                            ])
-                        @empty
-                            <div class="text-muted small py-2">No folders yet.</div>
-                        @endforelse
+                            @forelse($rootFolders as $folder)
+                                @include('department-documents.partials.folder-tree-node', [
+                                    'folder' => $folder,
+                                    'foldersByParent' => $foldersByParent,
+                                    'selectedDepartmentId' => $selectedDepartmentId,
+                                    'currentFolderId' => $currentFolderId,
+                                    'activePathIds' => $activePathIds,
+                                    'depth' => 0,
+                                    'canManageFolders' => $canManageFolders,
+                                ])
+                            @empty
+                                <div class="text-muted small py-2">No folders yet.</div>
+                            @endforelse
                         </ul>
                     </div>
                 </div>
@@ -115,12 +115,13 @@
                                     <div class="search-wrapper" style="width: 240px;">
                                         <i class="fas fa-search search-icon"></i>
                                         <input type="text" name="search" class="search-input py-1"
-                                            placeholder="Search files, folder..."
-                                            value="{{ request('search') }}">
+                                            placeholder="Search files, folder..." value="{{ request('search') }}">
                                     </div>
                                     <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Filter</button>
                                 </form>
-                                <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                <button type="button"
+                                    class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
+                                    data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                     <i class="fas fa-cloud-upload-alt"></i> Upload
                                 </button>
                             </div>
@@ -138,25 +139,6 @@
                                     </a>
                                 @endforeach
                             </div>
-
-                            @if ($currentFolder && $canManageFolders)
-                                <div class="d-flex gap-2 folder-toolbar mb-3">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary"
-                                        data-bs-toggle="modal" data-bs-target="#renameFolderModal" 
-                                        data-folder-name="{{ $currentFolder->name }}"
-                                        data-folder-code="{{ $currentFolder->folder_code }}"
-                                        data-folder-action="{{ route('department-documents.folders.update', $currentFolder) }}">
-                                        <i class="fas fa-pen me-1"></i>Edit Folder
-                                    </button>
-
-                                    <button type="button" class="btn btn-sm btn-outline-danger"
-                                        data-bs-toggle="modal" data-bs-target="#deleteFolderModal" 
-                                        data-folder-name="{{ $currentFolder->name }}"
-                                        data-folder-action="{{ route('department-documents.folders.destroy', $currentFolder) }}">
-                                        <i class="fas fa-trash me-1"></i>Delete Folder
-                                    </button>
-                                </div>
-                            @endif
                         </div>
 
                         <div class="doc-table-wrapper border-0">
@@ -165,7 +147,7 @@
                                     <tr>
                                         <th>Resource</th>
                                         <th>Department & Type</th>
-                                        <th>Virtual Folder</th>
+                                        <th>Folder Code</th>
                                         <th>Physical Location</th>
                                         <th>Received On</th>
                                         <th>Status</th>
@@ -229,7 +211,7 @@
                                             $docFolderCode = $docFolder?->folder_code ?? null;
                                             $docFolderPath = $docFolder
                                                 ? $folderPathMaps[$docFolder->id]['display_path'] ?? $docFolder->name
-                                                : ($selectedDepartmentName ?? 'Root');
+                                                : $selectedDepartmentName ?? 'Root';
                                         @endphp
                                         <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }}">
                                             <td>
@@ -259,9 +241,7 @@
                                                 <div class="text-muted x-small mt-1">{{ $docFolderPath }}</div>
                                             </td>
                                             <td>
-                                                <div class="small"><i
-                                                        class="fas fa-building me-1 text-muted"></i>{{ $doc->folderLocation->name }}
-                                                </div>
+                                                {{-- <div class="small">{{ $doc->folderLocation->name }} </div> --}}
                                                 <div class="text-muted x-small mt-1">
                                                     {{ $doc->folderLocation->full_location }}</div>
                                             </td>
@@ -279,8 +259,8 @@
                                                 <div class="d-flex justify-content-center gap-2">
                                                     @if ($previewable)
                                                         <button type="button" class="btn-action-round"
-                                                            aria-label="Preview Document"
-                                                            title="Preview Document" data-preview-trigger
+                                                            aria-label="Preview Document" title="Preview Document"
+                                                            data-preview-trigger
                                                             data-preview-url="{{ $previewUrl }}"
                                                             data-preview-kind="{{ $previewKind }}"
                                                             data-preview-mime="{{ $doc->mime_type }}"
@@ -290,12 +270,12 @@
                                                         </button>
                                                     @endif
                                                     <a href="{{ route('department-documents.download', $doc) }}"
-                                                        class="btn-action-round" aria-label="Download Resource" title="Download Resource">
+                                                        class="btn-action-round" aria-label="Download Resource"
+                                                        title="Download Resource">
                                                         <i class="fas fa-download"></i>
                                                     </a>
                                                     <button type="button" class="btn-action-round text-danger"
-                                                        aria-label="Archive Document"
-                                                        title="Archive Document"
+                                                        aria-label="Archive Document" title="Archive Document"
                                                         data-bs-toggle="modal" data-bs-target="#archiveDocumentModal"
                                                         data-doc-name="{{ $doc->original_filename }}"
                                                         data-doc-url="{{ route('department-documents.archive', $doc) }}">
@@ -334,14 +314,18 @@
     <div class="modal fade" id="createDepartmentFolderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-                <form method="POST" action="{{ route('department-documents.folders.store') }}" data-ajax-folder data-folder-create-form data-loading-target>
+                <form method="POST" action="{{ route('department-documents.folders.store') }}" data-ajax-folder
+                    data-folder-create-form data-loading-target>
                     @csrf
-                    <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-folder-create-department-id>
-                    <input type="hidden" name="parent_id" value="{{ $currentFolderId ?: '' }}" data-folder-create-parent-id>
+                    <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}"
+                        data-folder-create-department-id>
+                    <input type="hidden" name="parent_id" value="{{ $currentFolderId ?: '' }}"
+                        data-folder-create-parent-id>
 
                     <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                         <h5 class="modal-title fw-bold text-dark fs-5">Add Folder</h5>
-                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
 
                     <div class="modal-body px-4 pt-2">
@@ -350,24 +334,31 @@
                         </p>
 
                         <div class="mb-2">
-                            <label for="create_folder_name" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">
+                            <label for="create_folder_name" class="form-label fw-semibold text-secondary"
+                                style="font-size: 0.85rem;">
                                 Folder Name <span class="text-danger">*</span>
                             </label>
-                            <input type="text" id="create_folder_name" name="name" class="form-control field-input bg-light" placeholder="e.g. 2026 Expenses"
-                                required data-folder-create-name>
+                            <input type="text" id="create_folder_name" name="name"
+                                class="form-control field-input bg-light" placeholder="e.g. 2026 Expenses" required
+                                data-folder-create-name>
                         </div>
                         <div class="mb-2">
-                            <label for="create_folder_code" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">
+                            <label for="create_folder_code" class="form-label fw-semibold text-secondary"
+                                style="font-size: 0.85rem;">
                                 Folder Code <span class="text-muted fw-normal">(Optional)</span>
                             </label>
-                            <input type="text" id="create_folder_code" name="folder_code" class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001"
+                            <input type="text" id="create_folder_code" name="folder_code"
+                                class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001"
                                 data-folder-create-code>
                         </div>
                     </div>
 
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
-                        <button type="button" class="btn btn-light fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger text-white d-inline-flex align-items-center gap-2 fw-semibold shadow-sm btn-submit-loading" data-folder-submit>
+                        <button type="button" class="btn btn-light fw-semibold text-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit"
+                            class="btn btn-danger text-white d-inline-flex align-items-center gap-2 fw-semibold shadow-sm btn-submit-loading"
+                            data-folder-submit>
                             <i class="fas fa-save"></i> Save Folder
                         </button>
                     </div>
@@ -385,20 +376,27 @@
                     @method('PATCH')
                     <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                         <h5 class="modal-title fw-bold text-dark fs-5">Rename Folder</h5>
-                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body px-4 pt-2">
                         <div class="mb-2">
-                            <label for="rename_folder_name" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Folder Name</label>
-                            <input type="text" name="name" id="rename_folder_name" class="form-control field-input bg-light" required>
+                            <label for="rename_folder_name" class="form-label fw-semibold text-secondary"
+                                style="font-size: 0.85rem;">Folder Name</label>
+                            <input type="text" name="name" id="rename_folder_name"
+                                class="form-control field-input bg-light" required>
                         </div>
                         <div class="mb-2">
-                            <label for="rename_folder_code" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Folder Code <span class="text-muted fw-normal">(Optional)</span></label>
-                            <input type="text" name="folder_code" id="rename_folder_code" class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001">
+                            <label for="rename_folder_code" class="form-label fw-semibold text-secondary"
+                                style="font-size: 0.85rem;">Folder Code <span
+                                    class="text-muted fw-normal">(Optional)</span></label>
+                            <input type="text" name="folder_code" id="rename_folder_code"
+                                class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001">
                         </div>
                     </div>
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
-                        <button type="button" class="btn btn-light fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light fw-semibold text-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary fw-semibold shadow-sm btn-submit-loading">
                             <i class="fas fa-pen me-1"></i> Rename
                         </button>
@@ -417,14 +415,19 @@
                     @method('DELETE')
                     <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                         <h5 class="modal-title fw-bold text-dark fs-5">Delete Folder</h5>
-                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body px-4 py-3">
-                        <p class="text-dark mb-0">Are you sure you want to delete <strong id="delete_folder_name_display"></strong>?</p>
-                        <p class="text-muted small mt-2 mb-0"><i class="fas fa-exclamation-triangle text-warning me-1"></i>Deletion is only allowed when the folder has no subfolders and no documents.</p>
+                        <p class="text-dark mb-0">Are you sure you want to delete <strong
+                                id="delete_folder_name_display"></strong>?</p>
+                        <p class="text-muted small mt-2 mb-0"><i
+                                class="fas fa-exclamation-triangle text-warning me-1"></i>Deletion is only allowed when
+                            the folder has no subfolders and no documents.</p>
                     </div>
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
-                        <button type="button" class="btn btn-light fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light fw-semibold text-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-danger fw-semibold shadow-sm btn-submit-loading">
                             <i class="fas fa-trash me-1"></i> Delete
                         </button>
@@ -443,14 +446,17 @@
                     @method('PATCH')
                     <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                         <h5 class="modal-title fw-bold text-dark fs-5">Archive Document</h5>
-                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body px-4 py-3">
-                        <p class="text-dark mb-0">Are you sure you want to archive <strong id="archive_document_name_display"></strong>?</p>
+                        <p class="text-dark mb-0">Are you sure you want to archive <strong
+                                id="archive_document_name_display"></strong>?</p>
                         <p class="text-muted small mt-2 mb-0">It will no longer appear in the main listing.</p>
                     </div>
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
-                        <button type="button" class="btn btn-light fw-semibold text-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light fw-semibold text-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-danger fw-semibold shadow-sm btn-submit-loading">
                             <i class="fas fa-archive"></i> Archive
                         </button>
@@ -466,12 +472,15 @@
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                     <h5 class="modal-title fw-bold text-dark fs-5">
-                        <i class="fas fa-cloud-upload-alt me-2 text-primary"></i> Upload Documents
+                        <i class="fas fa-cloud-upload-alt me-2 text-accent-red"></i> Upload Documents
                     </h5>
-                    <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form method="POST" action="{{ route('department-documents.store') }}" enctype="multipart/form-data" id="upload-form" x-data="{ dragging: false, files: [] }" data-loading-target>
+                    <form method="POST" action="{{ route('department-documents.store') }}"
+                        enctype="multipart/form-data" id="upload-form" x-data="{ dragging: false, files: [], uploadMode: 'standard', showExpiry: false }"
+                        x-init="$nextTick(() => { const select = $refs.typeSelect; if (select && select.selectedIndex >= 0) showExpiry = select.options[select.selectedIndex].dataset.hasExpiry === '1'; })" data-loading-target>
                         @csrf
                         <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
                         @if ($currentFolderId)
@@ -482,74 +491,117 @@
                             <div class="col-lg-7">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label for="upload_department" class="form-label small fw-bold text-uppercase text-muted">Department</label>
-                                        <input type="text" id="upload_department" class="form-control field-input bg-light" value="{{ $selectedDepartment?->name ?? 'N/A' }}" readonly>
+                                        <label for="upload_department"
+                                            class="form-label small fw-bold text-uppercase text-muted">Department</label>
+                                        <input type="text" id="upload_department"
+                                            class="form-control field-input bg-light"
+                                            value="{{ $selectedDepartment?->name ?? 'N/A' }}" readonly>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label for="upload_type" class="form-label small fw-bold text-uppercase text-muted">Document Type <span class="text-danger">*</span></label>
-                                        <select id="upload_type" name="document_type_id" class="form-select field-input" required>
-                                            <option value="">Select type</option>
+                                        <label for="upload_type"
+                                            class="form-label small fw-bold text-uppercase text-muted">Document Type
+                                            <span class="text-danger">*</span></label>
+                                        <select id="upload_type" name="document_type_id"
+                                            class="form-select field-input" required x-ref="typeSelect"
+                                            @change="showExpiry = $event.target.options[$event.target.selectedIndex].dataset.hasExpiry === '1'">
+                                            <option value="" data-has-expiry="0">Select type</option>
                                             @foreach ($documentTypes as $type)
-                                                <option value="{{ $type->id }}" {{ request('document_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                                                <option value="{{ $type->id }}"
+                                                    data-has-expiry="{{ $type->has_expiry ? '1' : '0' }}"
+                                                    {{ request('document_type_id') == $type->id ? 'selected' : '' }}>
+                                                    {{ $type->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label for="upload_location" class="form-label small fw-bold text-uppercase text-muted">Physical Location <span class="text-danger">*</span></label>
-                                        <select id="upload_location" name="folder_location_id" class="form-select field-input" required>
+                                        <label for="upload_location"
+                                            class="form-label small fw-bold text-uppercase text-muted">Physical
+                                            Location <span class="text-danger">*</span></label>
+                                        <select id="upload_location" name="folder_location_id"
+                                            class="form-select field-input" required>
                                             <option value="">Select location</option>
                                             @foreach ($folderLocations as $location)
-                                                <option value="{{ $location->id }}">{{ $location->display_name }}</option>
+                                                <option value="{{ $location->id }}">{{ $location->display_name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label for="upload_mode" class="form-label small fw-bold text-uppercase text-muted">Upload Mode <span class="text-danger">*</span></label>
-                                        <select id="upload_mode" name="upload_mode" class="form-select field-input" required>
-                                            <option value="standard" selected>Standard (Keep original)</option>
+                                        <label for="upload_mode"
+                                            class="form-label small fw-bold text-uppercase text-muted">Upload Mode
+                                            <span class="text-danger">*</span></label>
+                                        <select id="upload_mode" name="upload_mode" class="form-select field-input"
+                                            required x-model="uploadMode">
+                                            <option value="standard">Standard (Keep original)</option>
                                             <option value="scan_packet">Scan Packet (Merge to PDF)</option>
                                         </select>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label for="upload_date_received" class="form-label small fw-bold text-uppercase text-muted">Date Received <span class="text-danger">*</span></label>
-                                        <input type="date" id="upload_date_received" name="date_received" class="form-control field-input" value="{{ date('Y-m-d') }}" required>
+                                        <label for="upload_date_received"
+                                            class="form-label small fw-bold text-uppercase text-muted">Date Received
+                                            <span class="text-danger">*</span></label>
+                                        <input type="date" id="upload_date_received" name="date_received"
+                                            class="form-control field-input" value="{{ date('Y-m-d') }}" required>
                                     </div>
 
-                                    <div class="col-md-6">
-                                        <label for="upload_expiry_date" class="form-label small fw-bold text-uppercase text-muted">Expiry Date</label>
-                                        <input type="date" id="upload_expiry_date" name="expiry_date" class="form-control field-input">
+                                    <div class="col-md-6" x-show="showExpiry" x-cloak>
+                                        <label for="upload_expiry_date"
+                                            class="form-label small fw-bold text-uppercase text-muted">Expiry
+                                            Date</label>
+                                        <input type="date" id="upload_expiry_date" name="expiry_date"
+                                            class="form-control field-input">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-lg-5">
-                                <label class="form-label small fw-bold text-uppercase text-muted">Files to Upload <span class="text-danger">*</span></label>
-                                <div class="upload-zone position-relative overflow-hidden rounded-3 border-2 border-dashed border-primary bg-light" :class="{ 'bg-primary bg-opacity-10 border-primary': dragging }"
-                                    @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false"
+                                <label class="form-label small fw-bold text-uppercase text-muted">Files to Upload <span
+                                        class="text-danger">*</span></label>
+                                <div class="upload-zone position-relative overflow-hidden rounded-3 border-2 border-dashed upload-zone--accent-red bg-light"
+                                    :class="{ 'dragging': dragging }" @dragover.prevent="dragging = true"
+                                    @dragleave.prevent="dragging = false"
                                     @drop.prevent="dragging = false; files = Array.from($event.dataTransfer.files); $refs.fileInput.files = $event.dataTransfer.files"
                                     style="min-height: 200px;">
 
                                     <input type="file" name="files[]" multiple required x-ref="fileInput"
-                                        @change="files = Array.from($event.target.files)" style="opacity: 0; position: absolute; top:0; left:0; width: 100%; height: 100%; cursor: pointer; z-index: 10;">
+                                        :accept="uploadMode === 'scan_packet' ? '.pdf,.jpg,.jpeg,.png' :
+                                            '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv'"
+                                        @change="files = Array.from($event.target.files)"
+                                        style="opacity: 0; position: absolute; top:0; left:0; width: 100%; height: 100%; cursor: pointer; z-index: 10;">
 
-                                    <div class="upload-zone__content p-4 text-center d-flex flex-column justify-content-center h-100 position-absolute w-100 h-100 start-0 top-0 align-items-center">
-                                        <i class="fas fa-file-export mb-2 fs-2 text-primary opacity-75"></i>
-                                        <div class="upload-zone__text fw-medium text-dark" x-show="files.length === 0">Drag & drop files or click to browse</div>
-                                        <div class="upload-zone__text text-primary fw-bold" x-show="files.length > 0" x-cloak>
-                                            <span x-text="files.length"></span> file(s) selected
+                                    <div class="upload-zone__content p-4 text-center d-flex flex-column justify-content-center h-100 position-absolute w-100 h-100 start-0 top-0 align-items-center"
+                                        style="pointer-events: none;">
+                                        <i class="fas fa-file-export mb-2 fs-2 text-accent-red opacity-75"
+                                            x-show="files.length === 0"></i>
+                                        <div class="upload-zone__text fw-medium text-dark"
+                                            x-show="files.length === 0">Drag & drop files or click to browse</div>
+
+                                        <div class="w-100" x-show="files.length > 0" x-cloak
+                                            style="max-height: 140px; overflow-y: auto;">
+                                            <div class="d-flex flex-wrap justify-content-center gap-1 mt-1 px-2">
+                                                <template x-for="file in files" :key="file.name">
+                                                    <span class="badge badge-accent-red py-2 px-3 fw-medium"
+                                                        style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;"
+                                                        x-text="file.name"></span>
+                                                </template>
+                                            </div>
                                         </div>
-                                        <div class="upload-zone__subtext text-muted small mt-1">Supported: PDF, JPG, PNG, DOCX, XLSX, CSV</div>
+                                        <div class="upload-zone__subtext text-muted small mt-2"
+                                            x-show="files.length === 0"
+                                            x-text="uploadMode === 'scan_packet' ? 'Supported: PDF, JPG, PNG' : 'Supported: PDF, JPG, PNG, DOC(X), XLS(X), CSV'">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 pt-3 d-flex justify-content-end bg-white">
-                            <button type="button" class="btn btn-light fw-semibold text-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary px-4 shadow-sm btn-submit-loading">
+                            <button type="button" class="btn btn-light fw-semibold text-secondary me-2"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-accent-red px-4 shadow-sm btn-submit-loading">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload Documents
                             </button>
                         </div>
@@ -563,7 +615,8 @@
         <div class="preview-overlay__backdrop" data-preview-close></div>
         <div class="preview-overlay__toolbar">
             <div class="preview-overlay__toolbar-left">
-                <button type="button" class="preview-overlay__btn" data-preview-close aria-label="Close preview" title="Close">
+                <button type="button" class="preview-overlay__btn" data-preview-close aria-label="Close preview"
+                    title="Close">
                     <i class="fas fa-times"></i>
                 </button>
                 <span class="preview-overlay__filename" id="document-preview-title">Preview</span>
@@ -591,12 +644,14 @@
                 list-style: none;
                 padding-left: 0;
             }
+
             .ui-tree-children {
                 list-style: none;
                 padding-left: 1.25rem;
                 position: relative;
                 margin-top: 2px;
             }
+
             .ui-tree-children::before {
                 content: '';
                 position: absolute;
@@ -606,11 +661,13 @@
                 width: 1px;
                 background-color: var(--bs-border-color);
             }
+
             .ui-tree-node {
                 position: relative;
                 margin-bottom: 2px;
             }
-            .ui-tree-children > .ui-tree-node::before {
+
+            .ui-tree-children>.ui-tree-node::before {
                 content: '';
                 position: absolute;
                 top: 15px;
@@ -619,7 +676,8 @@
                 height: 1px;
                 background-color: var(--bs-border-color);
             }
-            .ui-tree-children > .ui-tree-node:last-child::after {
+
+            .ui-tree-children>.ui-tree-node:last-child::after {
                 content: '';
                 position: absolute;
                 top: 15px;
@@ -628,42 +686,97 @@
                 width: 3px;
                 background-color: #fff;
             }
+
             .ui-tree-item {
                 transition: background-color 0.2s ease-out;
             }
+
             .ui-tree-item:hover {
                 background-color: var(--bs-light);
             }
+
             .ui-tree-actions {
                 opacity: 0;
                 transition: opacity 0.2s;
             }
+
             .ui-tree-item:hover .ui-tree-actions,
             .ui-tree-actions.show {
                 opacity: 1;
             }
+
             .ui-tree-item.active {
                 background-color: var(--bs-light);
             }
+
             .collapse-icon {
                 transition: transform 0.2s ease-in-out;
             }
+
             .collapsed .collapse-icon {
                 transform: rotate(-90deg);
             }
+
             .animate-fade-in {
                 animation: fadeIn 0.3s ease-in-out forwards;
             }
+
             .animate-fade-out {
                 animation: fadeOut 0.4s ease-in-out forwards;
             }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
+
+            .btn-accent-red {
+                background-color: var(--company-primary) !important;
+                border-color: var(--company-primary) !important;
+                color: #fff !important;
             }
+
+            .btn-accent-red:hover {
+                background-color: var(--company-primary-hover) !important;
+                border-color: var(--company-primary-hover) !important;
+            }
+
+            .text-accent-red {
+                color: var(--company-primary) !important;
+            }
+
+            .upload-zone--accent-red {
+                border-color: var(--company-primary) !important;
+            }
+
+            .upload-zone--accent-red.dragging {
+                background-color: var(--company-primary-light) !important;
+                border-color: var(--company-primary) !important;
+            }
+
+            .badge-accent-red {
+                background-color: var(--company-primary-light) !important;
+                color: var(--company-primary) !important;
+                border: 1px solid var(--company-primary-border) !important;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
             @keyframes fadeOut {
-                from { opacity: 1; transform: translateY(0); }
-                to { opacity: 0; transform: translateY(-10px); }
+                from {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+
+                to {
+                    opacity: 0;
+                    transform: translateY(-10px);
+                }
             }
         </style>
     @endpush
@@ -691,7 +804,7 @@
 
                 const clearFlash = () => {
                     document.querySelectorAll('[data-flash-success], [data-flash-error]').forEach((node) => node
-                    .remove());
+                        .remove());
                 };
 
                 const showFlash = (message, type = 'success') => {
@@ -778,7 +891,7 @@
                                 once: true
                             });
                             existing.addEventListener('error', () => reject(new Error(
-                            `Failed to load ${src}`)), {
+                                `Failed to load ${src}`)), {
                                 once: true
                             });
                             return;
@@ -1080,40 +1193,47 @@
                 const bindModals = () => {
                     const renameModal = document.getElementById('renameFolderModal');
                     if (renameModal) {
-                        renameModal.addEventListener('show.bs.modal', function (event) {
+                        renameModal.addEventListener('show.bs.modal', function(event) {
                             const button = event.relatedTarget;
-                            if(button && button.hasAttribute('data-folder-name')) {
-                                document.getElementById('rename_folder_name').value = button.getAttribute('data-folder-name');
+                            if (button && button.hasAttribute('data-folder-name')) {
+                                document.getElementById('rename_folder_name').value = button.getAttribute(
+                                    'data-folder-name');
                             }
-                            if(button && button.hasAttribute('data-folder-code')) {
-                                document.getElementById('rename_folder_code').value = button.getAttribute('data-folder-code');
+                            if (button && button.hasAttribute('data-folder-code')) {
+                                document.getElementById('rename_folder_code').value = button.getAttribute(
+                                    'data-folder-code');
                             } else {
                                 document.getElementById('rename_folder_code').value = '';
                             }
-                            if(button && button.hasAttribute('data-folder-action')) {
-                                document.getElementById('global-rename-folder-form').action = button.getAttribute('data-folder-action');
+                            if (button && button.hasAttribute('data-folder-action')) {
+                                document.getElementById('global-rename-folder-form').action = button
+                                    .getAttribute('data-folder-action');
                             }
                         });
                     }
                     const deleteModal = document.getElementById('deleteFolderModal');
                     if (deleteModal) {
-                        deleteModal.addEventListener('show.bs.modal', function (event) {
+                        deleteModal.addEventListener('show.bs.modal', function(event) {
                             const button = event.relatedTarget;
-                            if(button && button.hasAttribute('data-folder-name')) {
-                                document.getElementById('delete_folder_name_display').textContent = button.getAttribute('data-folder-name');
+                            if (button && button.hasAttribute('data-folder-name')) {
+                                document.getElementById('delete_folder_name_display').textContent = button
+                                    .getAttribute('data-folder-name');
                             }
-                            if(button && button.hasAttribute('data-folder-action')) {
-                                document.getElementById('global-delete-folder-form').action = button.getAttribute('data-folder-action');
+                            if (button && button.hasAttribute('data-folder-action')) {
+                                document.getElementById('global-delete-folder-form').action = button
+                                    .getAttribute('data-folder-action');
                             }
                         });
                     }
                     const archiveModal = document.getElementById('archiveDocumentModal');
                     if (archiveModal) {
-                        archiveModal.addEventListener('show.bs.modal', function (event) {
+                        archiveModal.addEventListener('show.bs.modal', function(event) {
                             const button = event.relatedTarget;
-                            if(button && button.hasAttribute('data-doc-name')) {
-                                document.getElementById('archive_document_name_display').textContent = button.getAttribute('data-doc-name');
-                                document.getElementById('archiveDocumentForm').action = button.getAttribute('data-doc-url');
+                            if (button && button.hasAttribute('data-doc-name')) {
+                                document.getElementById('archive_document_name_display').textContent = button
+                                    .getAttribute('data-doc-name');
+                                document.getElementById('archiveDocumentForm').action = button.getAttribute(
+                                    'data-doc-url');
                             }
                         });
                     }
@@ -1128,7 +1248,10 @@
                             if (!btn.dataset.originalHTML) btn.dataset.originalHTML = btn.innerHTML;
                             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
                             btn.disabled = true;
-                            setTimeout(() => { btn.innerHTML = btn.dataset.originalHTML; btn.disabled = false; }, 5000);
+                            setTimeout(() => {
+                                btn.innerHTML = btn.dataset.originalHTML;
+                                btn.disabled = false;
+                            }, 5000);
                         }
                     });
                 });
@@ -1155,7 +1278,8 @@
 
                         const departmentId = trigger.getAttribute('data-folder-department-id') || '';
                         const parentId = trigger.getAttribute('data-folder-parent-id') || '';
-                        const scopeText = trigger.getAttribute('data-folder-create-scope') || 'New folder at root level';
+                        const scopeText = trigger.getAttribute('data-folder-create-scope') ||
+                            'New folder at root level';
 
                         if (departmentInput) {
                             departmentInput.value = departmentId;
@@ -1237,7 +1361,7 @@
                 const closeAllFolderModals = () => {
                     const modalIds = ['createDepartmentFolderModal', 'renameFolderModal', 'deleteFolderModal'];
                     if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
-                    
+
                     modalIds.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {

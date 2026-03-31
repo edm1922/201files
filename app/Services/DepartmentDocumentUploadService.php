@@ -107,7 +107,7 @@ class DepartmentDocumentUploadService
                     'document_folder_id' => $documentFolderId,
                     'uploaded_by' => $user->id,
                     'file_path' => $relativePath,
-                    'original_filename' => substr($baseFilename, 0, 255),
+                    'original_filename' => substr($resolvedFilename, 0, 255),
                     'system_filename' => $resolvedFilename,
                     'page_count' => $pageCount,
                     'file_size_bytes' => $fileSize,
@@ -217,7 +217,9 @@ class DepartmentDocumentUploadService
 
     private function buildBaseFilename(int $departmentId, string $docTypeCode, Carbon $date, string $extension): string
     {
-        $prefix = sprintf('DEPT-%d_%s_%s', $departmentId, strtoupper($docTypeCode), $date->format('YmdHis'));
+        // Use the user-selected business date (Ymd) but inject the exact real-time (His) of the upload for uniqueness
+        $timestamp = $date->format('Ymd') . now()->format('His');
+        $prefix = sprintf('DEPT-%d_%s_%s', $departmentId, strtoupper($docTypeCode), $timestamp);
         return Str::of($prefix)->append('.')->append($extension)->toString();
     }
 
