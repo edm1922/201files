@@ -64,7 +64,7 @@ it('policy allows download inside assigned department scope', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'C',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $viewer = User::factory()->viewer()->create();
@@ -115,7 +115,7 @@ it('policy blocks download outside assigned department scope', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'D',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $viewer = User::factory()->viewer()->create();
@@ -166,7 +166,7 @@ it('blocks access to documents outside authorized departments', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'C',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $viewer = User::factory()->viewer()->create();
