@@ -98,7 +98,7 @@ class EmployeeController extends Controller
 
         if ($employee->trashed()) {
             return redirect()
-                ->route('employees.archive')
+                ->route('archives.index', ['tab' => 'employees'])
                 ->with('success', 'Employee created and automatically archived (resigned).');
         }
 
@@ -238,7 +238,7 @@ class EmployeeController extends Controller
 
         if ($employee->trashed()) {
             return redirect()
-                ->route('employees.archive')
+                ->route('archives.index', ['tab' => 'employees'])
                 ->with('success', 'Employee has been resigned and moved to the archive.');
         }
 
@@ -320,7 +320,7 @@ class EmployeeController extends Controller
         });
 
         return redirect()
-            ->route('employees.archive')
+            ->route('archives.index', ['tab' => 'employees'])
             ->with('success', 'Employee permanently deleted. Folder is now available.');
     }
     /**
