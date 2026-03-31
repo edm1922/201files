@@ -51,9 +51,6 @@ Route::middleware('auth')->group(function () {
         Route::prefix('folder-locations')->name('folder-locations.')->group(function () {
             Route::get('/', [FolderLocationController::class, 'index'])->name('index');
             Route::post('/row', [FolderLocationController::class, 'storeRow'])->name('store-row');
-            Route::post('/row/{row_name}/column', [FolderLocationController::class, 'storeColumn'])->name('store-column');
-            Route::delete('/row/{row_name}/column/{column_code}', [FolderLocationController::class, 'destroyColumn'])->name('destroy-column');
-            Route::delete('/row/{row_name}', [FolderLocationController::class, 'destroyRow'])->name('destroy-row');
             Route::put('/{folderLocation}', [FolderLocationController::class, 'update'])->name('update');
             Route::delete('/{folderLocation}', [FolderLocationController::class, 'destroy'])->name('destroy');
         });
@@ -74,8 +71,8 @@ Route::middleware('auth')->group(function () {
 
     // ── Archive (admin and encoder) ──
     Route::middleware('role:admin,encoder')->group(function () {
-        Route::get('/employees/archive', [EmployeeController::class, 'archiveIndex'])
-            ->name('employees.archive');
+        Route::get('/archives', [\App\Http\Controllers\ArchiveController::class, 'index'])
+            ->name('archives.index');
         Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
             ->name('employees.details');
         Route::patch('/employees/{id}/restore', [EmployeeController::class, 'restore'])
@@ -135,6 +132,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}/restore', [DepartmentDocumentController::class, 'restore'])
             ->middleware('role:admin')
             ->name('restore');
+
+        Route::delete('/{id}/force-delete', [DepartmentDocumentController::class, 'forceDelete'])
+            ->name('forceDelete');
 
         Route::get('/{document}/preview', [DepartmentDocumentController::class, 'preview'])
             ->middleware('can:download,document')

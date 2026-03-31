@@ -69,7 +69,7 @@ class DepartmentDocumentController extends Controller
             $folderBreadcrumbs = collect($chain);
         }
 
-        $folderLocations = FolderLocation::query()->orderBy('row_name')->orderBy('column_code')->get();
+        $folderLocations = FolderLocation::query()->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
 
         $query = Document::with(['department', 'documentType', 'folderLocation', 'documentFolder'])
             ->whereIn('department_id', $accessibleDepartmentIds)
@@ -376,6 +376,28 @@ class DepartmentDocumentController extends Controller
         return back()->with('success', 'Document restored successfully.');
     }
 
+    public function forceDelete(Request $request, $id)
+    {
+        $document = Document::withTrashed()->findOrFail($id);
+        
+        // Only admins can permanently delete
+        if (!$request->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $this->authorize('restore', $document); // Use restore permission as baseline for department access
+
+        $filename = $document->original_filename;
+        
+        if (\Illuminate\Support\Facades\Storage::disk('local')->exists($document->file_path)) {
+            \Illuminate\Support\Facades\Storage::disk('local')->delete($document->file_path);
+        }
+
+        $document->forceDelete();
+
+        return back()->with('success', "Document '{$filename}' permanently deleted.");
+    }
+
 
     public function download(Document $document): StreamedResponse
     {
@@ -485,9 +507,7 @@ class DepartmentDocumentController extends Controller
             $nameSegments = array_map(fn (DocumentFolder $segment) => $segment->name, $chain);
             $codeSegments = array_values(array_filter(array_map(fn (DocumentFolder $segment) => (string) $segment->folder_code, $chain)));
             $displaySegments = array_map(function (DocumentFolder $segment): string {
-                $codePrefix = $segment->folder_code ? '[' . $segment->folder_code . '] ' : '';
-
-                return $codePrefix . $segment->name;
+                return $segment->name;
             }, $chain);
 
             $maps[(int) $folder->id] = [

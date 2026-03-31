@@ -6,12 +6,14 @@
     {{-- ── Flash Messages ── --}}
     @if(session('success'))
         <div class="alert-flash alert-flash--success">
-            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <i class="fas fa-check-circle me-2"></i>
+            <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
         <div class="alert-flash alert-flash--error">
-            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 
@@ -419,7 +421,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
                                             <small class="text-muted">
-                                        Last encoded: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
+                                        Last number: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
                                     </small>
                                     
                                     @if($folders && $folders->count() > 0)

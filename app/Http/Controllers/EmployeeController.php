@@ -23,7 +23,7 @@ class EmployeeController extends Controller
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
-        $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
+        $locations = FolderLocation::orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
         $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
@@ -60,10 +60,26 @@ class EmployeeController extends Controller
                 $employee->saveQuietly();
             }
 
+            $fresh = $employee->fresh()->load(['company', 'folder', 'folderLocation', 'bankType']);
+            $after = $fresh->only([
+                'system_id', 'first_name', 'middle_name', 'last_name',
+                'suffix', 'date_hired', 'status', 'barcode_id',
+                'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
+            ]);
+
+            // Resolve descriptive names for logging
+            $after['bank_name']     = $fresh->bankType?->name ?? 'N/A';
+            $after['company_name']  = $fresh->company?->name ?? 'N/A';
+            $after['folder_code']   = $fresh->folder?->folder_code ?? 'N/A';
+            $after['location_name'] = $fresh->folderLocation?->full_location ?? 'N/A';
+
+            unset($after['bank_type_id'], $after['company_id'], $after['folder_id'], $after['folder_location_id']);
+
             AuditService::log(
                 'created',
-                "Added new employee",
-                $employee
+                "Added new employee: " . $employee->full_name,
+                $employee,
+                ['before' => [], 'after' => $after]
             );
 
             // If created as resigned, auto-archive
@@ -82,7 +98,7 @@ class EmployeeController extends Controller
 
         if ($employee->trashed()) {
             return redirect()
-                ->route('employees.archive')
+                ->route('archives.index', ['tab' => 'employees'])
                 ->with('success', 'Employee created and automatically archived (resigned).');
         }
 
@@ -108,7 +124,7 @@ class EmployeeController extends Controller
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
-        $locations = FolderLocation::orderBy('row_name')->orderBy('column_code')->get();
+        $locations = FolderLocation::orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
         $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
@@ -137,13 +153,13 @@ class EmployeeController extends Controller
                 'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]);
 
-            // Resolve bank name for logging
-            if ($employee->bank_type_id) {
-                $old['bank_name'] = $employee->bankType?->name ?? 'N/A';
-            } else {
-                $old['bank_name'] = 'N/A';
-            }
-            unset($old['bank_type_id']);
+            // Resolve descriptive names for logging (Old state)
+            $old['bank_name']     = $employee->bankType?->name ?? 'N/A';
+            $old['company_name']  = $employee->company?->name ?? 'N/A';
+            $old['folder_code']   = $employee->folder?->folder_code ?? 'N/A';
+            $old['location_name'] = $employee->folderLocation?->full_location ?? 'N/A';
+
+            unset($old['bank_type_id'], $old['company_id'], $old['folder_id'], $old['folder_location_id']);
 
             $employee->update($request->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
@@ -151,19 +167,20 @@ class EmployeeController extends Controller
                 'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]));
 
-            $fresh = $employee->fresh();
+            $fresh = $employee->fresh()->load(['company', 'folder', 'folderLocation', 'bankType']);
             $after = $fresh->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
                 'suffix', 'date_hired', 'status', 'barcode_id',
                 'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]);
 
-            if ($fresh->bank_type_id) {
-                $after['bank_name'] = $fresh->bankType?->name ?? 'N/A';
-            } else {
-                $after['bank_name'] = 'N/A';
-            }
-            unset($after['bank_type_id']);
+            // Resolve descriptive names for logging (New state)
+            $after['bank_name']     = $fresh->bankType?->name ?? 'N/A';
+            $after['company_name']  = $fresh->company?->name ?? 'N/A';
+            $after['folder_code']   = $fresh->folder?->folder_code ?? 'N/A';
+            $after['location_name'] = $fresh->folderLocation?->full_location ?? 'N/A';
+
+            unset($after['bank_type_id'], $after['company_id'], $after['folder_id'], $after['folder_location_id']);
 
             // Update or create folder
             if ($request->has('folder_code')) {
@@ -221,7 +238,7 @@ class EmployeeController extends Controller
 
         if ($employee->trashed()) {
             return redirect()
-                ->route('employees.archive')
+                ->route('archives.index', ['tab' => 'employees'])
                 ->with('success', 'Employee has been resigned and moved to the archive.');
         }
 
@@ -303,7 +320,7 @@ class EmployeeController extends Controller
         });
 
         return redirect()
-            ->route('employees.archive')
+            ->route('archives.index', ['tab' => 'employees'])
             ->with('success', 'Employee permanently deleted. Folder is now available.');
     }
     /**

@@ -16,6 +16,21 @@ This document isolates all tasks assigned to **Developer B** across all developm
 - [X] 2.8 Change the the Date of bitrh to Date hired
 - [X] 2.9 Update the Controller and Model and Table base on the chages that you made (Date of Birth -> Date Hired)
 
+**Phase 2: Modification**
+
+* [X] 1 Add atm status is 201 files (On process, for Releasing and Recieved) User can update the status and display in in the employee tab.
+* [X] 2 Add a font color based on their status (On process, for Releasing and Recieved)
+* [X] 3 The Css and Js script must be put in the css and js file only and just include them in the Main file 201file
+* [X] 4 Add a Bank types in the settigs for adding, editing and removing bank types
+* [X] 5 Reflect it to the 201files next to the atm status where user can choose a bank type for the employee
+* [X] 6 Add color atm status "On process" is red "For Relasing" is orange and the "recieved" is green.
+* [X] 7 Update the activity logs based on the changes
+* [X] 8 Instead of bank Id display in the activity logs after updating an employee, use bank name instead
+* [X] 9 Modify the folder location, Instead of column it maximum employee  can be filled in that folder location
+  (e.g Row: A 1-500 )
+* [X] 10 Update the folder location table based on the changes
+* [X] 11 Update the Audit logs or activity logs instead of folder id is capture make it name istead
+
 *Expected Outcome: Employees can be created, edited, assigned to companies, and bulk-imported.*
 
 ---
@@ -101,15 +116,23 @@ This document isolates all tasks assigned to **Developer B** across all developm
 * [X] 6.5.7 Remove the activity_logs since there is a audit logs
 * [X] 6.5.8 Add a Time (5sec) for the sucessfull and error message
 * [X] 6.5.9 Modify the successfull and error message instead of displaying to the page make it float
+* [X] 6.5.10 Modifiy the dashboard layout make it just like in the picture:
+  ![1774917690333](image/tasks-dev-b/1774917690333.png)
+  where 1,2,4 and 5 is the stat card are positioned, 7 is where hiring trends and 6 is company distribution pie chart then the 9 is where the bank has an employee, display it using colloumn charts.
+* [X] 6.5.11 Make a css and js file for the dashboard only and put it to the public just call them in the app layout since the app layout is inclueded in the dashboard page.
 * [ ] *Expected Outcome: Data from Dev A's controllers is rendered cleanly in tables and charts. Export buttons trigger Dev A's export services.*
 
 ---
 
-## Phase 6: Polish & Security (Week 11–12)
+## Phase 8: Added features
 
-- [ ] Data Privacy Settings UI (privacy policy, consent logs viewer)
-- [ ] Error handling UI (user-friendly error pages: 404, 403, 500)
-- [ ] Performance Testing & Optimization (with Dev A)
-- [ ] Production Server Deployment (with Dev A)
+* [X] 8.1 Add in the dashboard if the date is click in the top section then the calendar appear where user can browes dates
+
+## Phase 7: Polish & Security (Week 11–12)
+
+- [ ] 7.1 Data Privacy Settings UI (privacy policy, consent logs viewer)
+- [X] 7.2 Error handling UI (user-friendly error pages: 404, 403, 500)
+- [ ] 7.3 Performance Testing & Optimization (with Dev A)
+- [ ] 7.4 Production Server Deployment (with Dev A)
 
 *Expected Outcome: The system elegantly handles failure states and guarantees DPA compliance visually to the administrators.*

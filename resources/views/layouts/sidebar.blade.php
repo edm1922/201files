@@ -41,8 +41,8 @@
         @if(Auth::user()->isAdmin() || Auth::user()->isEncoder())
         {{-- Archive (admin only) --}}
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('employees/archive*') ? 'active' : '' }}" href="{{ route('employees.archive') }}">
-                <i class="fas fa-box-archive"></i> Archive
+            <a class="nav-link {{ request()->routeIs('archives.index') ? 'active' : '' }}" href="{{ route('archives.index', ['tab' => 'employees']) }}">
+                <i class="fas fa-box-archive"></i> Archives
             </a>
         </li>
         @endif

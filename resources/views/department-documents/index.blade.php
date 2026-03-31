@@ -150,7 +150,6 @@
                                         <th>Folder Code</th>
                                         <th>Physical Location</th>
                                         <th>Received On</th>
-                                        <th>Status</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -221,7 +220,8 @@
                                                             class="fas fa-{{ $ext === 'pdf' ? 'file-pdf' : (in_array($ext, ['jpg', 'jpeg', 'png']) ? 'file-image' : 'file-lines') }}"></i>
                                                     </div>
                                                     <div>
-                                                        <div class="fw-bold text-dark">{{ $doc->original_filename }}
+                                                        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                                            {{ $doc->original_filename }}
                                                         </div>
                                                         <div class="text-muted small">{{ strtoupper($ext) }} &bull;
                                                             {{ number_format(($doc->file_size_bytes ?? 0) / 1024, 2) }}
@@ -248,12 +248,6 @@
                                             <td>
                                                 <div class="small">
                                                     {{ $doc->date_received?->format('F d, Y') ?? '-' }}</div>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    class="status-pill {{ $doc->status === 'active' ? 'status-pill--active' : 'status-pill--archived' }}">
-                                                    {{ $doc->status }}
-                                                </span>
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-2">
