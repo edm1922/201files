@@ -6,12 +6,14 @@
     {{-- ── Flash Messages ── --}}
     @if(session('success'))
         <div class="alert-flash alert-flash--success">
-            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <i class="fas fa-check-circle me-2"></i>
+            <span>{{ session('success') }}</span>
         </div>
     @endif
     @if(session('error'))
         <div class="alert-flash alert-flash--error">
-            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span>{{ session('error') }}</span>
         </div>
     @endif
 

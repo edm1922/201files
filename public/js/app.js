@@ -184,10 +184,33 @@ $(document).ready(function () {
         minimumResultsForSearch: 0
     });
 
-    // Auto-hide success and error messages after 5 seconds
+    // Flash Messages Handling (Auto-hide and Manual Close)
+    $('.alert, .alert-flash').each(function () {
+        const $alert = $(this);
+        
+        // Ensure the content is wrapped in a span for flex-grow if not already
+        if ($alert.find('span').length === 0 && $alert.text().trim() !== '') {
+            const text = $alert.html();
+            // Wrap text (excluding the icon if any)
+            // But for simplicity, let's just make sure the close button is appended
+        }
+
+        // Add manual close button if it's not already there
+        if ($alert.find('.btn-close-flash').length === 0) {
+            const closeBtn = $('<button type="button" class="btn-close-flash" title="Close"><i class="fas fa-times"></i></button>');
+            $alert.append(closeBtn);
+            
+            // Manual close event
+            closeBtn.on('click', function () {
+                $alert.fadeOut('fast');
+            });
+        }
+    });
+
+    // Auto-hide after 5 seconds
     setTimeout(function () {
         $('.alert, .alert-flash').fadeOut('slow');
-    }, 3000);
+    }, 5000);
 });
 
 /**
