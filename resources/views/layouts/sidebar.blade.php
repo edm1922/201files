@@ -66,7 +66,7 @@
             <ul class="nav flex-column ms-3" x-show="open" x-transition x-cloak>
                 <li class="nav-item">
                     <a class="nav-link {{ !request('department_id') && request()->is('department-documents*') ? 'active' : '' }}" href="{{ route('department-documents.index') }}">
-                        <i class="fas fa-layer-group"></i> All Departments
+                        <i class="fas fa-layer-group"></i> Department Home
                     </a>
                 </li>
                 @php

@@ -111,6 +111,14 @@ Route::middleware('auth')->group(function () {
             ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
             ->name('folders.store');
 
+        Route::patch('/folders/{folder}', [DepartmentDocumentController::class, 'updateFolder'])
+            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->name('folders.update');
+
+        Route::delete('/folders/{folder}', [DepartmentDocumentController::class, 'destroyFolder'])
+            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->name('folders.destroy');
+
         Route::post('/', [DepartmentDocumentController::class, 'store'])
             ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
             ->name('store');
@@ -122,6 +130,10 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}/restore', [DepartmentDocumentController::class, 'restore'])
             ->middleware('role:admin')
             ->name('restore');
+
+        Route::get('/{document}/preview', [DepartmentDocumentController::class, 'preview'])
+            ->middleware('can:download,document')
+            ->name('preview');
 
         Route::get('/{document}/download', [DepartmentDocumentController::class, 'download'])
             ->middleware('can:download,document')
