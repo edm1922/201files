@@ -36,6 +36,12 @@
     <!-- Custom styles -->
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
 
+    @if(request()->routeIs('dashboard'))
+        <link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+        <script src="{{ asset('js/dashboard.js') }}" defer></script>
+    @endif
+
     @stack('styles')
 </head>
 <body>

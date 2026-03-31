@@ -64,6 +64,12 @@ class DashboardController extends Controller
             ->groupBy('companies.id', 'companies.name')
             ->get();
 
+        // Bank distribution data for Column Chart
+        $bankDistribution = \App\Models\BankType::select('bank_types.name', DB::raw('count(employees.id) as count'))
+            ->leftJoin('employees', 'bank_types.id', '=', 'employees.bank_type_id')
+            ->groupBy('bank_types.id', 'bank_types.name')
+            ->get();
+
         // Calendar Logic
         $calendarDate = date('Y-m-d');
         $calendarYear = date('Y', strtotime($calendarDate));
@@ -111,8 +117,9 @@ class DashboardController extends Controller
             'totalDocuments',
             'totalUsers',
             'companyDistribution',
+            'bankDistribution',
             'hiringTrends',
-            'year',
+                'year',
             'month',
             'calendarData',
             'availableYears',
