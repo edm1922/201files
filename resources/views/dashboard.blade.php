@@ -1,9 +1,41 @@
 <x-app-layout>
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 mb-0 fw-bold">Dashboard</h2>
+        <div><h2 class="h4 mb-0 fw-bold">Dashboard</h2>
+        <small>Welcome to the CSC Document Management System</small></div>
         <div class="d-flex align-items-center gap-3">
-            <div class="date-pill">
-                <span>{{ date('M d, Y') }}</span> 
+            <div class="calendar-wrapper" x-data="{ open: false }">
+                <div class="date-pill" @click="open = !open">
+                    <i class="fas fa-calendar-alt me-2" style="color: #dd270d !important;"></i>
+                    <span>{{ date('M d, Y', strtotime($calendarDate)) }}</span> 
+                </div>
+
+                <div class="calendar-dropdown" x-show="open" @click.away="open = false" x-transition x-cloak>
+                    <div class="calendar-nav">
+                        <a href="{{ route('dashboard', ['cal_date' => date('Y-m-d', strtotime('-1 month', strtotime($calendarDate))), 'year' => $year, 'month' => $month]) }}" class="calendar-nav-btn">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <h4>{{ $calendarMonthName }} {{ $calendarYear }}</h4>
+                        <a href="{{ route('dashboard', ['cal_date' => date('Y-m-d', strtotime('+1 month', strtotime($calendarDate))), 'year' => $year, 'month' => $month]) }}" class="calendar-nav-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="calendar-weekday">Su</div>
+                        <div class="calendar-weekday">Mo</div>
+                        <div class="calendar-weekday">Tu</div>
+                        <div class="calendar-weekday">We</div>
+                        <div class="calendar-weekday">Th</div>
+                        <div class="calendar-weekday">Fr</div>
+                        <div class="calendar-weekday">Sa</div>
+
+                        @foreach($calendarData as $day)
+                            <div class="calendar-day {{ $day['current_month'] ? 'current' : 'other' }} {{ $day['today'] ? 'today' : '' }}">
+                                {{ $day['day'] }}
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         </div>
     </div>

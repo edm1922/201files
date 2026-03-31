@@ -421,7 +421,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
                                             <small class="text-muted">
-                                        Last encoded: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
+                                        Last number: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
                                     </small>
                                     
                                     @if($folders && $folders->count() > 0)
