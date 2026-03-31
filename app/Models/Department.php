@@ -12,10 +12,8 @@ class Department extends Model
     protected $fillable = [
         'name',
         'code',
-        'folder_code',
         'description',
         'is_active',
-        'folder_location_id',
     ];
 
     protected $casts = [

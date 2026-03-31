@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
@@ -18,7 +19,7 @@ class ReportController extends Controller
     {
         $companies = Company::orderBy('name')->get();
         $departments = Department::orderBy('name')->get();
-        
+
         return view('reports.generate', compact('companies', 'departments'));
     }
 
@@ -27,17 +28,22 @@ class ReportController extends Controller
      */
     public function exportEmployees(Request $request): StreamedResponse
     {
+        $validated = $request->validate([
+            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
+            'status' => ['nullable', Rule::in(['active', 'awol', 'resigned'])],
+        ]);
+
         $query = Employee::with(['company', 'folder', 'folderLocation']);
 
-        if ($request->filled('company_id')) {
-            $query->where('company_id', $request->company_id);
+        if (! empty($validated['company_id'])) {
+            $query->where('company_id', (int) $validated['company_id']);
         }
 
-        if ($request->filled('status')) {
-            if ($request->status === 'archived') {
-                $query->onlyTrashed();
-            } else {
-                $query->where('status', $request->status);
+        if (! empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+
+            if ($validated['status'] === 'resigned') {
+                $query->withTrashed();
             }
         }
 
@@ -50,7 +56,7 @@ class ReportController extends Controller
 
         $callback = function () use ($employees) {
             $file = fopen('php://output', 'w');
-            
+
             // CSV Headers
             fputcsv($file, [
                 'System ID',
@@ -61,7 +67,7 @@ class ReportController extends Controller
                 'Date Hired',
                 'Folder Code',
                 'Physical Location',
-                'Archive Date'
+                'Archive Date',
             ]);
 
             foreach ($employees as $emp) {
@@ -74,7 +80,7 @@ class ReportController extends Controller
                     $emp->date_hired?->format('Y-m-d') ?? '',
                     $emp->folder?->folder_code ?? '',
                     $emp->folderLocation ? ($emp->folderLocation->row_name . $emp->folderLocation->column_code) : '',
-                    $emp->archive_date?->format('Y-m-d') ?? ($emp->deleted_at?->format('Y-m-d') ?? '')
+                    $emp->archive_date?->format('Y-m-d') ?? ($emp->deleted_at?->format('Y-m-d') ?? ''),
                 ]);
             }
 
@@ -95,7 +101,7 @@ class ReportController extends Controller
             },
             'employees as resigned_count' => function ($query) {
                 $query->where('status', 'resigned')->withTrashed();
-            }
+            },
         ])->get();
 
         $headers = [
@@ -105,12 +111,12 @@ class ReportController extends Controller
 
         $callback = function () use ($companies) {
             $file = fopen('php://output', 'w');
-            
+
             fputcsv($file, [
                 'Company Name',
                 'Active Employees',
                 'Resigned Employees',
-                'Total Employees'
+                'Total Employees',
             ]);
 
             foreach ($companies as $company) {
@@ -119,7 +125,7 @@ class ReportController extends Controller
                     $company->name,
                     $company->active_count,
                     $company->resigned_count,
-                    $total
+                    $total,
                 ]);
             }
 
@@ -135,7 +141,7 @@ class ReportController extends Controller
     public function exportStorageUtilization(): StreamedResponse
     {
         $locations = \App\Models\FolderLocation::withCount('employees')->get();
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="storage_utilization_' . now()->format('Y-m-d_His') . '.csv"',
@@ -143,19 +149,19 @@ class ReportController extends Controller
 
         $callback = function () use ($locations) {
             $file = fopen('php://output', 'w');
-            
+
             fputcsv($file, [
                 'Location',
                 'Status',
-                'Occupied By (Employee)'
+                'Occupied By (Employee)',
             ]);
 
             foreach ($locations as $loc) {
-                $occupiedBy = $loc->employees->map(fn($e) => $e->full_name)->join('; ');
+                $occupiedBy = $loc->employees->map(fn ($e) => $e->full_name)->join('; ');
                 fputcsv($file, [
                     $loc->row_name . $loc->column_code,
                     $loc->employees_count > 0 ? 'Occupied' : 'Available',
-                    $occupiedBy ?: '—'
+                    $occupiedBy ?: '—',
                 ]);
             }
 
@@ -171,7 +177,7 @@ class ReportController extends Controller
     public function exportAvailableFolders(): StreamedResponse
     {
         $locations = \App\Models\FolderLocation::available()->orderBy('row_name')->orderBy('column_code')->get();
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="available_folders_' . now()->format('Y-m-d_His') . '.csv"',
@@ -179,16 +185,16 @@ class ReportController extends Controller
 
         $callback = function () use ($locations) {
             $file = fopen('php://output', 'w');
-            
+
             fputcsv($file, [
                 'Location',
-                'Status'
+                'Status',
             ]);
 
             foreach ($locations as $loc) {
                 fputcsv($file, [
                     $loc->row_name . $loc->column_code,
-                    'Available'
+                    'Available',
                 ]);
             }
 
@@ -203,18 +209,24 @@ class ReportController extends Controller
      */
     public function exportAuditLogs(Request $request): StreamedResponse
     {
+        $validated = $request->validate([
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ]);
+
         $query = AuditLog::with('user')->orderBy('created_at', 'desc');
 
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
+        if (! empty($validated['user_id'])) {
+            $query->where('user_id', (int) $validated['user_id']);
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        if (! empty($validated['date_from'])) {
+            $query->whereDate('created_at', '>=', $validated['date_from']);
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        if (! empty($validated['date_to'])) {
+            $query->whereDate('created_at', '<=', $validated['date_to']);
         }
 
         $logs = $query->get();
@@ -226,14 +238,14 @@ class ReportController extends Controller
 
         $callback = function () use ($logs) {
             $file = fopen('php://output', 'w');
-            
+
             fputcsv($file, [
                 'Timestamp',
                 'User',
                 'Action',
                 'Entity Type',
                 'Description',
-                'IP Address'
+                'IP Address',
             ]);
 
             foreach ($logs as $log) {
@@ -243,7 +255,7 @@ class ReportController extends Controller
                     strtoupper($log->action),
                     $log->model_type ? class_basename($log->model_type) : 'N/A',
                     $log->description,
-                    $log->ip_address
+                    $log->ip_address,
                 ]);
             }
 

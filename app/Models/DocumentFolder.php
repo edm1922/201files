@@ -12,6 +12,7 @@ class DocumentFolder extends Model
         'department_id',
         'parent_id',
         'name',
+        'folder_code',
     ];
 
     public function department(): BelongsTo
