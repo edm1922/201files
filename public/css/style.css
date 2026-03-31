@@ -1,3 +1,10 @@
+:root {
+    --company-primary: #dd270d;
+    --company-primary-hover: #b31e0a;
+    --company-primary-light: rgba(221, 39, 13, 0.1);
+    --company-primary-border: rgba(221, 39, 13, 0.2);
+}
+
 /* ─── Toolbar Grid — IN 201files.blade.php ──────────────────────────── */
 
 .parent {
@@ -60,8 +67,8 @@
 }
 
 .search-input:focus {
-    border-color: #dd270d;
-    box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.15);
+    border-color: var(--company-primary);
+    box-shadow: 0 0 0 3px var(--company-primary-light);
 }
 
 
@@ -113,26 +120,18 @@
 }
 
 .file-tab:hover {
-    color: #dd270d;
+    color: var(--company-primary);
 }
 
 .file-tab.active {
-    color: #dd270d;
-    border-bottom-color: #dd270d;
+    color: var(--company-primary);
+    border-bottom-color: var(--company-primary);
     font-weight: 600;
-}
-
-/* Save / Close buttons */
-.file-panel__actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-    padding: 8px 0;
 }
 
 .btn-file-save {
     padding: 7px 20px;
-    background: #dd270d;
+    background: var(--company-primary);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -162,9 +161,8 @@
     background: #4b5563;
 }
 
-/* Branded primary button */
 .btn-brand {
-    background: rgb(221, 39, 13);
+    background: var(--company-primary);
     color: #fff;
     border: none;
     font-weight: 600;
@@ -175,7 +173,7 @@
 }
 
 .btn-brand:hover {
-    background: #b91500;
+    background: var(--company-primary-hover);
     color: #fff;
     transform: translateY(-1px);
 }
@@ -187,7 +185,7 @@
 
 /* Panel section title (e.g. "PROFILE") */
 .panel-section-title {
-    color: #dd270d;
+    color: var(--company-primary);
     font-weight: 700;
     font-size: 0.8rem;
     letter-spacing: 0.08em;
@@ -246,7 +244,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 18px;
-    background: #c0392b;
+    background: var(--company-primary);
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -257,7 +255,7 @@
 }
 
 .btn-doc-upload:hover {
-    background: #a93226;
+    background: var(--company-primary-hover);
     transform: translateY(-1px);
 }
 
@@ -813,13 +811,13 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    background: linear-gradient(135deg, var(--company-primary), var(--company-primary-hover));
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     font-size: 1.25rem;
-    box-shadow: 0 4px 10px rgba(192, 57, 43, 0.3);
+    box-shadow: 0 4px 10px var(--company-primary-light);
     flex-shrink: 0;
 }
 

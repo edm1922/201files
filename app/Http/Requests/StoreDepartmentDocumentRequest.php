@@ -114,6 +114,7 @@ class StoreDepartmentDocumentRequest extends FormRequest
                         'text/csv',
                         'application/csv',
                         'text/plain',
+                        'application/msword',
                         'application/vnd.ms-excel',
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -127,11 +128,11 @@ class StoreDepartmentDocumentRequest extends FormRequest
                         $mime = $file->getMimeType() ?: '';
                         $extension = strtolower($file->getClientOriginalExtension() ?: '');
 
-                        $extensionAllowed = in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'csv', 'xls', 'xlsx', 'docx'], true);
+                        $extensionAllowed = in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'csv', 'xls', 'xlsx', 'doc', 'docx'], true);
                         $mimeAllowed = in_array($mime, $standardAllowedMimes, true);
 
                         if (! $extensionAllowed && ! $mimeAllowed) {
-                            $validator->errors()->add('files', 'Invalid format: Standard mode supports PDF, JPG, JPEG, PNG, DOCX, XLS, XLSX, and CSV.');
+                            $validator->errors()->add('files', 'Invalid format: Standard mode supports PDF, JPG, JPEG, PNG, DOC, DOCX, XLS, XLSX, and CSV.');
                             break;
                         }
                     }

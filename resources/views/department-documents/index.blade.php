@@ -120,7 +120,7 @@
                                     <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Filter</button>
                                 </form>
                                 <button type="button"
-                                    class="btn btn-primary btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
+                                    class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
                                     data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                     <i class="fas fa-cloud-upload-alt"></i> Upload
                                 </button>
@@ -139,25 +139,6 @@
                                     </a>
                                 @endforeach
                             </div>
-
-                            @if ($currentFolder && $canManageFolders)
-                                <div class="d-flex gap-2 folder-toolbar mb-3">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary"
-                                        data-bs-toggle="modal" data-bs-target="#renameFolderModal"
-                                        data-folder-name="{{ $currentFolder->name }}"
-                                        data-folder-code="{{ $currentFolder->folder_code }}"
-                                        data-folder-action="{{ route('department-documents.folders.update', $currentFolder) }}">
-                                        <i class="fas fa-pen me-1"></i>Edit Folder
-                                    </button>
-
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
-                                        data-bs-target="#deleteFolderModal"
-                                        data-folder-name="{{ $currentFolder->name }}"
-                                        data-folder-action="{{ route('department-documents.folders.destroy', $currentFolder) }}">
-                                        <i class="fas fa-trash me-1"></i>Delete Folder
-                                    </button>
-                                </div>
-                            @endif
                         </div>
 
                         <div class="doc-table-wrapper border-0">
@@ -166,7 +147,7 @@
                                     <tr>
                                         <th>Resource</th>
                                         <th>Department & Type</th>
-                                        <th>Virtual Folder</th>
+                                        <th>Folder Code</th>
                                         <th>Physical Location</th>
                                         <th>Received On</th>
                                         <th class="text-center">Actions</th>
@@ -260,9 +241,7 @@
                                                 <div class="text-muted x-small mt-1">{{ $docFolderPath }}</div>
                                             </td>
                                             <td>
-                                                <div class="small"><i
-                                                        class="fas fa-building me-1 text-muted"></i>{{ $doc->folderLocation->name }}
-                                                </div>
+                                                {{-- <div class="small">{{ $doc->folderLocation->name }} </div> --}}
                                                 <div class="text-muted x-small mt-1">
                                                     {{ $doc->folderLocation->full_location }}</div>
                                             </td>
@@ -487,14 +466,15 @@
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
                 <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                     <h5 class="modal-title fw-bold text-dark fs-5">
-                        <i class="fas fa-cloud-upload-alt me-2 text-primary"></i> Upload Documents
+                        <i class="fas fa-cloud-upload-alt me-2 text-accent-red"></i> Upload Documents
                     </h5>
                     <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <form method="POST" action="{{ route('department-documents.store') }}"
-                        enctype="multipart/form-data" id="upload-form" x-data="{ dragging: false, files: [] }" data-loading-target>
+                        enctype="multipart/form-data" id="upload-form" x-data="{ dragging: false, files: [], uploadMode: 'standard', showExpiry: false }"
+                        x-init="$nextTick(() => { const select = $refs.typeSelect; if (select && select.selectedIndex >= 0) showExpiry = select.options[select.selectedIndex].dataset.hasExpiry === '1'; })" data-loading-target>
                         @csrf
                         <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
                         @if ($currentFolderId)
@@ -517,10 +497,12 @@
                                             class="form-label small fw-bold text-uppercase text-muted">Document Type
                                             <span class="text-danger">*</span></label>
                                         <select id="upload_type" name="document_type_id"
-                                            class="form-select field-input" required>
-                                            <option value="">Select type</option>
+                                            class="form-select field-input" required x-ref="typeSelect"
+                                            @change="showExpiry = $event.target.options[$event.target.selectedIndex].dataset.hasExpiry === '1'">
+                                            <option value="" data-has-expiry="0">Select type</option>
                                             @foreach ($documentTypes as $type)
                                                 <option value="{{ $type->id }}"
+                                                    data-has-expiry="{{ $type->has_expiry ? '1' : '0' }}"
                                                     {{ request('document_type_id') == $type->id ? 'selected' : '' }}>
                                                     {{ $type->name }}</option>
                                             @endforeach
@@ -546,8 +528,8 @@
                                             class="form-label small fw-bold text-uppercase text-muted">Upload Mode
                                             <span class="text-danger">*</span></label>
                                         <select id="upload_mode" name="upload_mode" class="form-select field-input"
-                                            required>
-                                            <option value="standard" selected>Standard (Keep original)</option>
+                                            required x-model="uploadMode">
+                                            <option value="standard">Standard (Keep original)</option>
                                             <option value="scan_packet">Scan Packet (Merge to PDF)</option>
                                         </select>
                                     </div>
@@ -560,7 +542,7 @@
                                             class="form-control field-input" value="{{ date('Y-m-d') }}" required>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-6" x-show="showExpiry" x-cloak>
                                         <label for="upload_expiry_date"
                                             class="form-label small fw-bold text-uppercase text-muted">Expiry
                                             Date</label>
@@ -573,27 +555,39 @@
                             <div class="col-lg-5">
                                 <label class="form-label small fw-bold text-uppercase text-muted">Files to Upload <span
                                         class="text-danger">*</span></label>
-                                <div class="upload-zone position-relative overflow-hidden rounded-3 border-2 border-dashed border-primary bg-light"
-                                    :class="{ 'bg-primary bg-opacity-10 border-primary': dragging }"
-                                    @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false"
+                                <div class="upload-zone position-relative overflow-hidden rounded-3 border-2 border-dashed upload-zone--accent-red bg-light"
+                                    :class="{ 'dragging': dragging }" @dragover.prevent="dragging = true"
+                                    @dragleave.prevent="dragging = false"
                                     @drop.prevent="dragging = false; files = Array.from($event.dataTransfer.files); $refs.fileInput.files = $event.dataTransfer.files"
                                     style="min-height: 200px;">
 
                                     <input type="file" name="files[]" multiple required x-ref="fileInput"
+                                        :accept="uploadMode === 'scan_packet' ? '.pdf,.jpg,.jpeg,.png' :
+                                            '.pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv'"
                                         @change="files = Array.from($event.target.files)"
                                         style="opacity: 0; position: absolute; top:0; left:0; width: 100%; height: 100%; cursor: pointer; z-index: 10;">
 
-                                    <div
-                                        class="upload-zone__content p-4 text-center d-flex flex-column justify-content-center h-100 position-absolute w-100 h-100 start-0 top-0 align-items-center">
-                                        <i class="fas fa-file-export mb-2 fs-2 text-primary opacity-75"></i>
+                                    <div class="upload-zone__content p-4 text-center d-flex flex-column justify-content-center h-100 position-absolute w-100 h-100 start-0 top-0 align-items-center"
+                                        style="pointer-events: none;">
+                                        <i class="fas fa-file-export mb-2 fs-2 text-accent-red opacity-75"
+                                            x-show="files.length === 0"></i>
                                         <div class="upload-zone__text fw-medium text-dark"
                                             x-show="files.length === 0">Drag & drop files or click to browse</div>
-                                        <div class="upload-zone__text text-primary fw-bold" x-show="files.length > 0"
-                                            x-cloak>
-                                            <span x-text="files.length"></span> file(s) selected
+
+                                        <div class="w-100" x-show="files.length > 0" x-cloak
+                                            style="max-height: 140px; overflow-y: auto;">
+                                            <div class="d-flex flex-wrap justify-content-center gap-1 mt-1 px-2">
+                                                <template x-for="file in files" :key="file.name">
+                                                    <span class="badge badge-accent-red py-2 px-3 fw-medium"
+                                                        style="max-width: 100%; overflow: hidden; text-overflow: ellipsis;"
+                                                        x-text="file.name"></span>
+                                                </template>
+                                            </div>
                                         </div>
-                                        <div class="upload-zone__subtext text-muted small mt-1">Supported: PDF, JPG,
-                                            PNG, DOCX, XLSX, CSV</div>
+                                        <div class="upload-zone__subtext text-muted small mt-2"
+                                            x-show="files.length === 0"
+                                            x-text="uploadMode === 'scan_packet' ? 'Supported: PDF, JPG, PNG' : 'Supported: PDF, JPG, PNG, DOC(X), XLS(X), CSV'">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -601,7 +595,7 @@
                         <div class="mt-4 pt-3 d-flex justify-content-end bg-white">
                             <button type="button" class="btn btn-light fw-semibold text-secondary me-2"
                                 data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary px-4 shadow-sm btn-submit-loading">
+                            <button type="submit" class="btn btn-accent-red px-4 shadow-sm btn-submit-loading">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload Documents
                             </button>
                         </div>
@@ -723,6 +717,36 @@
 
             .animate-fade-out {
                 animation: fadeOut 0.4s ease-in-out forwards;
+            }
+
+            .btn-accent-red {
+                background-color: var(--company-primary) !important;
+                border-color: var(--company-primary) !important;
+                color: #fff !important;
+            }
+
+            .btn-accent-red:hover {
+                background-color: var(--company-primary-hover) !important;
+                border-color: var(--company-primary-hover) !important;
+            }
+
+            .text-accent-red {
+                color: var(--company-primary) !important;
+            }
+
+            .upload-zone--accent-red {
+                border-color: var(--company-primary) !important;
+            }
+
+            .upload-zone--accent-red.dragging {
+                background-color: var(--company-primary-light) !important;
+                border-color: var(--company-primary) !important;
+            }
+
+            .badge-accent-red {
+                background-color: var(--company-primary-light) !important;
+                color: var(--company-primary) !important;
+                border: 1px solid var(--company-primary-border) !important;
             }
 
             @keyframes fadeIn {

@@ -34,6 +34,8 @@ class DocumentMergeService
                 // FPDF image method signature: Image(file, x, y, w, h, type)
                 // Let's maximize the image preserving aspect ratio to an A4 page (210x297mm)
                 
+                $imageType = $mime === 'image/jpeg' ? 'JPEG' : 'PNG';
+
                 // Get image dimensions to scale appropriately
                 $size = getimagesize($path);
                 if ($size) {
@@ -58,9 +60,9 @@ class DocumentMergeService
                     $y = (297 - $h) / 2;
                     
                     // The FPDF image function doesn't actually throw on GD absence if we just pass the path and it can read dimensions.
-                    $fpdi->Image($path, $x, $y, $w, $h);
+                    $fpdi->Image($path, $x, $y, $w, $h, $imageType);
                 } else {
-                    $fpdi->Image($path, 0, 0, 210);
+                    $fpdi->Image($path, 0, 0, 210, 0, $imageType);
                 }
                 
                 $pageCount++;
