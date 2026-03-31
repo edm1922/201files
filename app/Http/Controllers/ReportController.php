@@ -134,7 +134,11 @@ class ReportController extends Controller
      */
     public function exportStorageUtilization(): StreamedResponse
     {
-        $locations = \App\Models\FolderLocation::orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
+        // Eager load employees to optimize row-by-row output
+        $locations = \App\Models\FolderLocation::with('employees')
+            ->orderByRaw('LENGTH(row_name) ASC')
+            ->orderBy('row_name', 'ASC')
+            ->get();
         
         $headers = [
             'Content-Type' => 'text/csv',
@@ -151,12 +155,23 @@ class ReportController extends Controller
             ]);
 
             foreach ($locations as $loc) {
-                $occupiedBy = $loc->employees->map(fn($e) => $e->full_name)->join('; ');
-                fputcsv($file, [
-                    $loc->full_location,
-                    $loc->employees_count > 0 ? 'Occupied' : 'Available',
-                    $occupiedBy ?: '—'
-                ]);
+                if ($loc->employees->isNotEmpty()) {
+                    // Output one row per employee for a vertical layout
+                    foreach ($loc->employees as $emp) {
+                        fputcsv($file, [
+                            $loc->full_location,
+                            'Occupied',
+                            $emp->full_name
+                        ]);
+                    }
+                } else {
+                    // Output single row for available location
+                    fputcsv($file, [
+                        $loc->full_location,
+                        'Available',
+                        '—'
+                    ]);
+                }
             }
 
             fclose($file);
