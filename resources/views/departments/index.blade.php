@@ -26,8 +26,7 @@
                     <thead>
                         <tr>
                             <th style="width: 250px;">Department Name</th>
-                            <th style="width: 150px;">Code / Folder ID</th>
-                            <th>Location</th>
+                            <th style="width: 150px;">Code</th>
                             <th>Description</th>
                             <th style="width: 120px; text-align: center;">Status</th>
                             <th style="width: 160px; text-align: center;">Document Types</th>
@@ -39,17 +38,7 @@
                             <tr>
                                 <td class="fw-medium" style="color: #1e2328;">{{ $department->name }}</td>
                                 <td>
-                                    <div class="fw-bold" style="font-size: 0.85rem; color: #374151;">{{ $department->code ?? '—' }}</div>
-                                    <div class="text-muted" style="font-size: 0.75rem; font-family: monospace;">{{ $department->folder_code ?? '—' }}</div>
-                                </td>
-                                <td>
-                                    @if($department->folderLocation)
-                                        <div class="text-danger fw-semibold" style="font-size: 0.8rem; font-family: monospace;">
-                                            {{ $department->folderLocation->full_location }}
-                                        </div>
-                                    @else
-                                        <span class="text-muted" style="font-size: 0.8rem;">— No Location —</span>
-                                    @endif
+                                    <div class="fw-bold font-monospace" style="font-size: 0.85rem; color: #374151;">{{ $department->code ?? '—' }}</div>
                                 </td>
                                 <td class="text-muted" style="font-size: 0.8rem;">
                                     {{ Str::limit($department->description ?: 'No description provided.', 80) }}
@@ -80,8 +69,6 @@
                                                     'id' => $department->id,
                                                     'name' => $department->name,
                                                     'code' => $department->code,
-                                                    'folder_code' => $department->folder_code,
-                                                    'folder_location_id' => $department->folder_location_id,
                                                     'description' => $department->description,
                                                     'is_active' => $department->is_active,
                                                     'updated_at' => $department->updated_at->format('M d, Y h:i A')
@@ -137,7 +124,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-5">
+                                <td colspan="6" class="text-center text-muted py-5">
                                     <i class="fas fa-sitemap mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
                                     <p class="mb-0 mt-2">No departments found.</p>
                                 </td>
@@ -172,8 +159,6 @@
                     id: '',
                     name: '',
                     code: '',
-                    folder_code: '',
-                    folder_location_id: '',
                     description: '',
                     updated_at: ''
                 },
@@ -195,7 +180,6 @@
                             id: '{{ old("id") }}',
                             name: '{!! addslashes(old("name")) !!}',
                             code: '{!! addslashes(old("code")) !!}',
-                            folder_location_id: '{{ old("folder_location_id") }}',
                             description: '{!! addslashes(old("description")) !!}',
                             is_active: {{ old('is_active') ? 'true' : 'false' }},
                             updated_at: ''

@@ -8,6 +8,7 @@ use App\Models\Document;
 use App\Models\DocumentFolder;
 use App\Models\DocumentType;
 use App\Models\FolderLocation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -32,6 +33,9 @@ class DepartmentDocumentController extends Controller
             $selectedDepartmentId = (int) ($departments->first()?->id ?? 0);
         }
 
+        $selectedDepartment = $departments->firstWhere('id', $selectedDepartmentId);
+        $selectedDepartmentName = $selectedDepartment?->name;
+
         $documentTypes = $selectedDepartmentId > 0
             ? DocumentType::query()->where('department_id', $selectedDepartmentId)->orderBy('name')->get()
             : collect();
@@ -48,6 +52,7 @@ class DepartmentDocumentController extends Controller
 
         $folderLookup = $allFolders->keyBy('id');
         $foldersByParent = $allFolders->groupBy(fn (DocumentFolder $folder) => (int) ($folder->parent_id ?? 0));
+        $folderPathMaps = $this->buildFolderPathMaps($allFolders);
 
         $folderBreadcrumbs = collect();
         if ($currentFolder) {
@@ -83,7 +88,39 @@ class DepartmentDocumentController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('original_filename', 'like', '%' . $request->search . '%');
+            $search = trim((string) $request->search);
+            $searchLower = mb_strtolower($search);
+
+            $matchingFolderIds = collect($folderPathMaps)
+                ->filter(function (array $map) use ($searchLower): bool {
+                    return str_contains(mb_strtolower($map['name_path']), $searchLower)
+                        || str_contains(mb_strtolower($map['code_path']), $searchLower)
+                        || str_contains(mb_strtolower($map['display_path']), $searchLower);
+                })
+                ->keys()
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            $matchesDeptName = $selectedDepartmentName
+                ? str_contains(mb_strtolower($selectedDepartmentName), $searchLower)
+                : false;
+
+            $query->where(function ($q) use ($search, $matchingFolderIds, $matchesDeptName) {
+                $q->where('original_filename', 'like', '%' . $search . '%')
+                    ->orWhereHas('documentFolder', function ($folderQuery) use ($search) {
+                        $folderQuery
+                            ->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('folder_code', 'like', '%' . $search . '%');
+                    });
+
+                if ($matchingFolderIds->isNotEmpty()) {
+                    $q->orWhereIn('document_folder_id', $matchingFolderIds->all());
+                }
+
+                if ($matchesDeptName) {
+                    $q->orWhereNull('document_folder_id');
+                }
+            });
         }
 
         $documents = $query->paginate(20)->withQueryString();
@@ -91,9 +128,11 @@ class DepartmentDocumentController extends Controller
         return view('department-documents.index', compact(
             'departments',
             'selectedDepartmentId',
+            'selectedDepartmentName',
             'documentTypes',
             'allFolders',
             'foldersByParent',
+            'folderPathMaps',
             'currentFolder',
             'currentFolderId',
             'folderBreadcrumbs',
@@ -135,6 +174,7 @@ class DepartmentDocumentController extends Controller
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'parent_id' => ['nullable', 'integer', 'exists:document_folders,id'],
             'name' => ['required', 'string', 'max:120'],
+            'folder_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         $departmentId = (int) $validated['department_id'];
@@ -145,43 +185,170 @@ class DepartmentDocumentController extends Controller
             $parentFolder = DocumentFolder::query()->find($parentId);
 
             if (! $parentFolder || (int) $parentFolder->department_id !== $departmentId) {
-                return back()->withErrors([
-                    'name' => 'The selected parent folder is invalid for the selected department.',
-                ])->withInput();
+                return $this->folderValidationError($request, 'The selected parent folder is invalid for the selected department.');
             }
         }
 
         $folderName = trim((string) $validated['name']);
         if ($folderName === '') {
-            return back()->withErrors([
-                'name' => 'Folder name is required.',
-            ])->withInput();
+            return $this->folderValidationError($request, 'Folder name is required.');
         }
 
-        $duplicate = DocumentFolder::query()
+        $folderCode = isset($validated['folder_code']) ? trim((string) $validated['folder_code']) : null;
+        if ($folderCode === '') {
+            $folderCode = null;
+        }
+
+        if ($folderCode) {
+            $duplicateCode = DocumentFolder::query()
+                ->where('department_id', $departmentId)
+                ->whereRaw('LOWER(folder_code) = ?', [mb_strtolower($folderCode)])
+                ->exists();
+
+            if ($duplicateCode) {
+                return $this->folderValidationError($request, 'Folder code already exists in this department.', 'folder_code');
+            }
+        }
+
+        $duplicateName = DocumentFolder::query()
             ->where('department_id', $departmentId)
             ->where('parent_id', $parentId)
             ->whereRaw('LOWER(name) = ?', [mb_strtolower($folderName)])
             ->exists();
 
-        if ($duplicate) {
-            return back()->withErrors([
-                'name' => 'A folder with this name already exists in this location.',
-            ])->withInput();
+        if ($duplicateName) {
+            return $this->folderValidationError($request, 'A folder with this name already exists in this location.');
         }
 
         $folder = DocumentFolder::create([
             'department_id' => $departmentId,
             'parent_id' => $parentId,
             'name' => $folderName,
+            'folder_code' => $folderCode,
         ]);
 
-        return redirect()
-            ->route('department-documents.index', [
+        return $this->folderActionSuccess(
+            $request,
+            'Folder created successfully.',
+            [
                 'department_id' => $departmentId,
                 'document_folder_id' => $folder->id,
-            ])
-            ->with('success', 'Folder created successfully.');
+            ],
+            $folder,
+            201
+        );
+    }
+
+
+    public function updateFolder(Request $request, DocumentFolder $folder)
+    {
+        $departmentId = (int) $folder->department_id;
+        $this->authorize('createForDepartment', [Document::class, $departmentId]);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'folder_code' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $folderName = trim((string) $validated['name']);
+        if ($folderName === '') {
+            return $this->folderValidationError($request, 'Folder name is required.');
+        }
+
+        $folderCode = isset($validated['folder_code']) ? trim((string) $validated['folder_code']) : null;
+        if ($folderCode === '') {
+            $folderCode = null;
+        }
+
+        if ($folderCode) {
+            $duplicateCode = DocumentFolder::query()
+                ->where('department_id', $departmentId)
+                ->whereRaw('LOWER(folder_code) = ?', [mb_strtolower($folderCode)])
+                ->whereKeyNot($folder->id)
+                ->exists();
+
+            if ($duplicateCode) {
+                return $this->folderValidationError($request, 'Folder code already exists in this department.', 'folder_code');
+            }
+        }
+
+        $duplicate = DocumentFolder::query()
+            ->where('department_id', $departmentId)
+            ->where('parent_id', $folder->parent_id)
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($folderName)])
+            ->whereKeyNot($folder->id)
+            ->exists();
+
+        if ($duplicate) {
+            return $this->folderValidationError($request, 'A folder with this name already exists in this location.');
+        }
+
+        $oldName = $folder->name;
+        $oldCode = $folder->folder_code;
+        
+        $folder->update([
+            'name' => $folderName,
+            'folder_code' => $folderCode,
+        ]);
+
+        \App\Services\AuditService::log('updated', "Department folder updated: {$oldName}.", $folder, [
+            'old_name' => $oldName,
+            'new_name' => $folderName,
+            'old_code' => $oldCode,
+            'new_code' => $folderCode,
+        ]);
+
+        return $this->folderActionSuccess(
+            $request,
+            'Folder renamed successfully.',
+            [
+                'department_id' => $departmentId,
+                'document_folder_id' => $folder->id,
+            ],
+            $folder
+        );
+    }
+
+
+    public function destroyFolder(Request $request, DocumentFolder $folder)
+    {
+        $departmentId = (int) $folder->department_id;
+        $this->authorize('createForDepartment', [Document::class, $departmentId]);
+
+        $hasChildren = DocumentFolder::query()->where('parent_id', $folder->id)->exists();
+        $hasDocuments = Document::withTrashed()->where('document_folder_id', $folder->id)->exists();
+
+        if ($hasChildren || $hasDocuments) {
+            $message = $hasChildren && $hasDocuments
+                ? 'Folder cannot be deleted because it has subfolders and documents.'
+                : ($hasChildren
+                    ? 'Folder cannot be deleted because it has subfolders.'
+                    : 'Folder cannot be deleted because it contains documents.');
+
+            return $this->folderValidationError($request, $message);
+        }
+
+        $parentFolderId = $folder->parent_id ? (int) $folder->parent_id : null;
+        $folderName = $folder->name;
+
+        $folder->delete();
+
+        \App\Services\AuditService::log('deleted', "Department folder deleted: {$folderName}.", null, [
+            'folder_name' => $folderName,
+            'department_id' => $departmentId,
+        ]);
+
+        $redirectParams = ['department_id' => $departmentId];
+        if ($parentFolderId) {
+            $redirectParams['document_folder_id'] = $parentFolderId;
+        }
+
+        return $this->folderActionSuccess(
+            $request,
+            "Folder {$folderName} deleted successfully.",
+            $redirectParams,
+            null
+        );
     }
 
     public function archive(Document $document)
@@ -209,6 +376,7 @@ class DepartmentDocumentController extends Controller
         return back()->with('success', 'Document restored successfully.');
     }
 
+
     public function download(Document $document): StreamedResponse
     {
         $this->authorize('download', $document);
@@ -218,5 +386,117 @@ class DepartmentDocumentController extends Controller
         }
 
         return Storage::disk('local')->download($document->file_path, $document->original_filename);
+    }
+
+    public function preview(Document $document): StreamedResponse
+    {
+        $this->authorize('download', $document);
+
+        if (! Storage::disk('local')->exists($document->file_path)) {
+            abort(404);
+        }
+
+        $mimeType = (string) ($document->mime_type ?: Storage::disk('local')->mimeType($document->file_path) ?: 'application/octet-stream');
+        if (! $this->isPreviewableMime($mimeType)) {
+            abort(415);
+        }
+
+        return response()->stream(function () use ($document) {
+            $stream = Storage::disk('local')->readStream($document->file_path);
+            if (! $stream) {
+                return;
+            }
+
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . addslashes($document->original_filename) . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, max-age=0, no-store, no-cache, must-revalidate',
+            'Pragma' => 'no-cache',
+        ]);
+    }
+
+    protected function folderValidationError(Request $request, string $message, string $field = 'name'): JsonResponse|\Illuminate\Http\RedirectResponse
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => false,
+                'message' => $message,
+                'errors' => [
+                    $field => [$message],
+                ],
+            ], 422);
+        }
+
+        return back()->withErrors([$field => $message])->withInput();
+    }
+
+    protected function folderActionSuccess(
+        Request $request,
+        string $message,
+        array $redirectParams,
+        ?DocumentFolder $folder = null,
+        int $statusCode = 200
+    ): JsonResponse|\Illuminate\Http\RedirectResponse {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'message' => $message,
+                'folder' => $folder ? [
+                    'id' => (int) $folder->id,
+                    'name' => $folder->name,
+                    'folder_code' => $folder->folder_code,
+                    'department_id' => (int) $folder->department_id,
+                    'parent_id' => $folder->parent_id ? (int) $folder->parent_id : null,
+                ] : null,
+                'redirect_url' => route('department-documents.index', $redirectParams),
+            ], $statusCode);
+        }
+
+        return redirect()
+            ->route('department-documents.index', $redirectParams)
+            ->with('success', $message);
+    }
+
+    protected function isPreviewableMime(string $mimeType): bool
+    {
+        return str_starts_with($mimeType, 'image/')
+            || $mimeType === 'application/pdf';
+    }
+
+    protected function buildFolderPathMaps($allFolders): array
+    {
+        $folderLookup = $allFolders->keyBy('id');
+        $maps = [];
+
+        foreach ($allFolders as $folder) {
+            $chain = [];
+            $cursor = $folder;
+            $safety = 0;
+
+            while ($cursor && $safety < 20) {
+                array_unshift($chain, $cursor);
+                $cursor = $cursor->parent_id ? $folderLookup->get($cursor->parent_id) : null;
+                $safety++;
+            }
+
+            $nameSegments = array_map(fn (DocumentFolder $segment) => $segment->name, $chain);
+            $codeSegments = array_values(array_filter(array_map(fn (DocumentFolder $segment) => (string) $segment->folder_code, $chain)));
+            $displaySegments = array_map(function (DocumentFolder $segment): string {
+                $codePrefix = $segment->folder_code ? '[' . $segment->folder_code . '] ' : '';
+
+                return $codePrefix . $segment->name;
+            }, $chain);
+
+            $maps[(int) $folder->id] = [
+                'name_path' => implode(' / ', $nameSegments),
+                'code_path' => implode(' / ', $codeSegments),
+                'display_path' => implode(' / ', $displaySegments),
+            ];
+        }
+
+        return $maps;
     }
 }

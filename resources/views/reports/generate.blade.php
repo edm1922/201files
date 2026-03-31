@@ -6,11 +6,30 @@
                 <p class="text-muted mb-0" style="font-size: 0.85rem;">Generate and download comprehensive datasets for auditing and compliance.</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('reports.audit-log') }}" class="btn btn-action-round" title="View Real-time Logs">
+                <a href="{{ route('reports.audit-log') }}" class="btn btn-action-round" title="View Real-time Logs"
+                    aria-label="View real-time audit logs">
                     <i class="fas fa-history"></i>
                 </a>
             </div>
         </div>
+
+        @if (session('success'))
+            <div class="alert-flash alert-flash--success mb-4">
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert-flash alert-flash--error mb-4">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert-flash alert-flash--error mb-4" data-report-errors>
+                <i class="fas fa-exclamation-triangle me-2"></i>{{ $errors->first() }}
+            </div>
+        @endif
 
         <div class="row g-4">
             {{-- ── Employee Master List Export ── --}}
@@ -27,30 +46,39 @@
                             </div>
                         </div>
 
-                        <form action="{{ route('reports.export-employees') }}" method="GET" class="mt-auto">
+                        <form action="{{ route('reports.export-employees') }}" method="GET" class="mt-auto" data-report-export-form>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Company</label>
-                                    <select name="company_id" class="form-select field-input">
+                                    <select name="company_id" class="form-select field-input @error('company_id') is-invalid @enderror">
                                         <option value="">All Companies</option>
-                                        @foreach($companies as $company)
-                                            <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                        @foreach ($companies as $company)
+                                            <option value="{{ $company->id }}" {{ (string) request('company_id') === (string) $company->id ? 'selected' : '' }}>
+                                                {{ $company->name }}
+                                            </option>
                                         @endforeach
                                     </select>
+                                    @error('company_id')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Status</label>
-                                    <select name="status" class="form-select field-input">
+                                    <select name="status" class="form-select field-input @error('status') is-invalid @enderror">
                                         <option value="">All Statuses</option>
-                                        <option value="active">Active</option>
-                                        <option value="archived">Archived (Resigned)</option>
-                                        <option value="awol">AWOL</option>
+                                        <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                                        <option value="resigned" {{ request('status') === 'resigned' ? 'selected' : '' }}>Resigned (Archived)</option>
+                                        <option value="awol" {{ request('status') === 'awol' ? 'selected' : '' }}>AWOL</option>
                                     </select>
+                                    @error('status')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-brand w-100 py-2 shadow-sm d-flex align-items-center justify-content-center" style="border-radius: 8px;">
+                            <button type="submit" class="btn btn-brand w-100 py-2 shadow-sm d-flex align-items-center justify-content-center"
+                                style="border-radius: 8px;" data-export-submit>
                                 <i class="fas fa-file-csv me-2" style="font-size: 1.1rem;"></i>
-                                <span class="fw-bold">Download Master List</span>
+                                <span class="fw-bold" data-export-label>Download Master List</span>
                             </button>
                         </form>
                     </div>
@@ -73,7 +101,8 @@
 
                         <div class="mt-auto">
                             <p class="text-muted small mb-4">This report provides a high-level summary of employee counts across all registered companies.</p>
-                            <a href="{{ route('reports.export-company-summary') }}" class="btn btn-dark w-100 py-2 shadow-sm d-flex align-items-center justify-content-center" style="background-color: #2c3340; border-color: #2c3340; border-radius: 8px;">
+                            <a href="{{ route('reports.export-company-summary') }}" class="btn btn-dark w-100 py-2 shadow-sm d-flex align-items-center justify-content-center"
+                                style="background-color: #2c3340; border-color: #2c3340; border-radius: 8px;">
                                 <i class="fas fa-file-csv me-2" style="font-size: 1.1rem;"></i>
                                 <span class="fw-bold">Export Company Summary</span>
                             </a>
@@ -98,7 +127,8 @@
 
                         <div class="mt-auto">
                             <p class="text-muted small mb-4">Track shelf space efficiency and identify available slots in the physical archive.</p>
-                            <a href="{{ route('reports.export-storage-utilization') }}" class="btn btn-success w-100 py-2 shadow-sm d-flex align-items-center justify-content-center" style="background-color: #10b981; border-color: #10b981; border-radius: 8px;">
+                            <a href="{{ route('reports.export-storage-utilization') }}" class="btn btn-success w-100 py-2 shadow-sm d-flex align-items-center justify-content-center"
+                                style="background-color: #10b981; border-color: #10b981; border-radius: 8px;">
                                 <i class="fas fa-file-csv me-2" style="font-size: 1.1rem;"></i>
                                 <span class="fw-bold">Export Storage Report</span>
                             </a>
@@ -121,20 +151,31 @@
                             </div>
                         </div>
 
-                        <form action="{{ route('reports.export-audit-logs') }}" method="GET" class="mt-auto">
+                        <form action="{{ route('reports.export-audit-logs') }}" method="GET" class="mt-auto" data-report-export-form>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Date From</label>
-                                    <input type="date" name="date_from" class="form-control field-input" value="{{ date('Y-m-01') }}">
+                                    <input type="date" name="date_from"
+                                        class="form-control field-input @error('date_from') is-invalid @enderror"
+                                        value="{{ request('date_from', date('Y-m-01')) }}">
+                                    @error('date_from')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem;">Date To</label>
-                                    <input type="date" name="date_to" class="form-control field-input" value="{{ date('Y-m-t') }}">
+                                    <input type="date" name="date_to"
+                                        class="form-control field-input @error('date_to') is-invalid @enderror"
+                                        value="{{ request('date_to', date('Y-m-t')) }}">
+                                    @error('date_to')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-outline-secondary w-100 py-2 shadow-sm d-flex align-items-center justify-content-center" style="border-radius: 8px; border-width: 2px;">
+                            <button type="submit" class="btn btn-outline-secondary w-100 py-2 shadow-sm d-flex align-items-center justify-content-center"
+                                style="border-radius: 8px; border-width: 2px;" data-export-submit>
                                 <i class="fas fa-file-csv me-2" style="font-size: 1.1rem;"></i>
-                                <span class="fw-bold">Export Activity Log</span>
+                                <span class="fw-bold" data-export-label>Export Activity Log</span>
                             </button>
                         </form>
                     </div>
@@ -160,12 +201,14 @@
     <style>
         .doc-list-card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
+
         .doc-list-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
         }
+
         .field-input {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -174,10 +217,44 @@
             background-color: #f8fafc;
             transition: all 0.2s;
         }
+
         .field-input:focus {
             background-color: #fff;
             border-color: var(--brand-red, #dd270d);
             box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.1);
         }
     </style>
+
+    @push('scripts')
+        <script>
+            (() => {
+                document.querySelectorAll('form[data-report-export-form]').forEach((form) => {
+                    if (form.dataset.exportBound === '1') {
+                        return;
+                    }
+
+                    form.dataset.exportBound = '1';
+                    form.addEventListener('submit', () => {
+                        const button = form.querySelector('[data-export-submit]');
+                        const label = form.querySelector('[data-export-label]');
+
+                        if (!button || !label || button.disabled) {
+                            return;
+                        }
+
+                        button.disabled = true;
+                        button.dataset.originalLabel = label.textContent.trim();
+                        label.textContent = 'Preparing export...';
+
+                        const spinner = document.createElement('span');
+                        spinner.className = 'spinner-border spinner-border-sm me-2';
+                        spinner.setAttribute('role', 'status');
+                        spinner.setAttribute('aria-hidden', 'true');
+                        spinner.dataset.exportSpinner = '1';
+                        button.insertBefore(spinner, button.firstChild);
+                    });
+                });
+            })();
+        </script>
+    @endpush
 </x-app-layout>

@@ -154,12 +154,14 @@ test('it can create a virtual folder and upload into it', function () {
 test('it rejects folder creation if name exists in same parent', function () {
     DocumentFolder::create([
         'department_id' => $this->department->id,
-        'name' => 'DUPLICATE'
+        'name' => 'DUPLICATE',
+        'folder_code' => 'TST-DUP-001',
     ]);
 
     $response = $this->actingAs($this->admin)->post(route('department-documents.folders.store'), [
         'department_id' => $this->department->id,
         'name' => 'duplicate',
+        'folder_code' => 'TST-DUP-002',
     ]);
 
     $response->assertSessionHasErrors(['name']);
