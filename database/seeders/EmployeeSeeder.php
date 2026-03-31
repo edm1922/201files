@@ -8,17 +8,11 @@ use Carbon\Carbon;
 
 class EmployeeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Disable foreign key checks to allow truncation
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('employees')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
-        $csvFile = base_path('temporary file/ALL_EMPLOYEE.csv');
+        // Truncate is now handled in DatabaseSeeder globally
+        
+        $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-500.csv');
         if (!file_exists($csvFile)) {
             return;
         }
@@ -26,20 +20,18 @@ class EmployeeSeeder extends Seeder
         $handle = fopen($csvFile, 'r');
         fgetcsv($handle); // Skip header
 
-        // Determine the starting folder ID
+        // Starting folder ID
         $firstFolder = DB::table('folders')->orderBy('id')->first();
         $nextFolderId = $firstFolder ? $firstFolder->id : 1;
-        $folderLocationId = 1; // Default to first location
         
-        $id = 1;
-        $now = '2026-03-16 08:33:00';
+        $now = '2026-03-31 00:00:00';
         $seenBarcodes = [];
         $seenSystemIds = [];
+        $idCounter = 1;
         
         while (($data = fgetcsv($handle)) !== false) {
-            if ((empty($data[0]) || trim($data[0]) == '') && (empty($data[4]) || trim($data[4]) == '')) {
-                continue;
-            }
+            // Basic validation
+            if (empty($data[0]) && empty($data[4])) continue;
 
             $barcode = trim($data[0] ?? '');
             $systemId = trim($data[1] ?? '');
@@ -47,21 +39,14 @@ class EmployeeSeeder extends Seeder
             if ($barcode && in_array($barcode, $seenBarcodes)) continue;
             if ($systemId && in_array($systemId, $seenSystemIds)) continue;
 
-            if (empty($systemId)) {
-                $systemId = 'TEMP-' . uniqid();
-            }
+            if (empty($systemId)) $systemId = 'TEMP-' . uniqid();
 
             $hiredDateRaw = trim($data[3] ?? '');
             $fullName = trim($data[4] ?? '');
-            $statusRaw = trim($data[5] ?? '');
-            
-            $validStatuses = ['active', 'awol', 'resigned'];
-            $status = in_array(strtolower($statusRaw), $validStatuses) ? strtolower($statusRaw) : 'active';
+            $statusRaw = trim($data[5] ?? 'active');
 
-            if (!$barcode && !$systemId && !$fullName) continue;
-
-            // Name Parsing: Last name, First name and Middle name
-            $firstName = $middleName = $lastName = $suffix = '';
+            // Parse Name
+            $firstName = $middleName = $lastName = "";
             if ($fullName) {
                 if (strpos($fullName, ',') !== false) {
                     $parts = explode(',', $fullName);
@@ -83,43 +68,40 @@ class EmployeeSeeder extends Seeder
                 }
             }
 
+            // Parse Date
             $hiredDate = null;
             if ($hiredDateRaw) {
-                if (is_numeric($hiredDateRaw)) {
-                    $unixDate = ($hiredDateRaw - 25569) * 86400;
-                    $hiredDate = date('Y-m-d', $unixDate);
-                } else {
-                    $dateObj = strtotime($hiredDateRaw);
-                    $hiredDate = $dateObj ? date('Y-m-d', $dateObj) : null;
+                $time = strtotime($hiredDateRaw);
+                if ($time) {
+                    $hiredDate = date('Y-m-d', $time);
                 }
             }
 
+            $folderLocationId = (int) ceil($idCounter / 500);
+
             DB::table('employees')->insert([
-                'id' => $id,
                 'system_id' => $systemId,
                 'barcode_id' => $barcode,
-                'first_name' => $firstName,
-                'middle_name' => $middleName,
-                'last_name' => $lastName,
-                'suffix' => $suffix,
+                'first_name' => (string)$firstName,
+                'middle_name' => (string)$middleName,
+                'last_name' => (string)$lastName,
                 'date_hired' => $hiredDate,
-                'status' => $status,
-                'archive_date' => null,
+                'status' => in_array(strtolower($statusRaw), ['active', 'awol', 'resigned']) ? strtolower($statusRaw) : 'active',
                 'company_id' => 1,
                 'folder_id' => $nextFolderId,
+                'folder_location_id' => $folderLocationId,
                 'created_at' => $now,
                 'updated_at' => $now,
-                'deleted_at' => null,
-                'folder_location_id' => $folderLocationId,
             ]);
 
-            // Mark the assigned folder as unavailable
+            // Mark folder occupied
             DB::table('folders')->where('id', $nextFolderId)->update(['is_available' => 0]);
 
-            $seenBarcodes[] = $barcode;
-            $seenSystemIds[] = $systemId;
-            $id++;
-            $nextFolderId++; // Move to next folder sequentially
+            if ($barcode) $seenBarcodes[] = $barcode;
+            if ($systemId) $seenSystemIds[] = $systemId;
+            
+            $idCounter++;
+            $nextFolderId++;
         }
         
         fclose($handle);

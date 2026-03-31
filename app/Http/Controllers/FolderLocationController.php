@@ -13,7 +13,6 @@ class FolderLocationController extends Controller
     public function index()
     {
         $rows = FolderLocation::withCount('employees')
-            ->with(['departments'])
             ->orderByRaw('LENGTH(row_name) ASC')
             ->orderBy('row_name', 'ASC')
             ->get();
@@ -68,7 +67,7 @@ class FolderLocationController extends Controller
      */
     public function destroy(FolderLocation $folderLocation)
     {
-        if ($folderLocation->employees()->exists() || $folderLocation->departments()->exists()) {
+        if ($folderLocation->employees()->exists()) {
             return redirect()->back()
                 ->with('error', "Cannot delete Row {$folderLocation->row_name} because it contains occupied folders.");
         }
