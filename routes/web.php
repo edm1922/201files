@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeSearchController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\BankTypeController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('departments', DepartmentController::class)->except(['show']);
         Route::patch('departments/{department}/toggle-active', [DepartmentController::class, 'toggleActive'])
              ->name('departments.toggle-active');
+
+        Route::resource('bank-types', BankTypeController::class)->except(['show']);
+        Route::patch('bank-types/{bankType}/toggle-active', [BankTypeController::class, 'toggleActive'])
+             ->name('bank-types.toggle-active');
 
         // Folder Locations (Physical Storage)
         Route::prefix('folder-locations')->name('folder-locations.')->group(function () {

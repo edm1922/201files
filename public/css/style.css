@@ -1627,3 +1627,24 @@ body.preview-overlay-open {
         max-height: calc(100vh - 120px);
     }
 }
+/* 201 Files Custom Styles */
+
+.atm-status--on-process {
+    color: #dc3545 !important;
+    /* Red */
+    font-weight: 600;
+}
+
+.atm-status--for-releasing {
+    color: #fd7e14 !important;
+    /* Orange */
+    font-weight: 600;
+}
+
+.atm-status--received {
+    color: #198754 !important;
+    /* Green */
+    font-weight: 600;
+}
+
+/* Add any other 201files specific styles here */
