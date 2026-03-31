@@ -37,7 +37,7 @@ it('uploads single and multi-file department documents with hybrid upload modes'
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'D',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();
@@ -132,7 +132,7 @@ it('uploads into selected current folder context', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'F',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();
@@ -180,7 +180,7 @@ it('accepts scan packet upload when file extension is valid but mime is inconsis
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'E',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();

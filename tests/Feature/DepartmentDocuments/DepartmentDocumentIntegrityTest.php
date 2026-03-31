@@ -23,7 +23,7 @@ it('rejects creating document without department_id', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'A',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $response = $this->actingAs($user)->post(route('department-documents.store'), [
@@ -48,7 +48,7 @@ it('rejects persisting document with null department_id at DB layer', function (
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'A',
-        'column_code' => '9',
+        'max_capacity' => 500,
     ]);
 
     $uploader = User::factory()->admin()->create();
@@ -96,7 +96,7 @@ it('rejects document type from another department', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'A',
-        'column_code' => '2',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();
@@ -132,7 +132,7 @@ it('rejects expiry date earlier than date received', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'A',
-        'column_code' => '3',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();
@@ -171,7 +171,7 @@ it('rejects files count above selected document type max_pages', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'A',
-        'column_code' => '4',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();
@@ -226,7 +226,7 @@ it('rejects document folder from another department', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'G',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->encoder()->create();
@@ -265,7 +265,7 @@ it('cleans up stored file when persistence fails', function () {
 
     $folder = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'B',
-        'column_code' => '1',
+        'max_capacity' => 500,
     ]);
 
     $user = User::factory()->admin()->create();

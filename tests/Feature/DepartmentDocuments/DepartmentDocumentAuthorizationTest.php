@@ -80,7 +80,7 @@ it('scopes index data and listing to the viewer authorized departments', functio
 
     $location = FolderLocation::query()->first() ?? FolderLocation::create([
         'row_name' => 'Z',
-        'column_code' => '9',
+        'max_capacity' => 500,
     ]);
 
     $adminUploader = User::factory()->admin()->create();

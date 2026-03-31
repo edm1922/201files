@@ -432,6 +432,31 @@
     border-left: 5px solid #ef4444 !important;
 }
 
+/* Close button for flash messages */
+.btn-close-flash {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: auto;
+    padding: 0 0 0 16px;
+    opacity: 0.5;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close-flash:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.alert-flash span {
+    flex: 1;
+}
+
 /* ─── New Button (tab bar) ─────────────────────────────────────────── */
 
 .btn-file-new {
