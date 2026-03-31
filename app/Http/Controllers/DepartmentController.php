@@ -14,12 +14,11 @@ class DepartmentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Department::with(['folderLocation'])->withCount(['documentTypes', 'documents']);
+        $query = Department::withCount(['documentTypes', 'documents']);
 
         $departments = $query->orderBy('name')->paginate(15)->withQueryString();
-        $folders = \App\Models\FolderLocation::available()->get();
 
-        return view('departments.index', compact('departments', 'folders'));
+        return view('departments.index', compact('departments'));
     }
 
     /**
@@ -36,8 +35,7 @@ class DepartmentController extends Controller
     public function store(DepartmentRequest $request)
     {
         $data = $request->validated();
-        $code = strtoupper($data['code']);
-        $data['folder_code'] = 'CSC-' . $code . '-0000';
+        $data['code'] = strtoupper($data['code']);
         
         $department = Department::create($data);
 
@@ -62,8 +60,7 @@ class DepartmentController extends Controller
     public function update(DepartmentRequest $request, Department $department)
     {
         $data = $request->validated();
-        $code = strtoupper($data['code']);
-        $data['folder_code'] = 'CSC-' . $code . '-0000';
+        $data['code'] = strtoupper($data['code']);
         
         $department->update($data);
 
