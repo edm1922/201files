@@ -73,7 +73,7 @@ class ReportController extends Controller
                     ucfirst($emp->status),
                     $emp->date_hired?->format('Y-m-d') ?? '',
                     $emp->folder?->folder_code ?? '',
-                    $emp->folderLocation ? ($emp->folderLocation->row_name . $emp->folderLocation->column_code) : '',
+                    $emp->folderLocation ? $emp->folderLocation->full_location : '',
                     $emp->archive_date?->format('Y-m-d') ?? ($emp->deleted_at?->format('Y-m-d') ?? '')
                 ]);
             }
@@ -134,7 +134,7 @@ class ReportController extends Controller
      */
     public function exportStorageUtilization(): StreamedResponse
     {
-        $locations = \App\Models\FolderLocation::withCount('employees')->get();
+        $locations = \App\Models\FolderLocation::orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
         
         $headers = [
             'Content-Type' => 'text/csv',
@@ -153,7 +153,7 @@ class ReportController extends Controller
             foreach ($locations as $loc) {
                 $occupiedBy = $loc->employees->map(fn($e) => $e->full_name)->join('; ');
                 fputcsv($file, [
-                    $loc->row_name . $loc->column_code,
+                    $loc->full_location,
                     $loc->employees_count > 0 ? 'Occupied' : 'Available',
                     $occupiedBy ?: '—'
                 ]);
@@ -170,7 +170,7 @@ class ReportController extends Controller
      */
     public function exportAvailableFolders(): StreamedResponse
     {
-        $locations = \App\Models\FolderLocation::available()->orderBy('row_name')->orderBy('column_code')->get();
+        $locations = \App\Models\FolderLocation::available()->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
         
         $headers = [
             'Content-Type' => 'text/csv',
@@ -187,7 +187,7 @@ class ReportController extends Controller
 
             foreach ($locations as $loc) {
                 fputcsv($file, [
-                    $loc->row_name . $loc->column_code,
+                    $loc->full_location,
                     'Available'
                 ]);
             }

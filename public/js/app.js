@@ -203,7 +203,7 @@ document.addEventListener('alpine:init', () => {
         init() {
             // Universal uppercase for inputs with .text-uppercase
             document.querySelectorAll('.text-uppercase').forEach(input => {
-                input.addEventListener('input', function() {
+                input.addEventListener('input', function () {
                     this.value = this.value.toUpperCase();
                 });
             });
@@ -212,7 +212,7 @@ document.addEventListener('alpine:init', () => {
             if (modalEl) {
                 this.modal = new bootstrap.Modal(modalEl);
             }
-            
+
             // Listen for Select2 change
             $('#statusSelect').on('change', (e) => {
                 this.handleStatusChange(e.target.value);
@@ -243,7 +243,7 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Sync toolbar company dropdown → hidden form field
     const companySelect = document.getElementById('companySelect');
     if (companySelect) {
@@ -279,18 +279,18 @@ function formatChanges(changes) {
     if (!changes || typeof changes !== 'object' || !changes.before || !changes.after) {
         return '<div class="text-muted small" style="font-style: italic;">No specific field changes recorded.</div>';
     }
-    
+
     const relevantKeys = Object.keys(changes.before);
     let html = '<div class="mt-2" style="font-size: 0.75rem; border-left: 2px solid #fecaca; padding-left: 12px; margin-left: 4px;">';
     let changedCount = 0;
-    
+
     relevantKeys.forEach(key => {
         const beforeVal = changes.before[key];
         const afterVal = changes.after[key];
-        
+
         const bStr = (beforeVal === null || beforeVal === '') ? 'NONE' : String(beforeVal);
         const aStr = (afterVal === null || afterVal === '') ? 'NONE' : String(afterVal);
-        
+
         if (bStr !== aStr) {
             const label = key.replace(/_/g, ' ').toUpperCase();
             html += `
@@ -303,7 +303,7 @@ function formatChanges(changes) {
             changedCount++;
         }
     });
-    
+
     html += '</div>';
     return changedCount > 0 ? html : '';
 }
@@ -317,7 +317,7 @@ function showUpdateHistory(employeeId) {
 
     const modal = new bootstrap.Modal(modalElement);
     const content = document.getElementById('updateHistoryContent');
-    
+
     content.innerHTML = `
         <tr>
             <td colspan="4" class="text-center py-5 text-muted">
@@ -326,9 +326,9 @@ function showUpdateHistory(employeeId) {
             </td>
         </tr>
     `;
-    
+
     modal.show();
-    
+
     fetch(`/employees/${employeeId}/update-history`)
         .then(response => response.json())
         .then(data => {
@@ -336,7 +336,7 @@ function showUpdateHistory(employeeId) {
                 content.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No update history found.</td></tr>';
                 return;
             }
-            
+
             content.innerHTML = data.map(log => `
                 <tr>
                     <td class="ps-3" style="width: 15%; vertical-align: top;">

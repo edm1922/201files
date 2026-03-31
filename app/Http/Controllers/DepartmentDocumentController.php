@@ -64,7 +64,7 @@ class DepartmentDocumentController extends Controller
             $folderBreadcrumbs = collect($chain);
         }
 
-        $folderLocations = FolderLocation::query()->orderBy('row_name')->orderBy('column_code')->get();
+        $folderLocations = FolderLocation::query()->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
 
         $query = Document::with(['department', 'documentType', 'folderLocation', 'documentFolder'])
             ->whereIn('department_id', $accessibleDepartmentIds)

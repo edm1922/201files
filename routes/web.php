@@ -51,9 +51,6 @@ Route::middleware('auth')->group(function () {
         Route::prefix('folder-locations')->name('folder-locations.')->group(function () {
             Route::get('/', [FolderLocationController::class, 'index'])->name('index');
             Route::post('/row', [FolderLocationController::class, 'storeRow'])->name('store-row');
-            Route::post('/row/{row_name}/column', [FolderLocationController::class, 'storeColumn'])->name('store-column');
-            Route::delete('/row/{row_name}/column/{column_code}', [FolderLocationController::class, 'destroyColumn'])->name('destroy-column');
-            Route::delete('/row/{row_name}', [FolderLocationController::class, 'destroyRow'])->name('destroy-row');
             Route::put('/{folderLocation}', [FolderLocationController::class, 'update'])->name('update');
             Route::delete('/{folderLocation}', [FolderLocationController::class, 'destroy'])->name('destroy');
         });
