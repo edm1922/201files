@@ -99,6 +99,8 @@
     .main-content {
         padding-left: 5% !important;
         padding-right: 5% !important;
+        background-color: #f4f4f4;
+        min-height: calc(100vh - 60px);
     }
 }
 

@@ -71,18 +71,19 @@ class DashboardController extends Controller
             ->get();
 
         // Calendar Logic
-        $calendarDate = date('Y-m-d');
+        $calDateStr = $request->get('cal_date', date('Y-m-d'));
+        $calendarDate = date('Y-m-01', strtotime($calDateStr)); // First of the target month
         $calendarYear = date('Y', strtotime($calendarDate));
         $calendarMonth = date('m', strtotime($calendarDate));
+        $calendarMonthName = date('F', strtotime($calendarDate));
         
-        $firstDayOfMonth = date('Y-m-01', strtotime($calendarDate));
         $daysInMonth = date('t', strtotime($calendarDate));
-        $dayOfWeekOfFirst = date('w', strtotime($firstDayOfMonth)); // 0 (Su) to 6 (Sa)
+        $dayOfWeekOfFirst = date('w', strtotime($calendarDate)); // 0 (Su) to 6 (Sa)
         
         $calendarData = [];
         
-        // Previous month days
-        $prevMonthLastDay = date('t', strtotime("-1 month", strtotime($firstDayOfMonth)));
+        // Previous month days to fill the gap at the start of the grid
+        $prevMonthLastDay = date('t', strtotime("-1 month", strtotime($calendarDate)));
         for ($i = $dayOfWeekOfFirst - 1; $i >= 0; $i--) {
             $calendarData[] = [
                 'day' => $prevMonthLastDay - $i,
@@ -91,13 +92,14 @@ class DashboardController extends Controller
             ];
         }
         
-        // Current month days
-        $todayDay = date('j');
+        // Current target month days
+        $todayStr = date('Y-m-d');
         for ($day = 1; $day <= $daysInMonth; $day++) {
+            $currentDateStr = sprintf('%04d-%02d-%02d', $calendarYear, $calendarMonth, $day);
             $calendarData[] = [
                 'day' => $day,
                 'current_month' => true,
-                'today' => ($day == $todayDay)
+                'today' => ($currentDateStr == $todayStr)
             ];
         }
         
@@ -119,9 +121,12 @@ class DashboardController extends Controller
             'companyDistribution',
             'bankDistribution',
             'hiringTrends',
-                'year',
+            'year',
             'month',
             'calendarData',
+            'calendarDate',
+            'calendarMonthName',
+            'calendarYear',
             'availableYears',
             'daysInMonth'
         ));
