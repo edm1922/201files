@@ -55,6 +55,8 @@ class DatabaseSeeder extends Seeder
         // ── Sample Companies ──
         $this->call(CompanySeeder::class);
 
+        $this->call(BankTypeSeeder::class);
+
         // ── Test Employees ──
         $this->call(EmployeeSeeder::class);
     }
