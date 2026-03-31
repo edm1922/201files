@@ -87,6 +87,8 @@ class EmployeeSeeder extends Seeder
                 'last_name' => (string)$lastName,
                 'date_hired' => $hiredDate,
                 'status' => in_array(strtolower($statusRaw), ['active', 'awol', 'resigned']) ? strtolower($statusRaw) : 'active',
+                // 'atm_status' => 'not_applicable',  // UNCOMMENT IF YOU WANT TO ADD ATM STATUS
+                // 'bank_type_id' => 1,  // UNCOMMENT IF YOU WANT TO ADD BANK TYPE
                 'company_id' => 1,
                 'folder_id' => $nextFolderId,
                 'folder_location_id' => $folderLocationId,
