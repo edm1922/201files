@@ -74,8 +74,8 @@ Route::middleware('auth')->group(function () {
 
     // ── Archive (admin and encoder) ──
     Route::middleware('role:admin,encoder')->group(function () {
-        Route::get('/employees/archive', [EmployeeController::class, 'archiveIndex'])
-            ->name('employees.archive');
+        Route::get('/archives', [\App\Http\Controllers\ArchiveController::class, 'index'])
+            ->name('archives.index');
         Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
             ->name('employees.details');
         Route::patch('/employees/{id}/restore', [EmployeeController::class, 'restore'])
@@ -135,6 +135,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{id}/restore', [DepartmentDocumentController::class, 'restore'])
             ->middleware('role:admin')
             ->name('restore');
+
+        Route::delete('/{id}/force-delete', [DepartmentDocumentController::class, 'forceDelete'])
+            ->name('forceDelete');
 
         Route::get('/{document}/preview', [DepartmentDocumentController::class, 'preview'])
             ->middleware('can:download,document')
