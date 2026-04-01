@@ -111,6 +111,11 @@ class DepartmentDocumentController extends Controller
                         $folderQuery
                             ->where('name', 'like', '%' . $search . '%')
                             ->orWhere('folder_code', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('department', function ($departmentQuery) use ($search) {
+                        $departmentQuery
+                            ->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('code', 'like', '%' . $search . '%');
                     });
 
                 if ($matchingFolderIds->isNotEmpty()) {
@@ -199,17 +204,7 @@ class DepartmentDocumentController extends Controller
             $folderCode = null;
         }
 
-        if ($folderCode) {
-            $duplicateCode = DocumentFolder::query()
-                ->where('department_id', $departmentId)
-                ->whereRaw('LOWER(folder_code) = ?', [mb_strtolower($folderCode)])
-                ->exists();
-
-            if ($duplicateCode) {
-                return $this->folderValidationError($request, 'Folder code already exists in this department.', 'folder_code');
-            }
-        }
-
+        // Check for duplicate name in the same parent
         $duplicateName = DocumentFolder::query()
             ->where('department_id', $departmentId)
             ->where('parent_id', $parentId)
@@ -260,18 +255,7 @@ class DepartmentDocumentController extends Controller
             $folderCode = null;
         }
 
-        if ($folderCode) {
-            $duplicateCode = DocumentFolder::query()
-                ->where('department_id', $departmentId)
-                ->whereRaw('LOWER(folder_code) = ?', [mb_strtolower($folderCode)])
-                ->whereKeyNot($folder->id)
-                ->exists();
-
-            if ($duplicateCode) {
-                return $this->folderValidationError($request, 'Folder code already exists in this department.', 'folder_code');
-            }
-        }
-
+        // Check for duplicate name in the same parent (excluding itself)
         $duplicate = DocumentFolder::query()
             ->where('department_id', $departmentId)
             ->where('parent_id', $folder->parent_id)
@@ -535,10 +519,10 @@ class DepartmentDocumentController extends Controller
                 $safety++;
             }
 
-            $nameSegments = array_map(fn (DocumentFolder $segment) => $segment->name, $chain);
-            $codeSegments = array_values(array_filter(array_map(fn (DocumentFolder $segment) => (string) $segment->folder_code, $chain)));
-            $displaySegments = array_map(function (DocumentFolder $segment): string {
-                return $segment->name;
+            $nameSegments = array_map(fn (DocumentFolder $segment) => (string) ($segment->name ?? ''), $chain);
+            $codeSegments = array_values(array_filter(array_map(fn (DocumentFolder $segment) => (string) ($segment->folder_code ?? ''), $chain)));
+            $displaySegments = array_map(function (DocumentFolder $segment) {
+                return $segment->name ?: (string) $segment->folder_code;
             }, $chain);
 
             $maps[(int) $folder->id] = [
