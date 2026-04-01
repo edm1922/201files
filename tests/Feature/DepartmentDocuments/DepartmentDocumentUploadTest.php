@@ -217,3 +217,60 @@ it('accepts scan packet upload when file extension is valid but mime is inconsis
     expect($stored->upload_mode)->toBe('scan_packet');
     expect($stored->source_filenames)->toBe(['scanner-output.jpg']);
 });
+
+it('renames duplicate original filenames with incremental suffix', function () {
+    Storage::fake('local');
+
+    $department = Department::create([
+        'name' => 'Duplicate Name Dept',
+        'code' => 'DND',
+        'folder_code' => 'CSC-DND-0000',
+        'description' => 'Duplicate filename handling department',
+        'is_active' => true,
+    ]);
+
+    $documentType = DocumentType::create([
+        'department_id' => $department->id,
+        'name' => 'Duplicate Type',
+        'code' => 'DUPTYP',
+        'has_expiry' => false,
+        'max_pages' => 3,
+    ]);
+
+    $folder = FolderLocation::query()->first() ?? FolderLocation::create([
+        'row_name' => 'Z',
+        'max_capacity' => 500,
+    ]);
+
+    $user = User::factory()->encoder()->create();
+    $user->authorizedDepartments()->sync([$department->id]);
+
+    $payload = [
+        'department_id' => $department->id,
+        'document_type_id' => $documentType->id,
+        'folder_location_id' => $folder->id,
+        'upload_mode' => 'standard',
+        'date_received' => now()->toDateString(),
+    ];
+
+    $first = $this->actingAs($user)->post(route('department-documents.store'), [
+        ...$payload,
+        'files' => [UploadedFile::fake()->create('report.pdf', 120, 'application/pdf')],
+    ]);
+
+    $second = $this->actingAs($user)->post(route('department-documents.store'), [
+        ...$payload,
+        'files' => [UploadedFile::fake()->create('report.pdf', 121, 'application/pdf')],
+    ]);
+
+    $first->assertRedirect(route('department-documents.index', ['department_id' => $department->id]));
+    $second->assertRedirect(route('department-documents.index', ['department_id' => $department->id]));
+
+    $filenames = \App\Models\Document::query()
+        ->where('department_id', $department->id)
+        ->orderBy('id')
+        ->pluck('original_filename')
+        ->all();
+
+    expect($filenames)->toBe(['report.pdf', 'report (1).pdf']);
+});

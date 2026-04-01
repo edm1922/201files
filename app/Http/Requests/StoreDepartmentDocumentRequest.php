@@ -71,10 +71,6 @@ class StoreDepartmentDocumentRequest extends FormRequest
 
             if (is_array($files) && count($files) > 0) {
                 if ($uploadMode === 'scan_packet') {
-                    if (count($files) > $documentType->max_pages) {
-                        $validator->errors()->add('files', 'Too many files for the selected document type (Max: ' . $documentType->max_pages . ').');
-                    }
-
                     $scanPacketAllowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
                     $scanPacketAllowedMimes = [
                         'application/pdf',

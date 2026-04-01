@@ -213,14 +213,24 @@
                                                 : $selectedDepartmentName ?? 'Root';
                                         @endphp
                                         <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }}">
-                                            <td>
+                                            <td class="cursor-pointer" 
+                                                title="Double-click to preview"
+                                                @if($previewable)
+                                                    data-preview-dblclick
+                                                    data-preview-url="{{ $previewUrl }}"
+                                                    data-preview-kind="{{ $previewKind }}"
+                                                    data-preview-mime="{{ $doc->mime_type }}"
+                                                    data-preview-name="{{ $doc->original_filename }}"
+                                                    data-preview-ext="{{ $ext }}"
+                                                @endif
+                                            >
                                                 <div class="d-flex align-items-center">
                                                     <div class="file-icon-wrapper {{ $iconClass }}">
                                                         <i
                                                             class="fas fa-{{ $ext === 'pdf' ? 'file-pdf' : (in_array($ext, ['jpg', 'jpeg', 'png']) ? 'file-image' : 'file-lines') }}"></i>
                                                     </div>
                                                     <div>
-                                                        <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                                        <div class="fw-bold text-dark d-flex align-items-center gap-2 text-break">
                                                             {{ $doc->original_filename }}
                                                         </div>
                                                         <div class="text-muted small">{{ strtoupper($ext) }} &bull;
@@ -249,32 +259,51 @@
                                                 <div class="small">
                                                     {{ $doc->date_received?->format('F d, Y') ?? '-' }}</div>
                                             </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    @if ($previewable)
-                                                        <button type="button" class="btn-action-round"
-                                                            aria-label="Preview Document" title="Preview Document"
-                                                            data-preview-trigger
-                                                            data-preview-url="{{ $previewUrl }}"
-                                                            data-preview-kind="{{ $previewKind }}"
-                                                            data-preview-mime="{{ $doc->mime_type }}"
-                                                            data-preview-name="{{ $doc->original_filename }}"
-                                                            data-preview-ext="{{ $ext }}">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                    @endif
-                                                    <a href="{{ route('department-documents.download', $doc) }}"
-                                                        class="btn-action-round" aria-label="Download Resource"
-                                                        title="Download Resource">
-                                                        <i class="fas fa-download"></i>
-                                                    </a>
-                                                    <button type="button" class="btn-action-round text-danger"
-                                                        aria-label="Archive Document" title="Archive Document"
-                                                        data-bs-toggle="modal" data-bs-target="#archiveDocumentModal"
-                                                        data-doc-name="{{ $doc->original_filename }}"
-                                                        data-doc-url="{{ route('department-documents.archive', $doc) }}">
-                                                        <i class="fas fa-archive"></i>
+                                            <td class="text-center">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
+                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Document actions">
+                                                        <i class="fas fa-ellipsis-v px-2 py-1"></i>
                                                     </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                        @if ($previewable)
+                                                            <li>
+                                                                <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                    aria-label="Preview Document"
+                                                                    data-preview-trigger
+                                                                    data-preview-url="{{ $previewUrl }}"
+                                                                    data-preview-kind="{{ $previewKind }}"
+                                                                    data-preview-mime="{{ $doc->mime_type }}"
+                                                                    data-preview-name="{{ $doc->original_filename }}"
+                                                                    data-preview-ext="{{ $ext }}">
+                                                                    <i class="fas fa-eye text-secondary" style="width: 16px;"></i><span class="fw-medium">Preview</span>
+                                                                </button>
+                                                            </li>
+                                                        @endif
+                                                        <li>
+                                                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                data-bs-toggle="modal" data-bs-target="#renameDocumentModal"
+                                                                data-doc-name="{{ $doc->original_filename }}"
+                                                                data-doc-action="{{ route('department-documents.update', $doc) }}">
+                                                                <i class="fas fa-edit text-secondary" style="width: 16px;"></i><span class="fw-medium">Rename</span>
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <a href="{{ route('department-documents.download', $doc) }}"
+                                                                class="dropdown-item d-flex align-items-center gap-2 py-2">
+                                                                <i class="fas fa-download text-secondary" style="width: 16px;"></i><span class="fw-medium">Download</span>
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider opacity-50 my-1"></li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
+                                                                data-bs-toggle="modal" data-bs-target="#archiveDocumentModal"
+                                                                data-doc-name="{{ $doc->original_filename }}"
+                                                                data-doc-url="{{ route('department-documents.archive', $doc) }}">
+                                                                <i class="fas fa-archive" style="width: 16px;"></i><span class="fw-medium">Archive</span>
+                                                            </button>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
@@ -453,6 +482,39 @@
                             data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-danger fw-semibold shadow-sm btn-submit-loading">
                             <i class="fas fa-archive"></i> Archive
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Document Modal -->
+    <div class="modal fade" id="renameDocumentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+                <form id="renameDocumentForm" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
+                        <h5 class="modal-title fw-bold text-dark fs-5">Rename Document</h5>
+                        <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body px-4 pt-2">
+                        <div class="mb-3">
+                            <label for="rename_doc_name" class="form-label fw-semibold text-secondary"
+                                style="font-size: 0.85rem;">Document Name</label>
+                            <input type="text" name="original_filename" id="rename_doc_name"
+                                class="form-control field-input bg-light" required>
+                            <div class="form-text small">Extension will be preserved automatically.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
+                        <button type="button" class="btn btn-light fw-semibold text-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-semibold shadow-sm btn-submit-loading">
+                            <i class="fas fa-save me-1"></i> Save Changes
                         </button>
                     </div>
                 </form>
@@ -800,6 +862,50 @@
                     document.querySelectorAll('[data-flash-success], [data-flash-error]').forEach((node) => node
                         .remove());
                 };
+
+                // Rename Document Modal logic
+                const renameDocumentModal = document.getElementById('renameDocumentModal');
+                if (renameDocumentModal) {
+                    renameDocumentModal.addEventListener('show.bs.modal', function(event) {
+                        const button = event.relatedTarget;
+                        const docName = button.getAttribute('data-doc-name');
+                        const actionUrl = button.getAttribute('data-doc-action');
+
+                        const form = renameDocumentModal.querySelector('#renameDocumentForm');
+                        const input = renameDocumentModal.querySelector('#rename_doc_name');
+
+                        form.action = actionUrl;
+                        input.value = docName;
+                        
+                        // Focus after a short delay to allow modal animation
+                        setTimeout(() => input.select(), 500);
+                    });
+                }
+
+                // Double-click preview logic
+                document.querySelectorAll('[data-preview-dblclick]').forEach(cell => {
+                    cell.addEventListener('dblclick', function() {
+                        const previewUrl = this.getAttribute('data-preview-url');
+                        const previewKind = this.getAttribute('data-preview-kind');
+                        const previewMime = this.getAttribute('data-preview-mime');
+                        const previewName = this.getAttribute('data-preview-name');
+                        const previewExt = this.getAttribute('data-preview-ext');
+
+                        if (typeof window.triggerPreview === 'function') {
+                            window.triggerPreview({
+                                url: previewUrl,
+                                kind: previewKind,
+                                mime: previewMime,
+                                name: previewName,
+                                ext: previewExt
+                            });
+                        } else {
+                            // Fallback to finding a trigger button if function not globally exposed
+                            const trigger = this.closest('tr').querySelector('[data-preview-trigger]');
+                            if (trigger) trigger.click();
+                        }
+                    });
+                });
 
                 const showFlash = (message, type = 'success') => {
                     clearFlash();

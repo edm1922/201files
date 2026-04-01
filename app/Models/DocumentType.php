@@ -13,7 +13,6 @@ class DocumentType extends Model
         'name',
         'code',
         'has_expiry',
-        'max_pages',
     ];
 
     protected function casts(): array

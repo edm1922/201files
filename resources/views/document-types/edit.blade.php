@@ -62,23 +62,6 @@
                             <div class="form-text" style="font-size: 0.78rem;">Department that owns this document type.</div>
                         </div>
 
-                        {{-- Max Pages --}}
-                        <div class="col-md-6">
-                            <label for="edit_max_pages" class="form-label fw-semibold" style="font-size: 0.85rem; color: #374151;">
-                                Maximum Pages <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light"><i class="fas fa-file-alt text-muted"></i></span>
-                                <input type="number"
-                                       id="edit_max_pages"
-                                       name="max_pages"
-                                       class="form-control field-input"
-                                       x-model="editData.max_pages"
-                                       min="1" max="100" required
-                                       style="background-color: #f9fafb;">
-                            </div>
-                            <div class="form-text" style="font-size: 0.78rem;">Allowed length for uploads.</div>
-                        </div>
 
                         <hr class="mt-4 mb-2">
 

@@ -363,6 +363,37 @@ class DepartmentDocumentController extends Controller
         return back()->with('success', 'Document archived successfully.');
     }
 
+    public function update(Request $request, Document $document)
+    {
+        $this->authorize('download', $document); // Use download permission as proxy for department access
+
+        $validated = $request->validate([
+            'original_filename' => ['required', 'string', 'max:255'],
+        ]);
+
+        $oldName = $document->original_filename;
+        $newName = trim($validated['original_filename']);
+
+        // Ensure extension remains same or handle it
+        $oldExt = pathinfo($oldName, PATHINFO_EXTENSION);
+        $newExt = pathinfo($newName, PATHINFO_EXTENSION);
+
+        if (strtolower($oldExt) !== strtolower($newExt) && $oldExt !== '') {
+            $newName .= '.' . $oldExt;
+        }
+
+        $document->update([
+            'original_filename' => $newName,
+        ]);
+
+        \App\Services\AuditService::log('updated', "Document renamed from '{$oldName}' to '{$newName}'.", $document, [
+            'old_name' => $oldName,
+            'new_name' => $newName,
+        ]);
+
+        return back()->with('success', 'Document renamed successfully.');
+    }
+
     public function restore($id)
     {
         $document = Document::withTrashed()->findOrFail($id);
