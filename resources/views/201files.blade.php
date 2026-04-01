@@ -402,25 +402,37 @@
                             <h6 class="panel-section-title mt-4">Document Location Information</h6>
 
                              <div class="col-md-4">
-                                <label class="form-label" for="folderCodeInput">Folder Code <span class="text-danger">*</span></label>
+                                <label class="form-label" for="folderCodeInput">Folder Code</label>
                                 @php
                                     $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
                                     $dynamicMaxLength = max(4, strlen($numericPart));
                                     
-                                    // For the value in the input, if we are editing an employee, use their code from the folder.
-                                    // If it's a new employee, we leave it empty for manual entry.
                                     $currentCodeValue = ($employee && $employee->folder) ? str_replace('CSC-HR-', '', $employee->folder->folder_code) : old('folder_code');
                                 @endphp
                                 <div class="input-group">
                                     <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500; color: rgb(221, 39, 13);">CSC-HR-</span>
+                                    @php
+                                        $nextNumber = intval($numericPart) + 1;
+                                        $nextCodeNumeric = str_pad($nextNumber, $dynamicMaxLength, '0', STR_PAD_LEFT);
+                                        
+                                        $value = $currentCodeValue;
+                                        if (is_null($value) || $value === '') {
+                                            $value = $nextCodeNumeric;
+                                        }
+                                    @endphp
                                     <input type="text" id="folderCodeInput" name="folder_code"
                                            class="form-control field-input @error('folder_code') is-invalid @enderror"
-                                           placeholder="{{ str_pad('', $dynamicMaxLength, '0') }}"
+                                           placeholder="{{ $nextCodeNumeric }}"
                                            maxlength="{{ $dynamicMaxLength }}"
-                                           value="{{ $currentCodeValue }}">
+                                           value="{{ $value }}"
+                                           readonly
+                                           style="background-color: #e9ecef; cursor: not-allowed;">
+                                    <button class="btn btn-outline-secondary px-2" type="button" id="clearFolderCode" title="Clear to auto-generate" style="border-color: #dee2e6; color: #6c757d;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-                                            <small class="text-muted">
+                                    <small class="text-muted">
                                         Last number: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
                                     </small>
                                     

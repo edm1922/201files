@@ -277,21 +277,25 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Folder Code: Restrict to digits only
+    // Folder Code: Handle selection and clear
     const folderCodeInput = document.getElementById('folderCodeInput');
-    if (folderCodeInput) {
-        folderCodeInput.addEventListener('input', function (e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
-    }
-
-    // Update Folder Code input when Available Code Select changes
     const availableSelect = document.getElementById('availableCodeSelect');
+    const clearButton = document.getElementById('clearFolderCode');
+
     if (availableSelect && folderCodeInput) {
         availableSelect.addEventListener('change', function () {
             if (this.value) {
                 folderCodeInput.value = this.value;
+                // Optional: show a small feedback that it was replaced
             }
+        });
+    }
+
+    if (clearButton && folderCodeInput) {
+        clearButton.addEventListener('click', function () {
+            folderCodeInput.value = '';
+            folderCodeInput.placeholder = 'Auto-generate';
+            if (availableSelect) availableSelect.value = '';
         });
     }
 });
