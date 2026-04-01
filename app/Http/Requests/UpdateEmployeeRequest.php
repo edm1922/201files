@@ -14,7 +14,7 @@ class UpdateEmployeeRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('folder_code')) {
+        if ($this->has('folder_code') && !empty($this->folder_code)) {
             $code = $this->folder_code;
             // Prepend prefix if only digits were provided
             if (is_numeric($code)) {
@@ -40,7 +40,7 @@ class UpdateEmployeeRequest extends FormRequest
             'status'       => ['required', 'string', 'in:active,awol,resigned'],
             'barcode_id'   => ['nullable', 'string', 'max:100', Rule::unique('employees', 'barcode_id')->ignore($employee)],
             'folder_id'    => ['nullable', 'integer', 'exists:folders,id'],
-            'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folders', 'folder_code')->where(fn($q) => $q->where('is_available', 0))->ignore($folderId)],
+            'folder_code'  => ['nullable', 'string', 'max:255', Rule::unique('folders', 'folder_code')->where(fn($q) => $q->where('is_available', 0))->ignore($folderId)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
             'folder_location_id' => [
                 'nullable', 'integer', 'exists:folder_locations,id',

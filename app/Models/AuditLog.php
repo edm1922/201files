@@ -14,6 +14,7 @@ class AuditLog extends Model
         'action',
         'model_type',
         'model_id',
+        'target_name',
         'description',
         'changes',
         'ip_address',
@@ -46,6 +47,12 @@ class AuditLog extends Model
      */
     public function getTargetNameAttribute()
     {
+        // Priority 1: Use the stored target_name if it exists (handles deletions)
+        if (!empty($this->attributes['target_name'])) {
+            return $this->attributes['target_name'];
+        }
+
+        // Priority 2: Try to resolve from the relationship (fallback for legacy logs)
         if (!$this->model) {
             return '—';
         }

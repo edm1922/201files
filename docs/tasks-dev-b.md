@@ -30,6 +30,8 @@ This document isolates all tasks assigned to **Developer B** across all developm
   (e.g Row: A 1-500 )
 * [X] 10 Update the folder location table based on the changes
 * [X] 11 Update the Audit logs or activity logs instead of folder id is capture make it name istead
+* [ ] 12 Make the folder code auto generated instead of manually incode and since there is a availabilty attributes (0 and 1), then user can reuse the available code
+* [ ] 13 Update the 201files after implementing the changes
 
 *Expected Outcome: Employees can be created, edited, assigned to companies, and bulk-imported.*
 

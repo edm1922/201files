@@ -17,11 +17,24 @@ class AuditService
         $model = null,
         ?array $changes = null
     ): AuditLog {
+        $targetName = null;
+        if ($model) {
+            $targetName = match (get_class($model)) {
+                'App\Models\Employee'   => $model->full_name,
+                'App\Models\User'       => $model->username ?? $model->name,
+                'App\Models\Document'   => $model->original_filename,
+                'App\Models\Company', 
+                'App\Models\Department' => $model->name,
+                default => 'ID: ' . $model->id
+            };
+        }
+
         return AuditLog::create([
             'user_id' => Auth::id(),
             'action' => $action,
             'model_type' => $model ? get_class($model) : null,
             'model_id' => $model ? $model->id : null,
+            'target_name' => $targetName,
             'description' => $description,
             'changes' => $changes,
             'ip_address' => Request::ip(),
