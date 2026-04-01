@@ -42,7 +42,17 @@ class UpdateEmployeeRequest extends FormRequest
             'folder_id'    => ['nullable', 'integer', 'exists:folders,id'],
             'folder_code'  => ['required', 'string', 'max:255', Rule::unique('folders', 'folder_code')->where(fn($q) => $q->where('is_available', 0))->ignore($folderId)],
             'company_id'   => ['nullable', 'integer', 'exists:companies,id'],
-            'folder_location_id' => ['nullable', 'integer', 'exists:folder_locations,id'],
+            'folder_location_id' => [
+                'nullable', 'integer', 'exists:folder_locations,id',
+                function ($attribute, $value, $fail) use ($employee) {
+                    if ($value && (!$employee || $employee->folder_location_id != $value)) {
+                        $loc = \App\Models\FolderLocation::find($value);
+                        if ($loc && $loc->isFull()) {
+                            $fail("The selected folder location has reached its maximum capacity ({$loc->max_capacity}).");
+                        }
+                    }
+                }
+            ],
             'atm_status'   => ['nullable', 'string', 'in:on_process,for_releasing,received'],
             'bank_type_id' => ['nullable', 'integer', 'exists:bank_types,id'],
         ];

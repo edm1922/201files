@@ -16,5 +16,18 @@ class FolderLocationSeeder extends Seeder
         DB::table('folder_locations')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
+        $rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+        $locations = [];
+        foreach ($rows as $index => $row) {
+            $locations[] = [
+                'id' => $index + 1,
+                'row_name' => $row,
+                'max_capacity' => 500,
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+
+        DB::table('folder_locations')->insert($locations);
     }
 }

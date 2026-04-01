@@ -174,7 +174,8 @@ $(document).ready(function () {
     $('.basic-select').select2({
         width: '100%',
         allowClear: true,
-        minimumResultsForSearch: 0
+        minimumResultsForSearch: 0,
+        escapeMarkup: function (markup) { return markup; }
     });
 
     $('.tagging-select').select2({

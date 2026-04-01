@@ -20,9 +20,9 @@ class FolderSeeder extends Seeder
 
         $now = '2026-03-16 08:33:00';
         $folders = [];
-        for ($i = 1; $i <= 1200; $i++) {
+        for ($i = 1; $i <= 1300; $i++) {
             $folders[] = [
-                'id' => $i + 2,
+                'id' => $i,
                 'folder_code' => 'CSC-HR-' . str_pad($i, 4, '0', STR_PAD_LEFT),
                 'is_available' => 1,
                 'created_at' => $now,
