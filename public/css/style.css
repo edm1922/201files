@@ -764,6 +764,11 @@
     color: #b91c1c;
 }
 
+.text-full-limit {
+    color: #dc2626 !important;
+    font-weight: 700;
+}
+
 .profile-field__value--mono {
     font-family: 'Monaco', 'Consolas', monospace;
 }

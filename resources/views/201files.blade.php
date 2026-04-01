@@ -464,10 +464,16 @@
                                     @if(isset($locations) && count($locations) > 0)
                                         <optgroup label="Available Locations">
                                         @foreach($locations as $loc)
-                                                <option value="{{ $loc->id }}"
-                                                    {{ old('folder_location_id', $employee?->folder_location_id) == $loc->id ? 'selected' : '' }}>
-                                                    {{ $loc->full_location }}
-                                                </option>
+                                            @php
+                                                $isFull = ($loc->employees_count ?? 0) >= ($loc->max_capacity ?? 500);
+                                                $isCurrent = old('folder_location_id', $employee?->folder_location_id) == $loc->id;
+                                                $displaySuffix = $isFull ? '<span class="text-full-limit">[FULL]</span>' : '[' . ($loc->employees_count ?? 0) . '/' . ($loc->max_capacity ?? 500) . ']';
+                                            @endphp
+                                            <option value="{{ $loc->id }}"
+                                                {{ $isCurrent ? 'selected' : '' }}
+                                                {{ ($isFull && !$isCurrent) ? 'disabled' : '' }}>
+                                                {{ $loc->full_location }} {{ $displaySuffix }}
+                                            </option>
                                         @endforeach
                                         </optgroup>
                                     @endif

@@ -67,7 +67,16 @@ class FolderLocation extends Model
      */
     public function scopeAvailable($query)
     {
-        return $query->whereHas('employees', null, '<', \DB::raw('max_capacity'));
+        return $query->withCount('employees')->having('employees_count', '<', \DB::raw('max_capacity'));
+    }
+
+    /**
+     * Determine if the folder location has reached its maximum capacity.
+     */
+    public function isFull(): bool
+    {
+        $capacity = $this->max_capacity ?? 500;
+        return $this->employees()->count() >= $capacity;
     }
 
     /**
