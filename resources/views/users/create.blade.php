@@ -1,6 +1,6 @@
 {{-- Create User Modal --}}
 <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <form class="modal-content border-0 shadow" action="{{ route('settings.users.store') }}" method="POST">
             @csrf
             
@@ -48,14 +48,41 @@
 
                 <div class="mb-3">
                     <label for="role" class="form-label text-muted fw-semibold" style="font-size: 0.85rem;">Role <span class="text-danger">*</span></label>
-                    <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
+                    <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required
+                            onchange="document.getElementById('createDeptSection').style.display = this.value === 'admin' ? 'none' : 'block'">
                         <option value="viewer" {{ old('role') === 'viewer' ? 'selected' : '' }}>Viewer</option>
                         <option value="encoder" {{ old('role') === 'encoder' ? 'selected' : '' }}>Encoder</option>
                         <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                     </select>
                     @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                
+
+                {{-- Department Access Section --}}
+                <div id="createDeptSection" style="{{ old('role') === 'admin' ? 'display:none;' : '' }}">
+                    <div class="dept-access-panel">
+                        <div class="dept-access-header">
+                            <i class="fas fa-building me-2"></i>Department Access
+                        </div>
+                        <p class="text-muted mb-2" style="font-size: 0.8rem;">
+                            Select which departments this user can access. Leave empty for no access.
+                        </p>
+                        @error('department_ids')<div class="text-danger mb-2" style="font-size: 0.8rem;">{{ $message }}</div>@enderror
+                        <div class="dept-checkbox-grid">
+                            @foreach($departments as $dept)
+                                <label class="dept-checkbox-item">
+                                    <input type="checkbox" name="department_ids[]" value="{{ $dept->id }}"
+                                           {{ in_array($dept->id, old('department_ids', [])) ? 'checked' : '' }}>
+                                    <span class="dept-checkbox-label">{{ $dept->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @if($departments->isEmpty())
+                            <p class="text-muted text-center py-2 mb-0" style="font-size: 0.8rem;">
+                                <i class="fas fa-info-circle me-1"></i>No active departments found. Create departments first.
+                            </p>
+                        @endif
+                    </div>
+                </div>
                 
                 <div class="alert alert-info mt-3" role="alert" style="font-size: 0.85rem;">
                     <i class="fas fa-info-circle me-1"></i> A default password will be automatically generated as <strong>{last_name}csc</strong>. The user will be required to change this upon their first login.

@@ -4,7 +4,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="h4 mb-1 fw-bold">User Management</h2>
-                <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage system access, roles, and accounts.</p>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage system access, roles, and department permissions.</p>
             </div>
             <button class="btn btn-brand d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createUserModal">
                 <i class="fas fa-plus"></i> Add User
@@ -30,11 +30,12 @@
                 <table class="doc-table">
                     <thead>
                         <tr>
-                            <th style="width: 250px;">Name</th>
-                            <th style="width: 150px;">Username</th>
-                            <th style="width: 120px;">Role</th>
-                            <th style="width: 160px; text-align: center;">Last Active</th>
-                            <th style="width: 140px; text-align: center;">Actions</th>
+                            <th style="width: 200px;">Name</th>
+                            <th style="width: 130px;">Username</th>
+                            <th style="width: 100px;">Role</th>
+                            <th style="min-width: 200px;">Department Access</th>
+                            <th style="width: 140px; text-align: center;">Last Active</th>
+                            <th style="width: 120px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,6 +58,23 @@
                                         <span class="badge" style="background: rgba(75, 85, 99, 0.1); color: #4b5563; padding: 5px 10px; font-weight: 600;">Viewer</span>
                                     @endif
                                 </td>
+                                <td>
+                                    @if($user->role === 'admin')
+                                        <span class="dept-badge dept-badge--all">
+                                            <i class="fas fa-globe-americas me-1" style="font-size: 0.65rem;"></i>All Departments
+                                        </span>
+                                    @elseif($user->authorizedDepartments->isNotEmpty())
+                                        <div class="dept-badges-wrap">
+                                            @foreach($user->authorizedDepartments as $dept)
+                                                <span class="dept-badge">{{ $dept->name }}</span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-muted" style="font-size: 0.8rem; font-style: italic;">
+                                            <i class="fas fa-exclamation-circle me-1" style="color: #f59e0b;"></i>No departments assigned
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <span class="text-muted" style="font-size: 0.8rem;">
                                         {{ $user->last_active_at ? $user->last_active_at->diffForHumans() : 'Never' }}
@@ -74,7 +92,8 @@
                                                     'last_name' => $user->last_name,
                                                     'suffix' => $user->suffix,
                                                     'username' => $user->username,
-                                                    'role' => $user->role
+                                                    'role' => $user->role,
+                                                    'department_ids' => $user->authorizedDepartments->pluck('id')->map(fn($id) => (int) $id)->values()->toArray(),
                                                 ]) }})">
                                             <i class="fas fa-pen" style="font-size: 0.7rem;"></i>
                                         </button>
@@ -108,7 +127,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-5">
+                                <td colspan="6" class="text-center text-muted py-5">
                                     <i class="fas fa-users mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
                                     <p class="mb-0 mt-2">No users found.</p>
                                 </td>
@@ -145,7 +164,8 @@
                     last_name: '',
                     suffix: '',
                     username: '',
-                    role: ''
+                    role: '',
+                    department_ids: []
                 },
 
                 // Confirmation Modal Data for Delete
@@ -167,7 +187,8 @@
                             last_name: '{!! addslashes(old("last_name")) !!}',
                             suffix: '{!! addslashes(old("suffix")) !!}',
                             username: '{!! addslashes(old("username")) !!}',
-                            role: '{!! addslashes(old("role")) !!}'
+                            role: '{!! addslashes(old("role")) !!}',
+                            department_ids: @json(old('department_ids', []))
                         };
                         var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
                         modal.show();

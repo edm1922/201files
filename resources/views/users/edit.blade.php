@@ -1,6 +1,6 @@
 {{-- Edit User Modal --}}
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <form class="modal-content border-0 shadow" :action="editUrl" method="POST">
             @csrf
             @method('PUT')
@@ -51,12 +51,40 @@
 
                 <div class="mb-3">
                     <label for="edit_role" class="form-label text-muted fw-semibold" style="font-size: 0.85rem;">Role <span class="text-danger">*</span></label>
-                    <select class="form-select @error('role') is-invalid @enderror" id="edit_role" name="role" x-model="editData.role" required>
+                    <select class="form-select @error('role') is-invalid @enderror" id="edit_role" name="role" x-model="editData.role" required
+                            @change="editData.role = $event.target.value">
                         <option value="viewer">Viewer</option>
                         <option value="encoder">Encoder</option>
                         <option value="admin">Admin</option>
                     </select>
                     @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                {{-- Department Access Section --}}
+                <div x-show="editData.role !== 'admin'" x-transition>
+                    <div class="dept-access-panel">
+                        <div class="dept-access-header">
+                            <i class="fas fa-building me-2"></i>Department Access
+                        </div>
+                        <p class="text-muted mb-2" style="font-size: 0.8rem;">
+                            Select which departments this user can access. Leave empty for no access.
+                        </p>
+                        @error('department_ids')<div class="text-danger mb-2" style="font-size: 0.8rem;">{{ $message }}</div>@enderror
+                        <div class="dept-checkbox-grid">
+                            @foreach($departments as $dept)
+                                <label class="dept-checkbox-item">
+                                    <input type="checkbox" name="department_ids[]" value="{{ $dept->id }}"
+                                           :checked="editData.department_ids && editData.department_ids.includes({{ $dept->id }})">
+                                    <span class="dept-checkbox-label">{{ $dept->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @if($departments->isEmpty())
+                            <p class="text-muted text-center py-2 mb-0" style="font-size: 0.8rem;">
+                                <i class="fas fa-info-circle me-1"></i>No active departments found. Create departments first.
+                            </p>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Password Reset Notice --}}
