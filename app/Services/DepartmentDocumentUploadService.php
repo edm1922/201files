@@ -156,6 +156,11 @@ class DepartmentDocumentUploadService
         $baseFilename = $this->buildBaseFilename($departmentId, $documentType->code, $dateReceived, $extension);
         $directory = "documents/departments/{$departmentId}";
         $resolvedFilename = $this->resolveUniqueFilename($directory, $baseFilename, $extension);
+        $resolvedOriginalFilename = $this->resolveUniqueOriginalFilename(
+            departmentId: $departmentId,
+            documentFolderId: $documentFolderId,
+            originalFilename: $file->getClientOriginalName()
+        );
         $relativePath = "{$directory}/{$resolvedFilename}";
 
         try {
@@ -168,6 +173,7 @@ class DepartmentDocumentUploadService
                 $documentFolderId,
                 $user,
                 $resolvedFilename,
+                $resolvedOriginalFilename,
                 $dateReceived,
                 $expiryDate,
                 $validatedData
@@ -184,7 +190,7 @@ class DepartmentDocumentUploadService
                     'document_folder_id' => $documentFolderId,
                     'uploaded_by' => $user->id,
                     'file_path' => $relativePath,
-                    'original_filename' => substr($file->getClientOriginalName(), 0, 255),
+                    'original_filename' => $resolvedOriginalFilename,
                     'system_filename' => $resolvedFilename,
                     'page_count' => 1,
                     'file_size_bytes' => (int) $file->getSize(),
@@ -246,5 +252,49 @@ class DepartmentDocumentUploadService
         $folderId = (int) ($folderIdInput ?? 0);
 
         return $folderId > 0 ? $folderId : null;
+    }
+
+    private function resolveUniqueOriginalFilename(int $departmentId, ?int $documentFolderId, string $originalFilename): string
+    {
+        $trimmed = trim($originalFilename);
+        $original = $trimmed !== '' ? $trimmed : 'file';
+
+        $extension = pathinfo($original, PATHINFO_EXTENSION);
+        $baseName = pathinfo($original, PATHINFO_FILENAME);
+        $baseName = $baseName !== '' ? $baseName : 'file';
+        $extensionWithDot = $extension !== '' ? ".{$extension}" : '';
+
+        $candidate = substr($original, 0, 255);
+        if (! $this->originalFilenameExists($departmentId, $documentFolderId, $candidate)) {
+            return $candidate;
+        }
+
+        $counter = 1;
+        while (true) {
+            $suffix = " ({$counter})";
+            $maxBaseLength = max(1, 255 - strlen($suffix) - strlen($extensionWithDot));
+            $truncatedBase = mb_substr($baseName, 0, $maxBaseLength);
+            $candidate = "{$truncatedBase}{$suffix}{$extensionWithDot}";
+
+            if (! $this->originalFilenameExists($departmentId, $documentFolderId, $candidate)) {
+                return $candidate;
+            }
+
+            $counter++;
+        }
+    }
+
+    private function originalFilenameExists(int $departmentId, ?int $documentFolderId, string $filename): bool
+    {
+        return Document::query()
+            ->where('department_id', $departmentId)
+            ->where('status', 'active')
+            ->when(
+                $documentFolderId === null,
+                fn ($query) => $query->whereNull('document_folder_id'),
+                fn ($query) => $query->where('document_folder_id', $documentFolderId)
+            )
+            ->where('original_filename', $filename)
+            ->exists();
     }
 }

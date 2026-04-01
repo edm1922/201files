@@ -145,6 +145,9 @@ Route::middleware('auth')->group(function () {
             ->middleware('can:download,document')
             ->name('download')
             ->withTrashed();
+
+        Route::patch('/{document}', [DepartmentDocumentController::class, 'update'])
+            ->name('update');
     });
 });
 
