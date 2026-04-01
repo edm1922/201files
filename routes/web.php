@@ -69,8 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/{id}/update-history', [EmployeeController::class, 'updateHistory'])
         ->name('employees.update-history');
 
-    // ── Archive (admin and encoder) ──
-    Route::middleware('role:admin,encoder')->group(function () {
+    // ── Archive (admin only) ──
+    Route::middleware('role:admin')->group(function () {
         Route::get('/archives', [\App\Http\Controllers\ArchiveController::class, 'index'])
             ->name('archives.index');
         Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
@@ -147,6 +147,7 @@ Route::middleware('auth')->group(function () {
             ->withTrashed();
 
         Route::patch('/{document}', [DepartmentDocumentController::class, 'update'])
+            ->middleware('role:admin,encoder')
             ->name('update');
     });
 });

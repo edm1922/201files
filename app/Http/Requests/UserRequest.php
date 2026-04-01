@@ -31,6 +31,8 @@ class UserRequest extends FormRequest
             'suffix' => ['nullable', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($userId)],
             'role' => ['required', 'string', Rule::in(['admin', 'encoder', 'viewer'])],
+            'department_ids' => ['nullable', 'array'],
+            'department_ids.*' => ['integer', 'exists:departments,id'],
         ];
 
         // Passwords are no longer validated in UserRequest as they are auto-generated on creation or handled in ForcePasswordChange

@@ -3,6 +3,7 @@
         $selectedDepartment = $departments->firstWhere('id', $selectedDepartmentId);
         $rootFolders = $foldersByParent->get(0, collect());
         $canManageFolders = auth()->user()->hasRole('admin', 'encoder') && $selectedDepartmentId > 0;
+        $canUploadAndEdit = auth()->user()->hasRole('admin', 'encoder');
 
         $activePathIds = isset($folderBreadcrumbs) ? $folderBreadcrumbs->pluck('id')->toArray() : [];
         if ($currentFolderId) {
@@ -42,18 +43,13 @@
             <div class="explorer-grid mb-4" id="department-document-explorer">
                 <div class="card doc-list-card explorer-sidebar">
                     <div class="card-body p-3">
-                        <form method="GET" action="{{ route('department-documents.index') }}" class="mb-3">
-                            <label class="form-label small fw-bold text-uppercase text-muted">Department</label>
-                            <select name="department_id" class="form-select field-input" onchange="this.form.submit()"
-                                required>
-                                @foreach ($departments as $department)
-                                    <option value="{{ $department->id }}"
-                                        {{ (int) $department->id === (int) $selectedDepartmentId ? 'selected' : '' }}>
-                                        {{ $department->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
+                        <div class="mb-4 pt-1">
+                            <label class="form-label small fw-bold text-uppercase text-muted mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Department</label>
+                            <div class="d-flex align-items-center gap-2 px-2 py-2 rounded-3" style="background: rgba(221, 39, 13, 0.05); border: 1px solid rgba(221, 39, 13, 0.1);">
+                                <i class="fas fa-building text-accent-red" style="font-size: 0.85rem;"></i>
+                                <span class="fw-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">{{ $selectedDepartment?->name ?? 'None' }}</span>
+                            </div>
+                        </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Folders</h6>
@@ -119,11 +115,13 @@
                                     </div>
                                     <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Filter</button>
                                 </form>
+                                @if($canUploadAndEdit)
                                 <button type="button"
                                     class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
                                     data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                     <i class="fas fa-cloud-upload-alt"></i> Upload
                                 </button>
+                                @endif
                             </div>
                         </div>
 
@@ -262,7 +260,7 @@
                                             <td class="text-center">
                                                 <div class="dropdown">
                                                     <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
-                                                        type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Document actions">
+                                                        type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="Document actions">
                                                         <i class="fas fa-ellipsis-v px-2 py-1"></i>
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
@@ -280,6 +278,7 @@
                                                                 </button>
                                                             </li>
                                                         @endif
+                                                        @if($canUploadAndEdit)
                                                         <li>
                                                             <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
                                                                 data-bs-toggle="modal" data-bs-target="#renameDocumentModal"
@@ -288,12 +287,14 @@
                                                                 <i class="fas fa-edit text-secondary" style="width: 16px;"></i><span class="fw-medium">Rename</span>
                                                             </button>
                                                         </li>
+                                                        @endif
                                                         <li>
                                                             <a href="{{ route('department-documents.download', $doc) }}"
                                                                 class="dropdown-item d-flex align-items-center gap-2 py-2">
                                                                 <i class="fas fa-download text-secondary" style="width: 16px;"></i><span class="fw-medium">Download</span>
                                                             </a>
                                                         </li>
+                                                        @if($canUploadAndEdit)
                                                         <li><hr class="dropdown-divider opacity-50 my-1"></li>
                                                         <li>
                                                             <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
@@ -303,6 +304,7 @@
                                                                 <i class="fas fa-archive" style="width: 16px;"></i><span class="fw-medium">Archive</span>
                                                             </button>
                                                         </li>
+                                                        @endif
                                                     </ul>
                                                 </div>
                                             </td>
@@ -777,6 +779,10 @@
                 animation: fadeIn 0.3s ease-in-out forwards;
             }
 
+            .doc-table tbody tr.animate-fade-in {
+                animation-name: fadeInNoTransform;
+            }
+
             .animate-fade-out {
                 animation: fadeOut 0.4s ease-in-out forwards;
             }
@@ -820,6 +826,16 @@
                 to {
                     opacity: 1;
                     transform: translateY(0);
+                }
+            }
+
+            @keyframes fadeInNoTransform {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
                 }
             }
 
@@ -1289,6 +1305,28 @@
                     });
                 };
 
+                const bindActionDropdownZIndexFix = () => {
+                    document.querySelectorAll('.doc-table [data-bs-toggle="dropdown"]').forEach((toggle) => {
+                        if (toggle.dataset.rowDropdownBound === '1') {
+                            return;
+                        }
+
+                        toggle.dataset.rowDropdownBound = '1';
+                        const row = toggle.closest('tr');
+                        if (!row) {
+                            return;
+                        }
+
+                        toggle.addEventListener('show.bs.dropdown', () => {
+                            row.classList.add('row-dropdown-open');
+                        });
+
+                        toggle.addEventListener('hide.bs.dropdown', () => {
+                            row.classList.remove('row-dropdown-open');
+                        });
+                    });
+                };
+
                 // Extended modal setup logic
                 const bindModals = () => {
                     const renameModal = document.getElementById('renameFolderModal');
@@ -1339,6 +1377,7 @@
                     }
                 };
                 bindModals();
+                bindActionDropdownZIndexFix();
 
                 // Loading State Handlers
                 document.querySelectorAll('form[data-loading-target], #archiveDocumentForm').forEach(form => {
@@ -1453,6 +1492,7 @@
                         bindFolderCreateUi();
                         bindFolderAjaxForms();
                         bindPreviewButtons();
+                        bindActionDropdownZIndexFix();
                     } catch (error) {
                         window.location.assign(normalizedUrl);
                     }
