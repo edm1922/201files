@@ -301,7 +301,8 @@
 /* Table */
 .doc-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.83rem;
 }
 
@@ -329,6 +330,19 @@
     border-right: 1px solid #f0f0f0;
     vertical-align: middle;
     color: #374151;
+    position: relative;
+}
+
+.doc-table tbody tr {
+    position: relative;
+}
+
+.doc-table tbody tr.row-dropdown-open {
+    z-index: 60;
+}
+
+.doc-table tbody tr.row-dropdown-open>td {
+    z-index: 60;
 }
 
 .doc-table td:last-child {
@@ -1757,7 +1771,7 @@ body.preview-overlay-open {
 
 /* Document table dropdown fix */
 .explorer-main .doc-table td .dropdown-menu {
-    z-index: 3000;
+    z-index: 5000 !important;
 }
 
 @media (max-width: 992px) {
