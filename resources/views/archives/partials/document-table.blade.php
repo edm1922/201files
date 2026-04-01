@@ -1,5 +1,6 @@
-<div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
-    @if($documents->count() > 0)
+<div x-data="documentArchiveManager()">
+    <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
+        @if($documents->count() > 0)
         <div class="p-0 table-responsive">
             <table class="table table-hover mb-0 align-middle" style="font-size: 0.9rem;">
                 <thead style="background-color: #f9fafb;">
@@ -78,34 +79,26 @@
 
                                     {{-- Restore Button --}}
                                     @can('restore', $doc)
-                                        <form action="{{ route('department-documents.restore', $doc->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-sm"
-                                                    title="Restore Document"
-                                                    style="border-radius: 6px; padding: 6px 12px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 500; transition: all 0.2s; border: none;"
-                                                    onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.2)'"
-                                                    onmouseout="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'"
-                                                    onclick="return confirm('Restore this document back to its active folder?')">
-                                                <i class="fas fa-undo"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm"
+                                                title="Restore Document"
+                                                style="border-radius: 6px; padding: 6px 12px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 500; transition: all 0.2s; border: none;"
+                                                onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.2)'"
+                                                onmouseout="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'"
+                                                @click="openRestoreModal('{{ route('department-documents.restore', $doc->id) }}', '{{ addslashes($doc->original_filename) }}', '{{ $doc->documentFolder?->folder_code ?? 'ROOT' }}')">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
                                     @endcan
 
                                     {{-- Permanently Delete Button (Admin only) --}}
                                     @if(Auth::user()->isAdmin())
-                                        <form action="{{ route('department-documents.forceDelete', $doc->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm"
-                                                    title="Permanently Delete"
-                                                    style="border-radius: 6px; padding: 6px 12px; background-color: #fef2f2; color: #ef4444; font-weight: 500; transition: all 0.2s; border: none;"
-                                                    onmouseover="this.style.backgroundColor='#fee2e2'"
-                                                    onmouseout="this.style.backgroundColor='#fef2f2'"
-                                                    onclick="return confirm('Permanently delete this document? This cannot be undone.')">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm"
+                                                title="Permanently Delete"
+                                                style="border-radius: 6px; padding: 6px 12px; background-color: #fef2f2; color: #ef4444; font-weight: 500; transition: all 0.2s; border: none;"
+                                                onmouseover="this.style.backgroundColor='#fee2e2'"
+                                                onmouseout="this.style.backgroundColor='#fef2f2'"
+                                                @click="openConfirmModal('{{ route('department-documents.forceDelete', $doc->id) }}', '{{ addslashes($doc->original_filename) }}', '{{ $doc->documentFolder?->folder_code ?? 'ROOT' }}')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -122,10 +115,112 @@
         @endif
         
     @else
-        <div class="card-body text-center py-5">
-            <i class="fas fa-file-excel mb-3" style="font-size: 2.5rem; color: #cbd5e1;"></i>
-            <h4 class="h5 fw-bold text-dark mb-1">No Archived Documents</h4>
-            <p class="text-muted mb-0" style="font-size: 0.9rem;">Archived department documents will appear here.</p>
         </div>
     @endif
+    </div>
+
+    {{-- Confirm Restore Modal --}}
+    <template x-teleport="body">
+    <div class="modal fade" id="confirmDocRestoreModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" style="color: #0f172a;">
+                        <i class="fas fa-undo text-success me-2"></i>Restore Document
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="color: #475569;">
+                    <p class="mb-2">Are you sure you want to <strong class="text-success">restore</strong> this document?</p>
+                    <div class="p-3 rounded-3" style="background-color: #f0fdf4; border: 1px solid #dcfce7;">
+                        <div class="fw-semibold text-break" style="color: #166534;" x-text="restoreName"></div>
+                        <div class="text-muted mt-1" style="font-size: 0.85rem;">Original Context: <span x-text="restoreContext" class="font-monospace fw-bold" style="color: #15803d;"></span></div>
+                    </div>
+                    <p class="mt-3 mb-0 text-muted" style="font-size: 0.85rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        The document will be restored back to its active folder.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light fw-medium hover-bg-light" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                    <form :action="restoreActionUrl" method="POST" class="d-inline">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-success fw-medium shadow-sm transition-colors duration-200" style="border-radius: 8px;">
+                            <i class="fas fa-undo me-1"></i> Yes, Restore
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </template>
+
+    {{-- Confirm Delete Modal --}}
+    <template x-teleport="body">
+    <div class="modal fade" id="confirmDocDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" style="color: #0f172a;">
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>Permanently Delete Document
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="color: #475569;">
+                    <p class="mb-2">Are you sure you want to <strong class="text-danger">permanently delete</strong> this document?</p>
+                    <div class="p-3 rounded-3" style="background-color: #fef2f2; border: 1px solid #fee2e2;">
+                        <div class="fw-semibold text-break" style="color: #991b1b;" x-text="confirmName"></div>
+                        <div class="text-muted mt-1" style="font-size: 0.85rem;">Original Context: <span x-text="confirmContext" class="font-monospace fw-bold" style="color: #dd270d;"></span></div>
+                    </div>
+                    <p class="mt-3 mb-0 text-muted" style="font-size: 0.85rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This action <strong>cannot be undone</strong> and the file will be permanently removed from storage.
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light fw-medium hover-bg-light" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                    <form :action="confirmActionUrl" method="POST" class="d-inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger fw-medium shadow-sm transition-colors duration-200" style="border-radius: 8px;">
+                            <i class="fas fa-trash-alt me-1"></i> Yes, Delete Permanently
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </template>
 </div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        if (!Alpine.data('documentArchiveManager')) {
+            Alpine.data('documentArchiveManager', () => ({
+                restoreActionUrl: '',
+                restoreName: '',
+                restoreContext: '',
+                confirmActionUrl: '',
+                confirmName: '',
+                confirmContext: '',
+
+                openRestoreModal(url, name, context) {
+                    this.restoreActionUrl = url;
+                    this.restoreName = name;
+                    this.restoreContext = context || '—';
+                    var modal = new bootstrap.Modal(document.getElementById('confirmDocRestoreModal'));
+                    modal.show();
+                },
+
+                openConfirmModal(url, name, context) {
+                    this.confirmActionUrl = url;
+                    this.confirmName = name;
+                    this.confirmContext = context || '—';
+                    var modal = new bootstrap.Modal(document.getElementById('confirmDocDeleteModal'));
+                    modal.show();
+                }
+            }));
+        }
+    });
+</script>

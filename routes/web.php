@@ -138,11 +138,13 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/{document}/preview', [DepartmentDocumentController::class, 'preview'])
             ->middleware('can:download,document')
-            ->name('preview');
+            ->name('preview')
+            ->withTrashed();
 
         Route::get('/{document}/download', [DepartmentDocumentController::class, 'download'])
             ->middleware('can:download,document')
-            ->name('download');
+            ->name('download')
+            ->withTrashed();
     });
 });
 
