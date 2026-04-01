@@ -39,9 +39,4 @@ class Department extends Model
     {
         return $this->belongsToMany(User::class, 'department_user_access')->withTimestamps();
     }
-
-    public function folderLocation(): BelongsTo
-    {
-        return $this->belongsTo(FolderLocation::class);
-    }
 }

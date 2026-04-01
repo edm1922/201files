@@ -63,14 +63,6 @@ class FolderLocation extends Model
     }
 
     /**
-     * Departments associated with this folder location.
-     */
-    public function departments(): HasMany
-    {
-        return $this->hasMany(Department::class);
-    }
-
-    /**
      * Scope a query to only include available folder locations.
      */
     public function scopeAvailable($query)
