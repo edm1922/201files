@@ -82,9 +82,9 @@ class EmployeeSeeder extends Seeder
             DB::table('employees')->insert([
                 'system_id' => $systemId,
                 'barcode_id' => $barcode,
-                'first_name' => (string)$firstName,
-                'middle_name' => (string)$middleName,
-                'last_name' => (string)$lastName,
+                'first_name' => mb_convert_case((string)$firstName, MB_CASE_UPPER, "UTF-8"),
+                'middle_name' => mb_convert_case((string)$middleName, MB_CASE_UPPER, "UTF-8"),
+                'last_name' => mb_convert_case((string)$lastName, MB_CASE_UPPER, "UTF-8"),
                 'date_hired' => $hiredDate,
                 'status' => in_array(strtolower($statusRaw), ['active', 'awol', 'resigned']) ? strtolower($statusRaw) : 'active',
                 // 'atm_status' => 'not_applicable',  // UNCOMMENT IF YOU WANT TO ADD ATM STATUS
