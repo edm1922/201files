@@ -3,6 +3,8 @@
         $selectedDepartment = $departments->firstWhere('id', $selectedDepartmentId);
         $rootFolders = $foldersByParent->get(0, collect());
         $canManageFolders = auth()->user()->hasRole('admin', 'encoder') && $selectedDepartmentId > 0;
+        $canCreateFolders = auth()->user()->hasRole('admin', 'encoder') && $selectedDepartmentId > 0;
+        $canEditDeleteFolders = auth()->user()->isAdmin() && $selectedDepartmentId > 0;
         $canUploadAndEdit = auth()->user()->hasRole('admin', 'encoder');
 
         $activePathIds = isset($folderBreadcrumbs) ? $folderBreadcrumbs->pluck('id')->toArray() : [];
@@ -54,7 +56,11 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Folders</h6>
                             <div class="d-flex align-items-center gap-2">
-                                @if ($canManageFolders)
+                                @if ($selectedDepartmentId)
+                                    <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
+                                        class="text-decoration-none small">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
+                                @endif
+                                @if ($canCreateFolders)
                                     <button type="button" class="btn-action-round btn-action-round--xs"
                                         data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
                                         data-folder-department-id="{{ $selectedDepartmentId }}"
@@ -63,10 +69,6 @@
                                         title="Create folder {{ $currentFolderId ? 'inside current folder' : 'at root' }}">
                                         <i class="fas fa-plus"></i>
                                     </button>
-                                @endif
-                                @if ($selectedDepartmentId)
-                                    <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
-                                        class="text-decoration-none small">Root</a>
                                 @endif
                             </div>
                         </div>
@@ -79,7 +81,8 @@
                                     'currentFolderId' => $currentFolderId,
                                     'activePathIds' => $activePathIds,
                                     'depth' => 0,
-                                    'canManageFolders' => $canManageFolders,
+                                    'canManageFolders' => $canCreateFolders,
+                                    'canEditDeleteFolders' => $canEditDeleteFolders,
                                 ])
                             @empty
                                 <div class="text-muted small py-2">No folders yet.</div>
@@ -97,23 +100,23 @@
                                     <i class="fas fa-file-lines me-2 text-primary"></i>Documents in Current Scope
                                 </h5>
                                 <div class="text-muted small">
-                                    {{ $currentFolder ? 'Folder: ' . $currentFolder->name . ($currentFolder->folder_code ? ' (' . $currentFolder->folder_code . ')' : '') : ($selectedDepartmentName ?? 'Root') . ' — All documents' }}
+                                    {{ $currentFolder ? 'Folder: ' . $currentFolder->name . ($currentFolder->folder_code ? ' (' . $currentFolder->folder_code . ')' : '') : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root') . ' — All documents' }}
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-center gap-3">
                                 <form action="{{ route('department-documents.index') }}" method="GET"
-                                    class="d-flex gap-2 align-items-center mb-0">
+                                    class="d-flex gap-2 align-items-center mb-0" data-doc-live-search-form>
                                     <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
                                     @if ($currentFolderId)
                                         <input type="hidden" name="document_folder_id" value="{{ $currentFolderId }}">
                                     @endif
                                     <div class="search-wrapper" style="width: 240px;">
                                         <i class="fas fa-search search-icon"></i>
-                                        <input type="text" name="search" class="search-input py-1"
+                                        <input type="text" name="search" class="search-input py-1" data-doc-live-search-input
                                             placeholder="Search files, folder..." value="{{ request('search') }}">
                                     </div>
-                                    <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Filter</button>
+                                    <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Search</button>
                                 </form>
                                 @if($canUploadAndEdit)
                                 <button type="button"
@@ -128,7 +131,7 @@
                         <div class="card-body pt-0 pb-3">
                             <div class="explorer-breadcrumb mb-2">
                                 <a
-                                    href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}">{{ $selectedDepartmentName ?? 'Root' }}</a>
+                                    href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
                                 @foreach ($folderBreadcrumbs as $crumb)
                                     <i class="fas fa-chevron-right mx-2 text-muted" style="font-size: 0.7rem;"></i>
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId, 'document_folder_id' => $crumb->id]) }}"
@@ -208,7 +211,7 @@
                                             $docFolderCode = $docFolder?->folder_code ?? null;
                                             $docFolderPath = $docFolder
                                                 ? $folderPathMaps[$docFolder->id]['display_path'] ?? $docFolder->name
-                                                : $selectedDepartmentName ?? 'Root';
+                                                : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root');
                                         @endphp
                                         <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }}">
                                             <td class="cursor-pointer" 
@@ -373,7 +376,7 @@
                                 Folder Code <span class="text-muted fw-normal">(Optional)</span>
                             </label>
                             <input type="text" id="create_folder_code" name="folder_code"
-                                class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001"
+                                class="form-control field-input bg-light" placeholder="e.g. CSC-FIN-0001"
                                 data-folder-create-code>
                         </div>
                     </div>
@@ -407,7 +410,7 @@
                     <div class="modal-body px-4 pt-2">
                         <div class="mb-2">
                             <label for="rename_folder_name" class="form-label fw-semibold text-secondary"
-                                style="font-size: 0.85rem;">Folder Name</label>
+                                style="font-size: 0.85rem;">Folder Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="rename_folder_name"
                                 class="form-control field-input bg-light" required>
                         </div>
@@ -864,6 +867,11 @@
                 const previewDownloadBtn = document.getElementById('preview-download-btn');
                 const previewPrintBtn = document.getElementById('preview-print-btn');
                 let currentPreviewUrl = '';
+                const liveSearchState = {
+                    shouldRefocus: false,
+                    caretStart: null,
+                    caretEnd: null,
+                };
 
                 const resetPreviewBody = () => {
                     if (!previewBody) {
@@ -1327,6 +1335,51 @@
                     });
                 };
 
+                const bindLiveSearch = () => {
+                    const form = document.querySelector('[data-doc-live-search-form]');
+                    const input = form?.querySelector('[data-doc-live-search-input]');
+
+                    if (!form || !input || input.dataset.liveSearchBound === '1') {
+                        return;
+                    }
+
+                    input.dataset.liveSearchBound = '1';
+                    let searchTimer = null;
+
+                    const triggerSearch = () => {
+                        liveSearchState.shouldRefocus = true;
+                        liveSearchState.caretStart = input.selectionStart;
+                        liveSearchState.caretEnd = input.selectionEnd;
+
+                        const url = new URL(form.action, window.location.origin);
+                        const formData = new FormData(form);
+
+                        for (const [key, value] of formData.entries()) {
+                            if (typeof value !== 'string') {
+                                continue;
+                            }
+
+                            const trimmed = value.trim();
+                            if (trimmed !== '') {
+                                url.searchParams.set(key, trimmed);
+                            }
+                        }
+
+                        reloadExplorerFromUrl(url.toString());
+                    };
+
+                    input.addEventListener('input', () => {
+                        clearTimeout(searchTimer);
+                        searchTimer = setTimeout(triggerSearch, 250);
+                    });
+
+                    form.addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        clearTimeout(searchTimer);
+                        triggerSearch();
+                    });
+                };
+
                 // Extended modal setup logic
                 const bindModals = () => {
                     const renameModal = document.getElementById('renameFolderModal');
@@ -1378,6 +1431,7 @@
                 };
                 bindModals();
                 bindActionDropdownZIndexFix();
+                bindLiveSearch();
 
                 // Loading State Handlers
                 document.querySelectorAll('form[data-loading-target], #archiveDocumentForm').forEach(form => {
@@ -1493,6 +1547,25 @@
                         bindFolderAjaxForms();
                         bindPreviewButtons();
                         bindActionDropdownZIndexFix();
+                        bindLiveSearch();
+
+                        if (liveSearchState.shouldRefocus) {
+                            const nextInput = explorer.querySelector('[data-doc-live-search-input]');
+                            if (nextInput) {
+                                nextInput.focus({ preventScroll: true });
+                                const start = liveSearchState.caretStart;
+                                const end = liveSearchState.caretEnd;
+                                const fallbackPos = nextInput.value.length;
+                                nextInput.setSelectionRange(
+                                    typeof start === 'number' ? Math.min(start, fallbackPos) : fallbackPos,
+                                    typeof end === 'number' ? Math.min(end, fallbackPos) : fallbackPos
+                                );
+                            }
+
+                            liveSearchState.shouldRefocus = false;
+                            liveSearchState.caretStart = null;
+                            liveSearchState.caretEnd = null;
+                        }
                     } catch (error) {
                         window.location.assign(normalizedUrl);
                     }

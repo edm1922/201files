@@ -50,44 +50,48 @@
             </a>
 
             {{-- Actions --}}
-            @if ($canManageFolders ?? false)
+            @if (($canManageFolders ?? false) || ($canEditDeleteFolders ?? false))
                 <div class="ui-tree-actions d-flex align-items-center gap-1 ms-auto ps-2">
-                    <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
-                        title="Add Subfolder" data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
-                        data-folder-department-id="{{ $selectedDepartmentId }}" data-folder-parent-id="{{ $folder->id }}"
-                        data-folder-create-scope="New folder inside {{ $folder->name }}">
-                        <i class="fas fa-plus bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
-                            style="width: 18px; height: 18px; font-size: 0.6rem;"></i>
-                    </button>
-
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
-                            type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Folder actions">
-                            <i class="fas fa-ellipsis-v px-1"></i>
+                    @if ($canManageFolders ?? false)
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                            title="Add Subfolder" data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
+                            data-folder-department-id="{{ $selectedDepartmentId }}" data-folder-parent-id="{{ $folder->id }}"
+                            data-folder-create-scope="New folder inside {{ $folder->name }}">
+                            <i class="fas fa-plus bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                style="width: 18px; height: 18px; font-size: 0.6rem;"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
-                            <li>
-                                <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
-                                    data-bs-toggle="modal" data-bs-target="#renameFolderModal"
-                                    data-folder-name="{{ $folder->name }}" data-folder-code="{{ $folder->folder_code }}"
-                                    data-folder-action="{{ route('department-documents.folders.update', $folder) }}">
-                                    <i class="fas fa-pen text-secondary" style="width: 16px;"></i><span
-                                        class="fw-medium">Rename</span>
-                                </button>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider opacity-50 my-1">
-                            </li>
-                            <li>
-                                <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
-                                    data-bs-toggle="modal" data-bs-target="#deleteFolderModal"
-                                    data-folder-name="{{ $folder->name }}"
-                                    data-folder-action="{{ route('department-documents.folders.destroy', $folder) }}">
-                                    <i class="fas fa-trash" style="width: 16px;"></i><span class="fw-medium">Delete</span>
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                    @endif
+
+                    @if ($canEditDeleteFolders ?? false)
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Folder actions">
+                                <i class="fas fa-ellipsis-v px-1"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                        data-bs-toggle="modal" data-bs-target="#renameFolderModal"
+                                        data-folder-name="{{ $folder->name }}" data-folder-code="{{ $folder->folder_code }}"
+                                        data-folder-action="{{ route('department-documents.folders.update', $folder) }}">
+                                        <i class="fas fa-pen text-secondary" style="width: 16px;"></i><span
+                                            class="fw-medium">Rename</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider opacity-50 my-1">
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
+                                        data-bs-toggle="modal" data-bs-target="#deleteFolderModal"
+                                        data-folder-name="{{ $folder->name }}"
+                                        data-folder-action="{{ route('department-documents.folders.destroy', $folder) }}">
+                                        <i class="fas fa-trash" style="width: 16px;"></i><span class="fw-medium">Delete</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    @endif
                 </div>
             @endif
     </div>
@@ -103,6 +107,7 @@
                     'activePathIds' => $activePathIds ?? [],
                     'depth' => $depth + 1,
                     'canManageFolders' => $canManageFolders ?? false,
+                    'canEditDeleteFolders' => $canEditDeleteFolders ?? false,
                 ])
             @endforeach
                         </ul>
