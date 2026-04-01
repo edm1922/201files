@@ -358,12 +358,13 @@ class EmployeeController extends Controller
             $name = $employee->full_name;
             $systemId = $employee->system_id;
 
-            $employee->forceDelete();
-
             AuditService::log(
                 'deleted',
-                "Permanently deleted employee (System ID: {$systemId})"
+                "Permanently deleted employee (System ID: {$systemId})",
+                $employee
             );
+
+            $employee->forceDelete();
         });
 
         return redirect()
