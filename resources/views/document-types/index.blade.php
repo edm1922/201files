@@ -81,8 +81,6 @@
 
                         <th style="width: 150px;">Department</th>
                         <th style="width: 90px; text-align: center;">Expiry?</th>
-
-                        <th style="width: 90px; text-align: center;">Max Pages</th>
                         <th style="width: 100px; text-align: center;">Documents</th>
                         <th style="width: 80px; text-align: center;">Actions</th>
                     </tr>
@@ -107,8 +105,6 @@
                                     <i class="fas fa-minus-circle" style="color: #d1d5db;" title="No expiry"></i>
                                 @endif
                             </td>
-
-                            <td class="text-center" style="font-size: 0.85rem;">{{ $docType->max_pages }}</td>
                             <td class="text-center">
                                 <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 5px 10px; font-weight: 600;">
                                     {{ $docType->documents_count }}
@@ -197,8 +193,7 @@
                     name: '',
                     code: '',
                     department_id: '',
-                    has_expiry: false,
-                    max_pages: 1
+                    has_expiry: false
                 },
 
                 // Confirmation Modal Data (Toggle/Delete)
@@ -219,8 +214,7 @@
                             name: '{!! addslashes(old("name")) !!}',
                             code: '{!! addslashes(old("code")) !!}',
                             department_id: '{{ old("department_id") }}',
-                            has_expiry: {{ old('has_expiry') ? 'true' : 'false' }},
-                            max_pages: {{ old('max_pages', 1) }}
+                            has_expiry: {{ old('has_expiry') ? 'true' : 'false' }}
                         };
                         setTimeout(() => {
                             var modal = new bootstrap.Modal(document.getElementById('editDocumentTypeModal'));

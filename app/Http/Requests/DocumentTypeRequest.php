@@ -31,7 +31,6 @@ class DocumentTypeRequest extends FormRequest
             ],
             'has_expiry'    => ['boolean'],
             'is_required'   => ['boolean'],
-            'max_pages'     => ['required', 'integer', 'min:1', 'max:100'],
         ];
     }
 
@@ -46,8 +45,6 @@ class DocumentTypeRequest extends FormRequest
             'code.max'        => 'Code must not exceed 20 characters.',
             'code.alpha_dash' => 'Code may only contain letters, numbers, dashes, and underscores.',
             'department_id.exists' => 'The selected department does not exist.',
-            'max_pages.required' => 'Max pages is required.',
-            'max_pages.min'      => 'Max pages must be at least 1.',
         ];
     }
 
