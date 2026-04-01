@@ -12,7 +12,7 @@ class EmployeeSeeder extends Seeder
     {
         // Truncate is now handled in DatabaseSeeder globally
         
-        $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-1256.csv');
+        $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-1820.csv');
         if (!file_exists($csvFile)) {
             return;
         }
