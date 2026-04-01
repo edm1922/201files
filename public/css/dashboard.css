@@ -125,3 +125,151 @@
     border: 1px solid #f3f4f6;
     background: #fafafa;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   CALENDAR STYLES
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Wrapper for relative positioning of dropdown */
+.calendar-wrapper {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Date Pill - Clickable button that triggers dropdown */
+.date-pill {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 50px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.date-pill:hover {
+    border-color: #dd270d;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.date-pill i {
+    font-size: 1rem;
+}
+
+/* Dropdown Container */
+.calendar-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 280px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    z-index: 1001;
+}
+
+/* Navigation Header (Month Year + Prev/Next Buttons) */
+.calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.calendar-nav h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.calendar-nav-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    color: #6b7280;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav-btn:hover {
+    background: #dd270d;
+    color: #ffffff;
+    border-color: #dd270d;
+}
+
+.calendar-nav-btn i {
+    font-size: 0.75rem;
+}
+
+/* Calendar Grid (7 columns) */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+/* Mon-Sun Labels */
+.calendar-weekday {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 4px 0;
+}
+
+/* Individual Day Styles */
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Current Month Days */
+.calendar-day.current {
+    color: #374151;
+}
+
+.calendar-day.current:hover {
+    background: #f3f4f6;
+    color: #dd270d;
+}
+
+/* Days from adjacent months */
+.calendar-day.other {
+    color: #d1d5db;
+}
+
+/* Today's Date Highlight Case */
+.calendar-day.today {
+    background: #fee2e2;
+    color: #dd270d !important;
+    font-weight: 800;
+    box-shadow: inset 0 0 0 1px #fecaca;
+}
+
+.calendar-day.today:hover {
+    background: #dd270d;
+    color: #ffffff !important;
+}
