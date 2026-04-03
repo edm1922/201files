@@ -22,6 +22,41 @@
             </div>
         </div>
 
+        @if (!$departments->isEmpty())
+            <form action="{{ route('department-documents.index') }}" method="GET"
+                class="doc-command-search mb-4" data-doc-live-search-form
+                data-doc-suggest-url="{{ route('department-documents.search') }}">
+                <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-doc-search-department>
+                <input type="hidden" name="global_search" value="{{ request('global_search') ? '1' : '0' }}" data-doc-global-search>
+
+                <div class="doc-command-search__bar">
+                    <i class="fas fa-search doc-command-search__icon"></i>
+                    <input type="text" name="search" class="doc-command-search__input" data-doc-live-search-input
+                        placeholder="Search documents and folders" value="{{ request('search') }}" autocomplete="off">
+                    <button type="button"
+                        class="btn btn-sm doc-command-search__global {{ request('global_search') ? 'btn-danger text-white' : 'btn-outline-secondary' }}"
+                        data-doc-global-search-toggle aria-pressed="{{ request('global_search') ? 'true' : 'false' }}"
+                        title="Search all accessible departments">
+                        <i class="fas fa-globe me-1"></i>Global
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-light px-3 fw-medium">Search</button>
+                </div>
+
+                <div class="doc-command-search__scope text-muted" data-doc-search-scope>
+                    {{ request('global_search') ? 'Quick suggestions across all accessible departments' : 'Searching within this department' }}
+                </div>
+
+                <div class="doc-command-search__results d-none" data-doc-search-suggestions>
+                    <div class="doc-command-search__results-inner" data-doc-search-results></div>
+                    <div class="doc-command-search__results-footer">
+                        <button type="button" class="btn btn-link text-decoration-none p-0" data-doc-search-view-all>
+                            View all results
+                        </button>
+                    </div>
+                </div>
+            </form>
+        @endif
+
         @if (session('success'))
             <div class="alert-flash alert-flash--success mb-4" data-flash-success>
                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -60,16 +95,16 @@
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
                                         class="text-decoration-none small">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
                                 @endif
-                                @if ($canCreateFolders)
-                                    <button type="button" class="btn-action-round btn-action-round--xs"
-                                        data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
-                                        data-folder-department-id="{{ $selectedDepartmentId }}"
-                                        data-folder-parent-id="{{ $currentFolderId ?: '' }}"
-                                        data-folder-create-scope="{{ $currentFolderId ? 'New folder inside current folder' : 'New folder at root level' }}"
-                                        title="Create folder {{ $currentFolderId ? 'inside current folder' : 'at root' }}">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                @endif
+                                 @if ($canCreateFolders)
+                                     <button type="button" class="btn-action-round btn-action-round--xs"
+                                         data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
+                                         data-folder-department-id="{{ $selectedDepartmentId }}"
+                                         data-folder-parent-id=""
+                                         data-folder-create-scope="New folder at root level"
+                                         title="Create folder at root">
+                                         <i class="fas fa-plus"></i>
+                                     </button>
+                                 @endif
                             </div>
                         </div>
                         <ul class="ui-tree m-0 p-0 text-dark">
@@ -105,19 +140,12 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-3">
-                                <form action="{{ route('department-documents.index') }}" method="GET"
-                                    class="d-flex gap-2 align-items-center mb-0" data-doc-live-search-form>
-                                    <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
-                                    @if ($currentFolderId)
-                                        <input type="hidden" name="document_folder_id" value="{{ $currentFolderId }}">
-                                    @endif
-                                    <div class="search-wrapper" style="width: 240px;">
-                                        <i class="fas fa-search search-icon"></i>
-                                        <input type="text" name="search" class="search-input py-1" data-doc-live-search-input
-                                            placeholder="Search files, folder..." value="{{ request('search') }}">
-                                    </div>
-                                    <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Search</button>
-                                </form>
+                                @if (request('search'))
+                                    <span class="badge rounded-pill {{ request('global_search') ? 'text-bg-danger' : 'text-bg-secondary' }}">
+                                        <i class="fas fa-search me-1"></i>
+                                        {{ request('global_search') ? 'Global search' : 'Department search' }}
+                                    </span>
+                                @endif
                                 @if($canUploadAndEdit)
                                 <button type="button"
                                     class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
@@ -820,6 +848,113 @@
                 border: 1px solid var(--company-primary-border) !important;
             }
 
+            .doc-command-search {
+                position: relative;
+            }
+
+            .doc-command-search__bar {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: #f3f4f6;
+                border: 1px solid #e5e7eb;
+                border-radius: 999px;
+                padding: 0.45rem 0.6rem;
+            }
+
+            .doc-command-search__icon {
+                color: #6b7280;
+                margin-left: 0.35rem;
+            }
+
+            .doc-command-search__input {
+                flex: 1;
+                border: none;
+                background: transparent;
+                outline: none;
+                min-width: 160px;
+                color: #111827;
+            }
+
+            .doc-command-search__input:focus {
+                box-shadow: none;
+            }
+
+            .doc-command-search__global {
+                border-radius: 999px;
+            }
+
+            .doc-command-search__scope {
+                font-size: 0.75rem;
+                margin-top: 0.45rem;
+                padding-left: 0.9rem;
+            }
+
+            .doc-command-search__results {
+                position: absolute;
+                z-index: 1090;
+                top: calc(100% + 0.4rem);
+                left: 0;
+                right: 0;
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.9rem;
+                box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
+                overflow: hidden;
+            }
+
+            .doc-command-search__results-inner {
+                max-height: 360px;
+                overflow-y: auto;
+            }
+
+            .doc-command-search__result-item {
+                width: 100%;
+                border: none;
+                background: #fff;
+                padding: 0.75rem 0.95rem;
+                text-align: left;
+                border-bottom: 1px solid #f3f4f6;
+            }
+
+            .doc-command-search__result-item:hover,
+            .doc-command-search__result-item:focus {
+                background: #fef2f2;
+                outline: none;
+            }
+
+            .doc-command-search__result-title {
+                font-weight: 700;
+                color: #111827;
+                line-height: 1.25;
+            }
+
+            .doc-command-search__result-meta {
+                font-size: 0.76rem;
+                color: #6b7280;
+                margin-top: 0.18rem;
+                line-height: 1.2;
+            }
+
+            .doc-command-search__results-footer {
+                display: flex;
+                justify-content: flex-end;
+                padding: 0.55rem 0.9rem;
+                background: #fafafa;
+            }
+
+            @media (max-width: 768px) {
+                .doc-command-search__bar {
+                    border-radius: 1rem;
+                    flex-wrap: wrap;
+                }
+
+                .doc-command-search__input {
+                    width: 100%;
+                    order: 1;
+                }
+            }
+
             @keyframes fadeIn {
                 from {
                     opacity: 0;
@@ -871,6 +1006,9 @@
                     shouldRefocus: false,
                     caretStart: null,
                     caretEnd: null,
+                    requestId: 0,
+                    activeRequestId: 0,
+                    abortController: null,
                 };
 
                 const resetPreviewBody = () => {
@@ -1338,23 +1476,48 @@
                 const bindLiveSearch = () => {
                     const form = document.querySelector('[data-doc-live-search-form]');
                     const input = form?.querySelector('[data-doc-live-search-input]');
+                    const globalSearchInput = form?.querySelector('[data-doc-global-search]');
+                    const globalSearchToggle = form?.querySelector('[data-doc-global-search-toggle]');
+                    const scopeLabel = form?.querySelector('[data-doc-search-scope]');
+                    const suggestionPanel = form?.querySelector('[data-doc-search-suggestions]');
+                    const suggestionResults = form?.querySelector('[data-doc-search-results]');
+                    const viewAllButton = form?.querySelector('[data-doc-search-view-all]');
+                    const suggestionUrl = form?.getAttribute('data-doc-suggest-url') || '';
+                    let suggestionRequestId = 0;
+                    let activeSuggestionRequestId = 0;
+                    let suggestionAbortController = null;
 
                     if (!form || !input || input.dataset.liveSearchBound === '1') {
                         return;
                     }
 
                     input.dataset.liveSearchBound = '1';
-                    let searchTimer = null;
+                    let suggestionTimer = null;
 
-                    const triggerSearch = () => {
-                        liveSearchState.shouldRefocus = true;
-                        liveSearchState.caretStart = input.selectionStart;
-                        liveSearchState.caretEnd = input.selectionEnd;
+                    const hideSuggestions = () => {
+                        if (suggestionPanel) {
+                            suggestionPanel.classList.add('d-none');
+                        }
+                        if (suggestionResults) {
+                            suggestionResults.innerHTML = '';
+                        }
+                    };
 
+                    const showSuggestions = () => {
+                        if (suggestionPanel) {
+                            suggestionPanel.classList.remove('d-none');
+                        }
+                    };
+
+                    const buildSearchUrl = () => {
                         const url = new URL(form.action, window.location.origin);
                         const formData = new FormData(form);
 
                         for (const [key, value] of formData.entries()) {
+                            if (key === 'global_search') {
+                                continue;
+                            }
+
                             if (typeof value !== 'string') {
                                 continue;
                             }
@@ -1365,19 +1528,239 @@
                             }
                         }
 
-                        reloadExplorerFromUrl(url.toString());
+                        return url;
                     };
 
+                    const renderSuggestions = (items) => {
+                        if (!suggestionResults) {
+                            return;
+                        }
+
+                        if (!Array.isArray(items) || items.length === 0) {
+                            suggestionResults.innerHTML =
+                                '<div class="px-3 py-3 text-muted small">No quick matches found.</div>';
+                            showSuggestions();
+                            return;
+                        }
+
+                        suggestionResults.innerHTML = items.map((item) => {
+                            const title = escapeHtml(item?.title || 'Untitled');
+                            const department = escapeHtml(item?.department_name || 'Unknown department');
+                            const folder = escapeHtml(item?.folder_label || 'Root');
+                            const updatedAt = escapeHtml(item?.updated_at || '');
+                            const targetUrl = escapeHtml(item?.url || '#');
+
+                            return `
+                                <button type="button" class="doc-command-search__result-item" data-doc-search-url="${targetUrl}">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <div class="min-w-0">
+                                            <div class="doc-command-search__result-title text-truncate">${title}</div>
+                                            <div class="doc-command-search__result-meta">${department} • ${folder}</div>
+                                        </div>
+                                        <div class="doc-command-search__result-meta text-nowrap">${updatedAt}</div>
+                                    </div>
+                                </button>
+                            `;
+                        }).join('');
+
+                        showSuggestions();
+                    };
+
+                    const fetchSuggestions = async () => {
+                        const query = input.value.trim();
+                        if (query === '' || !suggestionUrl) {
+                            hideSuggestions();
+                            return;
+                        }
+
+                        const requestId = ++suggestionRequestId;
+                        activeSuggestionRequestId = requestId;
+
+                        if (suggestionAbortController) {
+                            suggestionAbortController.abort();
+                        }
+
+                        const abortController = new AbortController();
+                        suggestionAbortController = abortController;
+
+                        try {
+                            const url = new URL(suggestionUrl, window.location.origin);
+                            url.searchParams.set('q', query);
+                            url.searchParams.set('department_id', form.querySelector('[data-doc-search-department]')?.value || '');
+                            url.searchParams.set('global_search', globalSearchInput?.value === '1' ? '1' : '0');
+
+                            const response = await fetch(url.toString(), {
+                                headers: {
+                                    Accept: 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                signal: abortController.signal,
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Suggestion request failed');
+                            }
+
+                            const payload = await response.json().catch(() => ({
+                                results: [],
+                            }));
+
+                            if (requestId !== activeSuggestionRequestId) {
+                                return;
+                            }
+
+                            renderSuggestions(payload.results || []);
+                        } catch (error) {
+                            if (error?.name === 'AbortError') {
+                                return;
+                            }
+
+                            hideSuggestions();
+                        } finally {
+                            if (suggestionAbortController === abortController) {
+                                suggestionAbortController = null;
+                            }
+                        }
+                    };
+
+                    const syncGlobalToggleState = () => {
+                        if (!globalSearchInput || !globalSearchToggle) {
+                            return;
+                        }
+
+                        const enabled = globalSearchInput.value === '1';
+                        globalSearchToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+                        globalSearchToggle.classList.toggle('btn-danger', enabled);
+                        globalSearchToggle.classList.toggle('text-white', enabled);
+                        globalSearchToggle.classList.toggle('btn-outline-secondary', !enabled);
+
+                        if (scopeLabel) {
+                            scopeLabel.textContent = enabled
+                                ? 'Quick suggestions across all accessible departments'
+                                : 'Searching within this department';
+                        }
+                    };
+
+                    const triggerSearch = () => {
+                        liveSearchState.shouldRefocus = document.activeElement === input;
+                        liveSearchState.caretStart = input.selectionStart;
+                        liveSearchState.caretEnd = input.selectionEnd;
+                        hideSuggestions();
+                        reloadExplorerFromUrl(buildSearchUrl().toString());
+                    };
+
+                    syncGlobalToggleState();
+
+                    if (globalSearchToggle && globalSearchInput && globalSearchToggle.dataset.liveSearchBound !== '1') {
+                        globalSearchToggle.dataset.liveSearchBound = '1';
+                        globalSearchToggle.addEventListener('click', () => {
+                            globalSearchInput.value = globalSearchInput.value === '1' ? '0' : '1';
+                            syncGlobalToggleState();
+                            input.focus({
+                                preventScroll: true,
+                            });
+                            clearTimeout(suggestionTimer);
+                            suggestionTimer = setTimeout(fetchSuggestions, 150);
+                        });
+                    }
+
                     input.addEventListener('input', () => {
-                        clearTimeout(searchTimer);
-                        searchTimer = setTimeout(triggerSearch, 250);
+                        clearTimeout(suggestionTimer);
+
+                        if (input.value.trim() === '') {
+                            hideSuggestions();
+                            triggerSearch();
+                            return;
+                        }
+
+                        suggestionTimer = setTimeout(fetchSuggestions, 170);
+                    });
+
+                    input.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            hideSuggestions();
+                        }
+
+                        if (event.key === 'ArrowDown') {
+                            const firstItem = suggestionResults?.querySelector('[data-doc-search-url]');
+                            if (firstItem) {
+                                event.preventDefault();
+                                firstItem.focus();
+                            }
+                        }
                     });
 
                     form.addEventListener('submit', (event) => {
                         event.preventDefault();
-                        clearTimeout(searchTimer);
+                        clearTimeout(suggestionTimer);
                         triggerSearch();
                     });
+
+                    if (viewAllButton && viewAllButton.dataset.liveSearchBound !== '1') {
+                        viewAllButton.dataset.liveSearchBound = '1';
+                        viewAllButton.addEventListener('click', () => {
+                            triggerSearch();
+                        });
+                    }
+
+                    if (suggestionResults && suggestionResults.dataset.liveSearchBound !== '1') {
+                        suggestionResults.dataset.liveSearchBound = '1';
+
+                        suggestionResults.addEventListener('click', (event) => {
+                            const button = event.target.closest('[data-doc-search-url]');
+                            if (!button) {
+                                return;
+                            }
+
+                            const targetUrl = button.getAttribute('data-doc-search-url');
+                            if (targetUrl) {
+                                window.location.assign(targetUrl);
+                            }
+                        });
+
+                        suggestionResults.addEventListener('keydown', (event) => {
+                            const current = event.target.closest('[data-doc-search-url]');
+                            if (!current) {
+                                return;
+                            }
+
+                            if (event.key === 'ArrowDown') {
+                                event.preventDefault();
+                                const next = current.nextElementSibling?.matches('[data-doc-search-url]')
+                                    ? current.nextElementSibling
+                                    : current;
+                                next.focus();
+                            } else if (event.key === 'ArrowUp') {
+                                event.preventDefault();
+                                const prev = current.previousElementSibling?.matches('[data-doc-search-url]')
+                                    ? current.previousElementSibling
+                                    : null;
+                                if (prev) {
+                                    prev.focus();
+                                } else {
+                                    input.focus({
+                                        preventScroll: true,
+                                    });
+                                }
+                            } else if (event.key === 'Enter') {
+                                event.preventDefault();
+                                const targetUrl = current.getAttribute('data-doc-search-url');
+                                if (targetUrl) {
+                                    window.location.assign(targetUrl);
+                                }
+                            }
+                        });
+                    }
+
+                    if (form.dataset.liveSearchOutsideBound !== '1') {
+                        form.dataset.liveSearchOutsideBound = '1';
+                        document.addEventListener('click', (event) => {
+                            if (!form.contains(event.target)) {
+                                hideSuggestions();
+                            }
+                        });
+                    }
                 };
 
                 // Extended modal setup logic
@@ -1516,6 +1899,15 @@
                     }
 
                     const normalizedUrl = String(url).replace(/&amp;/g, '&');
+                    const requestId = ++liveSearchState.requestId;
+                    liveSearchState.activeRequestId = requestId;
+
+                    if (liveSearchState.abortController) {
+                        liveSearchState.abortController.abort();
+                    }
+
+                    const abortController = new AbortController();
+                    liveSearchState.abortController = abortController;
 
                     try {
                         const response = await fetch(normalizedUrl, {
@@ -1524,6 +1916,7 @@
                                 'X-Requested-With': 'XMLHttpRequest',
                             },
                             credentials: 'same-origin',
+                            signal: abortController.signal,
                         });
 
                         if (!response.ok) {
@@ -1534,6 +1927,10 @@
                         const parser = new DOMParser();
                         const nextDoc = parser.parseFromString(html, 'text/html');
                         const nextExplorer = nextDoc.getElementById('department-document-explorer');
+
+                        if (requestId !== liveSearchState.activeRequestId) {
+                            return;
+                        }
 
                         if (!nextExplorer || !explorer || !explorer.parentElement) {
                             window.location.assign(normalizedUrl);
@@ -1552,14 +1949,18 @@
                         if (liveSearchState.shouldRefocus) {
                             const nextInput = explorer.querySelector('[data-doc-live-search-input]');
                             if (nextInput) {
-                                nextInput.focus({ preventScroll: true });
-                                const start = liveSearchState.caretStart;
-                                const end = liveSearchState.caretEnd;
-                                const fallbackPos = nextInput.value.length;
-                                nextInput.setSelectionRange(
-                                    typeof start === 'number' ? Math.min(start, fallbackPos) : fallbackPos,
-                                    typeof end === 'number' ? Math.min(end, fallbackPos) : fallbackPos
-                                );
+                                window.requestAnimationFrame(() => {
+                                    nextInput.focus({
+                                        preventScroll: true,
+                                    });
+                                    const start = liveSearchState.caretStart;
+                                    const end = liveSearchState.caretEnd;
+                                    const fallbackPos = nextInput.value.length;
+                                    nextInput.setSelectionRange(
+                                        typeof start === 'number' ? Math.min(start, fallbackPos) : fallbackPos,
+                                        typeof end === 'number' ? Math.min(end, fallbackPos) : fallbackPos
+                                    );
+                                });
                             }
 
                             liveSearchState.shouldRefocus = false;
@@ -1567,7 +1968,15 @@
                             liveSearchState.caretEnd = null;
                         }
                     } catch (error) {
+                        if (error?.name === 'AbortError') {
+                            return;
+                        }
+
                         window.location.assign(normalizedUrl);
+                    } finally {
+                        if (liveSearchState.abortController === abortController) {
+                            liveSearchState.abortController = null;
+                        }
                     }
                 };
 
