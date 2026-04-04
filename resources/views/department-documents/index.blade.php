@@ -1131,10 +1131,10 @@
                     if (currentPreviewKind === 'pdf') {
                         const canvases = previewBody.querySelectorAll('.preview-overlay__pdf-canvas');
                         canvases.forEach((canvas) => {
-                            canvas.style.width = '100%';
-                            canvas.style.maxWidth = '100%';
-                            canvas.style.transform = `scale(${pdfPreviewState.zoom})`;
-                            canvas.style.transformOrigin = 'center top';
+                            canvas.style.width = `${Math.max(25, Math.round(pdfPreviewState.zoom * 100))}%`;
+                            canvas.style.maxWidth = 'none';
+                            canvas.style.transform = '';
+                            canvas.style.transformOrigin = '';
                             canvas.style.marginLeft = 'auto';
                             canvas.style.marginRight = 'auto';
                         });
