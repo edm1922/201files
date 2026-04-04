@@ -569,7 +569,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <form method="POST" action="{{ route('department-documents.store') }}"
-                        enctype="multipart/form-data" id="upload-form" x-data="{ dragging: false, files: [], uploadMode: 'standard', showExpiry: false }"
+                        enctype="multipart/form-data" id="upload-form" x-data="{ dragging: false, files: [], uploadMode: 'standard', showExpiry: false, receivedDate: '{{ old('date_received', date('Y-m-d')) }}', expiryDate: '{{ old('expiry_date', '') }}' }"
                         x-init="$nextTick(() => { const select = $refs.typeSelect; if (select && select.selectedIndex >= 0) showExpiry = select.options[select.selectedIndex].dataset.hasExpiry === '1'; })" data-loading-target>
                         @csrf
                         <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
@@ -635,7 +635,7 @@
                                             class="form-label small fw-bold text-uppercase text-muted">Date Received
                                             <span class="text-danger">*</span></label>
                                         <input type="date" id="upload_date_received" name="date_received"
-                                            class="form-control field-input" value="{{ date('Y-m-d') }}" required>
+                                            class="form-control field-input" value="{{ old('date_received', date('Y-m-d')) }}" x-model="receivedDate" :max="expiryDate || null" required>
                                     </div>
 
                                     <div class="col-md-6" x-show="showExpiry" x-cloak>
@@ -643,7 +643,7 @@
                                             class="form-label small fw-bold text-uppercase text-muted">Expiry
                                             Date</label>
                                         <input type="date" id="upload_expiry_date" name="expiry_date"
-                                            class="form-control field-input" :required="showExpiry">
+                                            class="form-control field-input" value="{{ old('expiry_date') }}" x-model="expiryDate" :required="showExpiry" :min="receivedDate || null">
                                     </div>
                                 </div>
                             </div>
