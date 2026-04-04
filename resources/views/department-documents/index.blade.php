@@ -34,26 +34,20 @@
                 </div>
             </div>
         @else
-            <div class="explorer-grid mb-4" id="department-document-explorer">
-                <div class="card doc-list-card explorer-sidebar">
-                    <div class="card-body p-3">
-                        <div class="mb-4 pt-1">
-                            <label class="form-label small fw-bold text-uppercase text-muted mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Department</label>
-                            <div class="d-flex align-items-center gap-2 px-2 py-2 rounded-3" style="background: rgba(221, 39, 13, 0.05); border: 1px solid rgba(221, 39, 13, 0.1);">
-                                <i class="fas fa-building text-accent-red" style="font-size: 0.85rem;"></i>
-                                <span class="fw-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">{{ $selectedDepartment?->name ?? 'None' }}</span>
-                            </div>
-                        </div>
+            <div class="explorer-grid mb-0" id="department-document-explorer">
+                <aside class="explorer-sidebar">
+                    <div class="explorer-sidebar__inner">
+                        <div class="doc-sidebar-department">{{ $selectedDepartment?->name ?? 'No Department' }}</div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Folders</h6>
                             <div class="d-flex align-items-center gap-2">
                                 @if ($selectedDepartmentId)
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
-                                        class="text-decoration-none small">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
+                                        class="text-decoration-none small">Root</a>
                                 @endif
-                                 @if ($canCreateFolders)
-                                     <button type="button" class="btn-action-round btn-action-round--xs"
+                                  @if ($canCreateFolders)
+                                      <button type="button" class="btn-action-round btn-action-round--xs"
                                          data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
                                          data-folder-department-id="{{ $selectedDepartmentId }}"
                                          data-folder-parent-id=""
@@ -81,7 +75,7 @@
                             @endforelse
                         </ul>
                     </div>
-                </div>
+                </aside>
 
                 <div class="explorer-main d-flex flex-column gap-4">
                     <div class="doc-command-search-row">
@@ -94,31 +88,38 @@
                                 <input type="hidden" name="document_folder_id" value="{{ (int) request('document_folder_id') }}">
                             @endif
 
-                            <div class="doc-command-search__bar">
-                                <i class="fas fa-search doc-command-search__icon"></i>
-                                <input type="text" name="search" class="doc-command-search__input" data-doc-live-search-input
-                                    placeholder="Search documents and folders" value="{{ request('search') }}" autocomplete="off">
-                                <button type="button"
-                                    class="doc-command-search__global {{ request('global_search') ? 'is-active' : '' }}"
-                                    data-doc-global-search-toggle aria-pressed="{{ request('global_search') ? 'true' : 'false' }}"
-                                    aria-label="Global search"
-                                    title="Search all accessible departments">
-                                    <i class="fas fa-globe"></i>
-                                </button>
+                            <div class="doc-command-search__shell">
+                                <div class="doc-command-search__bar">
+                                    <i class="fas fa-search doc-command-search__icon"></i>
+                                    <input type="text" name="search" class="doc-command-search__input" data-doc-live-search-input
+                                        placeholder="Search documents and folders" value="{{ request('search') }}" autocomplete="off">
+                                    <button type="button" class="doc-command-search__clear d-none" data-doc-search-clear
+                                        aria-label="Clear search" title="Clear search">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <button type="button"
+                                        class="doc-command-search__global {{ request('global_search') ? 'is-active' : '' }}"
+                                        data-doc-global-search-toggle aria-pressed="{{ request('global_search') ? 'true' : 'false' }}"
+                                        aria-label="Global search"
+                                        title="Search all accessible departments">
+                                        <i class="fas fa-globe"></i>
+                                    </button>
+                                </div>
+
+                                <div class="doc-command-search__results d-none" data-doc-search-suggestions>
+                                    <div class="doc-command-search__results-inner" data-doc-search-results></div>
+                                </div>
                             </div>
 
                             <div class="doc-command-search__scope text-muted" data-doc-search-scope>
                                 {{ request('global_search') ? 'Quick suggestions across all accessible departments' : 'Searching within this department' }}
                             </div>
 
-                            <div class="doc-command-search__results d-none" data-doc-search-suggestions>
-                                <div class="doc-command-search__results-inner" data-doc-search-results></div>
-                            </div>
                         </form>
 
                         @if($canUploadAndEdit)
                             <button type="button"
-                                class="btn btn-accent-red btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 fw-medium"
+                                class="btn btn-accent-red btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 fw-medium doc-upload-btn"
                                 data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload
                             </button>
@@ -126,19 +127,8 @@
                     </div>
 
                     <div class="card doc-list-card">
-                        <div class="bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
-                            <div>
-                                <h5 class="mb-1 fw-bold text-dark" style="font-size: 1.1rem;">
-                                    <i class="fas fa-file-lines me-2 text-primary"></i>Documents in Current Scope
-                                </h5>
-                                <div class="text-muted small">
-                                    {{ $currentFolder ? 'Folder: ' . $currentFolder->name . ($currentFolder->folder_code ? ' (' . $currentFolder->folder_code . ')' : '') : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root') . ' — All documents' }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-body pt-0 pb-3">
-                            <div class="explorer-breadcrumb mb-2">
+                        <div class="doc-table-context">
+                            <div class="explorer-breadcrumb mb-0">
                                 <a
                                     href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
                                 @foreach ($folderBreadcrumbs as $crumb)
@@ -152,7 +142,7 @@
 
                         </div>
 
-                        <div class="doc-table-wrapper border-0">
+                        <div class="doc-table-wrapper border-0 {{ $documents->count() === 0 ? 'is-empty' : '' }}">
                             <table class="doc-table">
                                 <thead>
                                     <tr>
@@ -326,17 +316,18 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center py-5">
-                                                <div class="text-muted">
-                                                    <i class="fas fa-folder-open fa-3x mb-3 opacity-20"></i>
-                                                    <p>No documents found in this scope.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
+
+                            @if ($documents->count() === 0)
+                                <div class="doc-table-empty-overlay" aria-live="polite">
+                                    <div class="text-muted doc-table-empty-state">
+                                        <i class="fas fa-folder-open fa-3x mb-3 opacity-20"></i>
+                                        <p>No documents found in this scope.</p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         @if ($documents->hasPages())
@@ -866,18 +857,107 @@
 
             .doc-command-search {
                 position: relative;
+                width: 100%;
                 max-width: 760px;
-                flex: 1 1 auto;
+                flex: 1 1 680px;
+            }
+
+            .doc-command-search__shell {
+                position: relative;
             }
 
             .doc-command-search-row {
                 display: flex;
                 align-items: flex-start;
+                flex-wrap: nowrap;
                 gap: 0.5rem;
+            }
+
+            .doc-sidebar-department {
+                font-size: 2rem;
+                font-weight: 706;
+                color: #000;
+                line-height: 1.2;
+                margin-bottom: 2rem;
+            }
+
+            .doc-upload-btn {
+                min-height: 2.5rem;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                align-self: flex-start;
+                margin-top: 0.25rem;
+                margin-left: auto;
+                flex: 0 0 auto;
             }
 
             .explorer-main.gap-4 {
                 gap: 0.5rem !important;
+            }
+
+            #department-document-explorer {
+                height: calc(100dvh - 56px - 3rem);
+                min-height: 520px;
+                margin-bottom: 0 !important;
+            }
+
+            #department-document-explorer .explorer-sidebar,
+            #department-document-explorer .explorer-main {
+                min-height: 0;
+            }
+
+            .explorer-main .doc-list-card {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
+            }
+
+            .doc-table-wrapper {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow: auto;
+                position: relative;
+            }
+
+            .doc-table-wrapper.is-empty {
+                overflow: hidden;
+            }
+
+            .doc-table-context {
+                padding: 1rem 1rem 1rem !important;
+            }
+
+            .doc-table-empty-overlay {
+                position: absolute;
+                top: 44px;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+            }
+
+            .doc-table-empty-state {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+            }
+
+            .doc-table-empty-state p {
+                margin-bottom: 0;
+            }
+
+            .explorer-sidebar {
+                min-height: 420px;
+                background: transparent;
+            }
+
+            .explorer-sidebar__inner {
+                padding: 0.5rem 0.25rem;
             }
 
             .doc-command-search__bar {
@@ -889,6 +969,20 @@
                 border-radius: 999px;
                 padding: 0.25rem 0.65rem;
                 min-height: 3rem;
+                transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            }
+
+            .doc-command-search__shell.is-open .doc-command-search__bar {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                border-bottom-color: #e5e7eb;
+                background: #fff;
+            }
+
+            .doc-command-search__bar:focus-within {
+                background: #fff;
+                border-color: #cbd5e1;
+                box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
             }
 
             .doc-command-search__icon {
@@ -920,6 +1014,21 @@
                 font-size: 0.95rem;
             }
 
+            .doc-command-search__clear {
+                border: none;
+                background: transparent;
+                color: #6b7280;
+                padding: 0.1rem 0.25rem;
+                line-height: 1;
+                font-size: 0.85rem;
+            }
+
+            .doc-command-search__clear:hover,
+            .doc-command-search__clear:focus-visible {
+                color: #374151;
+                outline: none;
+            }
+
             .doc-command-search__global:hover,
             .doc-command-search__global:focus-visible {
                 color: #334155;
@@ -939,28 +1048,31 @@
             .doc-command-search__results {
                 position: absolute;
                 z-index: 1090;
-                top: calc(100% + 0.4rem);
+                top: calc(100% - 1px);
                 left: 0;
                 right: 0;
                 background: #fff;
                 border: 1px solid #e5e7eb;
-                border-radius: 0.9rem;
-                box-shadow: 0 12px 36px rgba(15, 23, 42, 0.12);
+                border-top: 0;
+                border-radius: 0 0 1rem 1rem;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
                 overflow: hidden;
             }
 
             .doc-command-search__results-inner {
                 max-height: 360px;
                 overflow-y: auto;
+                padding: 0.35rem;
             }
 
             .doc-command-search__result-item {
                 width: 100%;
                 border: none;
                 background: #fff;
-                padding: 0.75rem 0.95rem;
+                padding: 0.65rem 0.85rem;
                 text-align: left;
-                border-bottom: 1px solid #f3f4f6;
+                border-bottom: 1px solid #f1f5f9;
+                border-radius: 0.6rem;
             }
 
             .doc-command-search__result-item:hover,
@@ -990,6 +1102,16 @@
             @media (max-width: 768px) {
                 .doc-command-search-row {
                     flex-wrap: wrap;
+                }
+
+                #department-document-explorer {
+                    height: auto;
+                    min-height: auto;
+                }
+
+                .doc-upload-btn {
+                    min-height: 2.75rem;
+                    margin-left: 0;
                 }
 
                 .doc-command-search__bar {
@@ -1962,6 +2084,8 @@
                 const bindLiveSearch = () => {
                     const form = document.querySelector('[data-doc-live-search-form]');
                     const input = form?.querySelector('[data-doc-live-search-input]');
+                    const searchShell = form?.querySelector('.doc-command-search__shell');
+                    const clearSearchButton = form?.querySelector('[data-doc-search-clear]');
                     const globalSearchInput = form?.querySelector('[data-doc-global-search]');
                     const globalSearchToggle = form?.querySelector('[data-doc-global-search-toggle]');
                     const scopeLabel = form?.querySelector('[data-doc-search-scope]');
@@ -1986,6 +2110,9 @@
                         if (suggestionPanel) {
                             suggestionPanel.classList.add('d-none');
                         }
+                        if (searchShell) {
+                            searchShell.classList.remove('is-open');
+                        }
                         if (suggestionResults) {
                             suggestionResults.innerHTML = '';
                         }
@@ -1996,9 +2123,22 @@
                         if (suggestionPanel) {
                             suggestionPanel.classList.remove('d-none');
                         }
+                        if (searchShell) {
+                            searchShell.classList.add('is-open');
+                        }
                     };
 
                     const getSuggestionButtons = () => Array.from(suggestionResults?.querySelectorAll('[data-doc-search-url]') || []);
+
+                    const syncClearButtonState = () => {
+                        if (!clearSearchButton) {
+                            return;
+                        }
+
+                        const hasValue = input.value.trim() !== '';
+                        clearSearchButton.classList.toggle('d-none', !hasValue);
+                        clearSearchButton.disabled = !hasValue;
+                    };
 
                     const paintActiveSuggestion = () => {
                         const items = getSuggestionButtons();
@@ -2199,6 +2339,7 @@
                     };
 
                     syncGlobalToggleState();
+                    syncClearButtonState();
 
                     if (globalSearchToggle && globalSearchInput && globalSearchToggle.dataset.liveSearchBound !== '1') {
                         globalSearchToggle.dataset.liveSearchBound = '1';
@@ -2215,6 +2356,7 @@
 
                     input.addEventListener('input', () => {
                         clearTimeout(suggestionTimer);
+                        syncClearButtonState();
 
                         if (input.value.trim() === '') {
                             hideSuggestions();
@@ -2279,6 +2421,21 @@
                         clearTimeout(suggestionTimer);
                         triggerSearch();
                     });
+
+                    if (clearSearchButton && clearSearchButton.dataset.liveSearchBound !== '1') {
+                        clearSearchButton.dataset.liveSearchBound = '1';
+                        clearSearchButton.addEventListener('click', () => {
+                            input.value = '';
+                            clearTimeout(suggestionTimer);
+                            syncClearButtonState();
+                            hideSuggestions();
+                            pendingEnterNavigation = false;
+                            triggerSearch();
+                            input.focus({
+                                preventScroll: true,
+                            });
+                        });
+                    }
 
                     if (suggestionResults && suggestionResults.dataset.liveSearchBound !== '1') {
                         suggestionResults.dataset.liveSearchBound = '1';
