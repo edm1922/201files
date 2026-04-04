@@ -14,52 +14,6 @@
     @endphp
 
     <div class="animate-fade-in stagger-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="h4 mb-1 fw-bold text-dark">Department Documents</h2>
-                <p class="text-muted mb-0" style="font-size: 0.85rem;">Browse folders first, then upload into the active
-                    folder context.</p>
-            </div>
-        </div>
-
-        @if (!$departments->isEmpty())
-            <form action="{{ route('department-documents.index') }}" method="GET"
-                class="doc-command-search mb-4" data-doc-live-search-form
-                data-doc-suggest-url="{{ route('department-documents.search') }}">
-                                    <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-doc-search-department>
-                                    <input type="hidden" name="global_search" value="{{ request('global_search') ? '1' : '0' }}" data-doc-global-search>
-                                    @if (request('document_folder_id'))
-                                        <input type="hidden" name="document_folder_id" value="{{ (int) request('document_folder_id') }}">
-                                    @endif
-
-                <div class="doc-command-search__bar">
-                    <i class="fas fa-search doc-command-search__icon"></i>
-                    <input type="text" name="search" class="doc-command-search__input" data-doc-live-search-input
-                        placeholder="Search documents and folders" value="{{ request('search') }}" autocomplete="off">
-                    <button type="button"
-                        class="btn btn-sm doc-command-search__global {{ request('global_search') ? 'btn-danger text-white' : 'btn-outline-secondary' }}"
-                        data-doc-global-search-toggle aria-pressed="{{ request('global_search') ? 'true' : 'false' }}"
-                        title="Search all accessible departments">
-                        <i class="fas fa-globe me-1"></i>Global
-                    </button>
-                    <button type="submit" class="btn btn-sm btn-light px-3 fw-medium">Search</button>
-                </div>
-
-                <div class="doc-command-search__scope text-muted" data-doc-search-scope>
-                    {{ request('global_search') ? 'Quick suggestions across all accessible departments' : 'Searching within this department' }}
-                </div>
-
-                <div class="doc-command-search__results d-none" data-doc-search-suggestions>
-                    <div class="doc-command-search__results-inner" data-doc-search-results></div>
-                    <div class="doc-command-search__results-footer">
-                        <button type="button" class="btn btn-link text-decoration-none p-0" data-doc-search-view-all>
-                            View all results
-                        </button>
-                    </div>
-                </div>
-            </form>
-        @endif
-
         @if (session('success'))
             <div class="alert-flash alert-flash--success mb-4" data-flash-success>
                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -130,9 +84,49 @@
                 </div>
 
                 <div class="explorer-main d-flex flex-column gap-4">
+                    <div class="doc-command-search-row">
+                        <form action="{{ route('department-documents.index') }}" method="GET"
+                            class="doc-command-search mb-0" data-doc-live-search-form
+                            data-doc-suggest-url="{{ route('department-documents.search') }}">
+                            <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-doc-search-department>
+                            <input type="hidden" name="global_search" value="{{ request('global_search') ? '1' : '0' }}" data-doc-global-search>
+                            @if (request('document_folder_id'))
+                                <input type="hidden" name="document_folder_id" value="{{ (int) request('document_folder_id') }}">
+                            @endif
+
+                            <div class="doc-command-search__bar">
+                                <i class="fas fa-search doc-command-search__icon"></i>
+                                <input type="text" name="search" class="doc-command-search__input" data-doc-live-search-input
+                                    placeholder="Search documents and folders" value="{{ request('search') }}" autocomplete="off">
+                                <button type="button"
+                                    class="doc-command-search__global {{ request('global_search') ? 'is-active' : '' }}"
+                                    data-doc-global-search-toggle aria-pressed="{{ request('global_search') ? 'true' : 'false' }}"
+                                    aria-label="Global search"
+                                    title="Search all accessible departments">
+                                    <i class="fas fa-globe"></i>
+                                </button>
+                            </div>
+
+                            <div class="doc-command-search__scope text-muted" data-doc-search-scope>
+                                {{ request('global_search') ? 'Quick suggestions across all accessible departments' : 'Searching within this department' }}
+                            </div>
+
+                            <div class="doc-command-search__results d-none" data-doc-search-suggestions>
+                                <div class="doc-command-search__results-inner" data-doc-search-results></div>
+                            </div>
+                        </form>
+
+                        @if($canUploadAndEdit)
+                            <button type="button"
+                                class="btn btn-accent-red btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 fw-medium"
+                                data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                <i class="fas fa-cloud-upload-alt"></i> Upload
+                            </button>
+                        @endif
+                    </div>
+
                     <div class="card doc-list-card">
-                        <div
-                            class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
+                        <div class="bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
                             <div>
                                 <h5 class="mb-1 fw-bold text-dark" style="font-size: 1.1rem;">
                                     <i class="fas fa-file-lines me-2 text-primary"></i>Documents in Current Scope
@@ -140,16 +134,6 @@
                                 <div class="text-muted small">
                                     {{ $currentFolder ? 'Folder: ' . $currentFolder->name . ($currentFolder->folder_code ? ' (' . $currentFolder->folder_code . ')' : '') : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root') . ' — All documents' }}
                                 </div>
-                            </div>
-
-                            <div class="d-flex align-items-center gap-3">
-                                @if($canUploadAndEdit)
-                                <button type="button"
-                                    class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
-                                    data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                                    <i class="fas fa-cloud-upload-alt"></i> Upload
-                                </button>
-                                @endif
                             </div>
                         </div>
 
@@ -882,21 +866,35 @@
 
             .doc-command-search {
                 position: relative;
+                max-width: 760px;
+                flex: 1 1 auto;
+            }
+
+            .doc-command-search-row {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .explorer-main.gap-4 {
+                gap: 0.5rem !important;
             }
 
             .doc-command-search__bar {
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                background: #f3f4f6;
-                border: 1px solid #e5e7eb;
+                gap: 0.4rem;
+                background: #eef2f6;
+                border: 1px solid #d9e1ea;
                 border-radius: 999px;
-                padding: 0.45rem 0.6rem;
+                padding: 0.25rem 0.65rem;
+                min-height: 3rem;
             }
 
             .doc-command-search__icon {
                 color: #6b7280;
-                margin-left: 0.35rem;
+                margin-left: 0.2rem;
+                font-size: 0.85rem;
             }
 
             .doc-command-search__input {
@@ -906,6 +904,7 @@
                 outline: none;
                 min-width: 160px;
                 color: #111827;
+                font-size: 0.86rem;
             }
 
             .doc-command-search__input:focus {
@@ -913,13 +912,28 @@
             }
 
             .doc-command-search__global {
-                border-radius: 999px;
+                border: none;
+                background: transparent;
+                color: #64748b;
+                padding: 0.1rem 0.2rem;
+                line-height: 1;
+                font-size: 0.95rem;
+            }
+
+            .doc-command-search__global:hover,
+            .doc-command-search__global:focus-visible {
+                color: #334155;
+                outline: none;
+            }
+
+            .doc-command-search__global.is-active {
+                color: #dc2626;
             }
 
             .doc-command-search__scope {
                 font-size: 0.75rem;
-                margin-top: 0.45rem;
-                padding-left: 0.9rem;
+                margin-top: 0.35rem;
+                padding-left: 0.75rem;
             }
 
             .doc-command-search__results {
@@ -973,14 +987,11 @@
                 line-height: 1.2;
             }
 
-            .doc-command-search__results-footer {
-                display: flex;
-                justify-content: flex-end;
-                padding: 0.55rem 0.9rem;
-                background: #fafafa;
-            }
-
             @media (max-width: 768px) {
+                .doc-command-search-row {
+                    flex-wrap: wrap;
+                }
+
                 .doc-command-search__bar {
                     border-radius: 1rem;
                     flex-wrap: wrap;
@@ -1956,7 +1967,6 @@
                     const scopeLabel = form?.querySelector('[data-doc-search-scope]');
                     const suggestionPanel = form?.querySelector('[data-doc-search-suggestions]');
                     const suggestionResults = form?.querySelector('[data-doc-search-results]');
-                    const viewAllButton = form?.querySelector('[data-doc-search-view-all]');
                     const suggestionUrl = form?.getAttribute('data-doc-suggest-url') || '';
                     let suggestionRequestId = 0;
                     let activeSuggestionRequestId = 0;
@@ -2171,9 +2181,7 @@
 
                         const enabled = globalSearchInput.value === '1';
                         globalSearchToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-                        globalSearchToggle.classList.toggle('btn-danger', enabled);
-                        globalSearchToggle.classList.toggle('text-white', enabled);
-                        globalSearchToggle.classList.toggle('btn-outline-secondary', !enabled);
+                        globalSearchToggle.classList.toggle('is-active', enabled);
 
                         if (scopeLabel) {
                             scopeLabel.textContent = enabled
@@ -2271,13 +2279,6 @@
                         clearTimeout(suggestionTimer);
                         triggerSearch();
                     });
-
-                    if (viewAllButton && viewAllButton.dataset.liveSearchBound !== '1') {
-                        viewAllButton.dataset.liveSearchBound = '1';
-                        viewAllButton.addEventListener('click', () => {
-                            triggerSearch();
-                        });
-                    }
 
                     if (suggestionResults && suggestionResults.dataset.liveSearchBound !== '1') {
                         suggestionResults.dataset.liveSearchBound = '1';
