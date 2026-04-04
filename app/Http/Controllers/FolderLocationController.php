@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DocumentLocation;
 use App\Models\FolderLocation;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,12 @@ class FolderLocationController extends Controller
             ->orderBy('row_name', 'ASC')
             ->get();
 
-        return view('folder_locations.index', compact('rows'));
+        $documentLocations = DocumentLocation::query()
+            ->withCount('documents')
+            ->orderBy('name')
+            ->get();
+
+        return view('folder_locations.index', compact('rows', 'documentLocations'));
     }
 
     /**
@@ -52,7 +58,7 @@ class FolderLocationController extends Controller
     public function update(Request $request, FolderLocation $folderLocation)
     {
         $validated = $request->validate([
-            'row_name'     => 'required|string|max:10',
+            'row_name' => 'required|string|max:10',
             'max_capacity' => 'required|integer|min:1',
         ]);
 

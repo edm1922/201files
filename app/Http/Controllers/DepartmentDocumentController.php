@@ -6,8 +6,8 @@ use App\Http\Requests\StoreDepartmentDocumentRequest;
 use App\Models\Department;
 use App\Models\Document;
 use App\Models\DocumentFolder;
+use App\Models\DocumentLocation;
 use App\Models\DocumentType;
-use App\Models\FolderLocation;
 use App\Services\AuditService;
 use App\Services\DepartmentDocumentUploadService;
 use Illuminate\Http\JsonResponse;
@@ -73,9 +73,9 @@ class DepartmentDocumentController extends Controller
             $folderBreadcrumbs = collect($chain);
         }
 
-        $folderLocations = FolderLocation::query()->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
+        $documentLocations = DocumentLocation::query()->orderBy('name')->get();
 
-        $query = Document::with(['department', 'documentType', 'folderLocation', 'documentFolder', 'uploader'])
+        $query = Document::with(['department', 'documentType', 'documentLocation', 'documentFolder', 'uploader'])
             ->whereIn('department_id', $accessibleDepartmentIds);
 
         if ($selectedDepartmentId > 0) {
@@ -152,7 +152,7 @@ class DepartmentDocumentController extends Controller
             'currentFolder',
             'currentFolderId',
             'folderBreadcrumbs',
-            'folderLocations',
+            'documentLocations',
             'documents'
         ));
     }

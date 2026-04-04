@@ -258,7 +258,7 @@
                                             </td>
                                             <td>
                                                 <div class="text-muted x-small mt-1">
-                                                    {{ $doc->folderLocation->full_location }}</div>
+                                                    {{ $doc->documentLocation?->name ?? '—' }}</div>
                                             </td>
                                             <td>
                                                 <div class="small">
@@ -609,11 +609,11 @@
                                         <label for="upload_location"
                                             class="form-label small fw-bold text-uppercase text-muted">Physical
                                             Location <span class="text-danger">*</span></label>
-                                        <select id="upload_location" name="folder_location_id"
+                                        <select id="upload_location" name="document_location_id"
                                             class="form-select field-input" required>
                                             <option value="">Select location</option>
-                                            @foreach ($folderLocations as $location)
-                                                <option value="{{ $location->id }}">{{ $location->display_name }}
+                                            @foreach ($documentLocations as $location)
+                                                <option value="{{ $location->id }}">{{ $location->name }}
                                                 </option>
                                             @endforeach
                                         </select>

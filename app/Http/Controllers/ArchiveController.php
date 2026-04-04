@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Document;
 use App\Models\Employee;
 use Illuminate\Http\Request;
@@ -15,11 +16,11 @@ class ArchiveController extends Controller
 
         if ($tab === 'documents') {
             $accessibleDepartmentIds = $user->isAdmin()
-                ? \App\Models\Department::query()->where('is_active', true)->pluck('id')
+                ? Department::query()->where('is_active', true)->pluck('id')
                 : $user->authorizedDepartments()->where('is_active', true)->pluck('departments.id');
 
             $documents = Document::onlyTrashed()
-                ->with(['department', 'documentType', 'folderLocation', 'documentFolder'])
+                ->with(['department', 'documentType', 'documentLocation', 'documentFolder'])
                 ->whereIn('department_id', $accessibleDepartmentIds)
                 ->orderBy('deleted_at', 'desc')
                 ->paginate(20)
@@ -29,8 +30,8 @@ class ArchiveController extends Controller
         }
 
         // Default to Employees - only Admin/Encoder
-        if (!$user->isAdmin() && !$user->isEncoder()) {
-             abort(403);
+        if (! $user->isAdmin() && ! $user->isEncoder()) {
+            abort(403);
         }
 
         $employees = Employee::archived()

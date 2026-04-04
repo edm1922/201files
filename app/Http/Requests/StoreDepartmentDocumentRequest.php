@@ -34,7 +34,7 @@ class StoreDepartmentDocumentRequest extends FormRequest
                 Rule::exists('document_types', 'id')->where(fn ($query) => $query->where('department_id', (int) $this->input('department_id'))
                 ),
             ],
-            'folder_location_id' => ['required', 'integer', 'exists:folder_locations,id'],
+            'document_location_id' => ['required', 'integer', 'exists:document_locations,id'],
             'document_folder_id' => ['nullable', 'integer', 'exists:document_folders,id'],
             'upload_mode' => ['required', Rule::in(['standard', 'scan_packet'])],
             'date_received' => ['required', 'date'],
@@ -68,6 +68,15 @@ class StoreDepartmentDocumentRequest extends FormRequest
 
             if ((bool) $documentType->has_expiry && ! $this->filled('expiry_date')) {
                 $validator->errors()->add('expiry_date', 'Expiry date is required for the selected document type.');
+            }
+
+            if ($this->filled('date_received') && $this->filled('expiry_date')) {
+                $receivedDate = strtotime((string) $this->input('date_received'));
+                $expiryDate = strtotime((string) $this->input('expiry_date'));
+
+                if ($receivedDate !== false && $expiryDate !== false && $receivedDate > $expiryDate) {
+                    $validator->errors()->add('date_received', 'Date received must be on or before the expiry date.');
+                }
             }
 
             if ($selectedFolderId > 0) {

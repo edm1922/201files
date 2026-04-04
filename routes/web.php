@@ -5,6 +5,7 @@ use App\Http\Controllers\BankTypeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DepartmentDocumentController;
+use App\Http\Controllers\DocumentLocationController;
 use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeSearchController;
@@ -57,6 +58,13 @@ Route::middleware('auth')->group(function () {
             Route::post('/row', [FolderLocationController::class, 'storeRow'])->name('store-row');
             Route::put('/{folderLocation}', [FolderLocationController::class, 'update'])->name('update');
             Route::delete('/{folderLocation}', [FolderLocationController::class, 'destroy'])->name('destroy');
+        });
+
+        // Document Locations (Department Documents)
+        Route::prefix('document-locations')->name('document-locations.')->group(function () {
+            Route::get('/', [DocumentLocationController::class, 'index'])->name('index');
+            Route::post('/', [DocumentLocationController::class, 'store'])->name('store');
+            Route::delete('/{documentLocation}', [DocumentLocationController::class, 'destroy'])->name('destroy');
         });
 
         Route::resource('document-types', DocumentTypeController::class)->except(['show', 'create', 'edit']);

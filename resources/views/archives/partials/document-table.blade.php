@@ -58,7 +58,7 @@
                             </td>
                             <td class="border-bottom-0" style="padding: 16px 24px;">
                                 <div class="text-muted font-monospace" style="font-size: 0.85rem;">
-                                    {{ $doc->folderLocation->full_location }}
+                                    {{ $doc->documentLocation?->name ?? '—' }}
                                 </div>
                             </td>
                             <td class="border-bottom-0" style="padding: 16px 24px;">

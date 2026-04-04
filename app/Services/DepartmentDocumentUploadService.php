@@ -21,7 +21,7 @@ class DepartmentDocumentUploadService
     {
         $departmentId = (int) $validatedData['department_id'];
         $docTypeId = (int) $validatedData['document_type_id'];
-        $folderLocId = (int) $validatedData['folder_location_id'];
+        $documentLocationId = (int) $validatedData['document_location_id'];
         $uploadMode = $validatedData['upload_mode'] ?? 'standard';
         $dateReceived = Carbon::parse($validatedData['date_received']);
         $expiryDate = isset($validatedData['expiry_date']) ? Carbon::parse($validatedData['expiry_date']) : null;
@@ -35,7 +35,7 @@ class DepartmentDocumentUploadService
                 files: $files,
                 departmentId: $departmentId,
                 documentType: $documentType,
-                folderLocationId: $folderLocId,
+                documentLocationId: $documentLocationId,
                 documentFolderId: $documentFolderId,
                 user: $user,
                 dateReceived: $dateReceived,
@@ -46,11 +46,12 @@ class DepartmentDocumentUploadService
 
         /** @var UploadedFile $file */
         $file = $files[0];
+
         return $this->storeStandardFile(
             file: $file,
             departmentId: $departmentId,
             documentType: $documentType,
-            folderLocationId: $folderLocId,
+            documentLocationId: $documentLocationId,
             documentFolderId: $documentFolderId,
             user: $user,
             dateReceived: $dateReceived,
@@ -63,7 +64,7 @@ class DepartmentDocumentUploadService
         array $files,
         int $departmentId,
         DocumentType $documentType,
-        int $folderLocationId,
+        int $documentLocationId,
         ?int $documentFolderId,
         User $user,
         Carbon $dateReceived,
@@ -86,7 +87,7 @@ class DepartmentDocumentUploadService
                 $relativePath,
                 $departmentId,
                 $documentType,
-                $folderLocationId,
+                $documentLocationId,
                 $documentFolderId,
                 $user,
                 $sourceNames,
@@ -94,8 +95,8 @@ class DepartmentDocumentUploadService
                 $pageCount,
                 $dateReceived,
                 $expiryDate,
-                $validatedData,
-                $baseFilename
+                $validatedData
+
             ) {
                 $fileSize = filesize($tempPath);
                 Storage::disk('local')->put($relativePath, file_get_contents($tempPath));
@@ -103,7 +104,7 @@ class DepartmentDocumentUploadService
                 $document = Document::create([
                     'department_id' => $departmentId,
                     'document_type_id' => $documentType->id,
-                    'folder_location_id' => $folderLocationId,
+                    'document_location_id' => $documentLocationId,
                     'document_folder_id' => $documentFolderId,
                     'uploaded_by' => $user->id,
                     'file_path' => $relativePath,
@@ -121,11 +122,12 @@ class DepartmentDocumentUploadService
 
                 AuditService::logDepartmentDocumentLifecycle('uploaded', $document);
 
-                if (!empty($validatedData['force_fail_after_store'])) {
+                if (! empty($validatedData['force_fail_after_store'])) {
                     throw new \RuntimeException('Forced failure for integrity test');
                 }
 
                 @unlink($tempPath);
+
                 return $document;
             });
         } catch (\Throwable $e) {
@@ -145,7 +147,7 @@ class DepartmentDocumentUploadService
         UploadedFile $file,
         int $departmentId,
         DocumentType $documentType,
-        int $folderLocationId,
+        int $documentLocationId,
         ?int $documentFolderId,
         User $user,
         Carbon $dateReceived,
@@ -169,7 +171,7 @@ class DepartmentDocumentUploadService
                 $relativePath,
                 $departmentId,
                 $documentType,
-                $folderLocationId,
+                $documentLocationId,
                 $documentFolderId,
                 $user,
                 $resolvedFilename,
@@ -186,7 +188,7 @@ class DepartmentDocumentUploadService
                 $document = Document::create([
                     'department_id' => $departmentId,
                     'document_type_id' => $documentType->id,
-                    'folder_location_id' => $folderLocationId,
+                    'document_location_id' => $documentLocationId,
                     'document_folder_id' => $documentFolderId,
                     'uploaded_by' => $user->id,
                     'file_path' => $relativePath,
@@ -204,7 +206,7 @@ class DepartmentDocumentUploadService
 
                 AuditService::logDepartmentDocumentLifecycle('uploaded', $document);
 
-                if (!empty($validatedData['force_fail_after_store'])) {
+                if (! empty($validatedData['force_fail_after_store'])) {
                     throw new \RuntimeException('Forced failure for integrity test');
                 }
 
@@ -224,14 +226,15 @@ class DepartmentDocumentUploadService
     private function buildBaseFilename(int $departmentId, string $docTypeCode, Carbon $date, string $extension): string
     {
         // Use the user-selected business date (Ymd) but inject the exact real-time (His) of the upload for uniqueness
-        $timestamp = $date->format('Ymd') . now()->format('His');
+        $timestamp = $date->format('Ymd').now()->format('His');
         $prefix = sprintf('DEPT-%d_%s_%s', $departmentId, strtoupper($docTypeCode), $timestamp);
+
         return Str::of($prefix)->append('.')->append($extension)->toString();
     }
 
     private function resolveUniqueFilename(string $directory, string $baseName, string $extension): string
     {
-        if (!Storage::disk('local')->exists("{$directory}/{$baseName}")) {
+        if (! Storage::disk('local')->exists("{$directory}/{$baseName}")) {
             return $baseName;
         }
 
@@ -240,7 +243,7 @@ class DepartmentDocumentUploadService
         while (true) {
             $formattedCounter = sprintf('%02d', $counter);
             $newName = "{$nameWithoutExtension}_{$formattedCounter}.{$extension}";
-            if (!Storage::disk('local')->exists("{$directory}/{$newName}")) {
+            if (! Storage::disk('local')->exists("{$directory}/{$newName}")) {
                 return $newName;
             }
             $counter++;
