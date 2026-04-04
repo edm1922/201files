@@ -14,14 +14,6 @@
     @endphp
 
     <div class="animate-fade-in stagger-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="h4 mb-1 fw-bold text-dark">Department Documents</h2>
-                <p class="text-muted mb-0" style="font-size: 0.85rem;">Browse folders first, then upload into the active
-                    folder context.</p>
-            </div>
-        </div>
-
         @if (session('success'))
             <div class="alert-flash alert-flash--success mb-4" data-flash-success>
                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -42,34 +34,28 @@
                 </div>
             </div>
         @else
-            <div class="explorer-grid mb-4" id="department-document-explorer">
-                <div class="card doc-list-card explorer-sidebar">
-                    <div class="card-body p-3">
-                        <div class="mb-4 pt-1">
-                            <label class="form-label small fw-bold text-uppercase text-muted mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">Department</label>
-                            <div class="d-flex align-items-center gap-2 px-2 py-2 rounded-3" style="background: rgba(221, 39, 13, 0.05); border: 1px solid rgba(221, 39, 13, 0.1);">
-                                <i class="fas fa-building text-accent-red" style="font-size: 0.85rem;"></i>
-                                <span class="fw-bold text-dark" style="font-size: 0.9rem; line-height: 1.2;">{{ $selectedDepartment?->name ?? 'None' }}</span>
-                            </div>
-                        </div>
+            <div class="explorer-grid mb-0" id="department-document-explorer">
+                <aside class="explorer-sidebar">
+                    <div class="explorer-sidebar__inner">
+                        <div class="doc-sidebar-department">{{ $selectedDepartment?->name ?? 'No Department' }}</div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Folders</h6>
                             <div class="d-flex align-items-center gap-2">
                                 @if ($selectedDepartmentId)
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
-                                        class="text-decoration-none small">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
+                                        class="text-decoration-none small">Root</a>
                                 @endif
-                                @if ($canCreateFolders)
-                                    <button type="button" class="btn-action-round btn-action-round--xs"
-                                        data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
-                                        data-folder-department-id="{{ $selectedDepartmentId }}"
-                                        data-folder-parent-id="{{ $currentFolderId ?: '' }}"
-                                        data-folder-create-scope="{{ $currentFolderId ? 'New folder inside current folder' : 'New folder at root level' }}"
-                                        title="Create folder {{ $currentFolderId ? 'inside current folder' : 'at root' }}">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                @endif
+                                  @if ($canCreateFolders)
+                                      <button type="button" class="btn-action-round btn-action-round--xs"
+                                         data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
+                                         data-folder-department-id="{{ $selectedDepartmentId }}"
+                                         data-folder-parent-id=""
+                                         data-folder-create-scope="New folder at root level"
+                                         title="Create folder at root">
+                                         <i class="fas fa-plus"></i>
+                                     </button>
+                                 @endif
                             </div>
                         </div>
                         <ul class="ui-tree m-0 p-0 text-dark">
@@ -89,47 +75,60 @@
                             @endforelse
                         </ul>
                     </div>
-                </div>
+                </aside>
 
                 <div class="explorer-main d-flex flex-column gap-4">
-                    <div class="card doc-list-card">
-                        <div
-                            class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
-                            <div>
-                                <h5 class="mb-1 fw-bold text-dark" style="font-size: 1.1rem;">
-                                    <i class="fas fa-file-lines me-2 text-primary"></i>Documents in Current Scope
-                                </h5>
-                                <div class="text-muted small">
-                                    {{ $currentFolder ? 'Folder: ' . $currentFolder->name . ($currentFolder->folder_code ? ' (' . $currentFolder->folder_code . ')' : '') : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root') . ' — All documents' }}
+                    <div class="doc-command-search-row">
+                        <form action="{{ route('department-documents.index') }}" method="GET"
+                            class="doc-command-search mb-0" data-doc-live-search-form
+                            data-doc-suggest-url="{{ route('department-documents.search') }}">
+                            <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-doc-search-department>
+                            <input type="hidden" name="global_search" value="{{ request('global_search') ? '1' : '0' }}" data-doc-global-search>
+                            @if (request('document_folder_id'))
+                                <input type="hidden" name="document_folder_id" value="{{ (int) request('document_folder_id') }}">
+                            @endif
+
+                            <div class="doc-command-search__shell">
+                                <div class="doc-command-search__bar">
+                                    <i class="fas fa-search doc-command-search__icon"></i>
+                                    <input type="text" name="search" class="doc-command-search__input" data-doc-live-search-input
+                                        placeholder="Search documents and folders" value="{{ request('search') }}" autocomplete="off">
+                                    <button type="button" class="doc-command-search__clear d-none" data-doc-search-clear
+                                        aria-label="Clear search" title="Clear search">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <button type="button"
+                                        class="doc-command-search__global {{ request('global_search') ? 'is-active' : '' }}"
+                                        data-doc-global-search-toggle aria-pressed="{{ request('global_search') ? 'true' : 'false' }}"
+                                        aria-label="Global search"
+                                        title="Search all accessible departments">
+                                        <i class="fas fa-globe"></i>
+                                    </button>
+                                </div>
+
+                                <div class="doc-command-search__results d-none" data-doc-search-suggestions>
+                                    <div class="doc-command-search__results-inner" data-doc-search-results></div>
                                 </div>
                             </div>
 
-                            <div class="d-flex align-items-center gap-3">
-                                <form action="{{ route('department-documents.index') }}" method="GET"
-                                    class="d-flex gap-2 align-items-center mb-0" data-doc-live-search-form>
-                                    <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
-                                    @if ($currentFolderId)
-                                        <input type="hidden" name="document_folder_id" value="{{ $currentFolderId }}">
-                                    @endif
-                                    <div class="search-wrapper" style="width: 240px;">
-                                        <i class="fas fa-search search-icon"></i>
-                                        <input type="text" name="search" class="search-input py-1" data-doc-live-search-input
-                                            placeholder="Search files, folder..." value="{{ request('search') }}">
-                                    </div>
-                                    <button type="submit" class="btn btn-light btn-sm px-3 fw-medium">Search</button>
-                                </form>
-                                @if($canUploadAndEdit)
-                                <button type="button"
-                                    class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
-                                    data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                                    <i class="fas fa-cloud-upload-alt"></i> Upload
-                                </button>
-                                @endif
+                            <div class="doc-command-search__scope text-muted" data-doc-search-scope>
+                                {{ request('global_search') ? 'Quick suggestions across all accessible departments' : 'Searching within this department' }}
                             </div>
-                        </div>
 
-                        <div class="card-body pt-0 pb-3">
-                            <div class="explorer-breadcrumb mb-2">
+                        </form>
+
+                        @if($canUploadAndEdit)
+                            <button type="button"
+                                class="btn btn-accent-red btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 fw-medium doc-upload-btn"
+                                data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                <i class="fas fa-cloud-upload-alt"></i> Upload
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="card doc-list-card">
+                        <div class="doc-table-context">
+                            <div class="explorer-breadcrumb mb-0">
                                 <a
                                     href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}">{{ $selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root' }}</a>
                                 @foreach ($folderBreadcrumbs as $crumb)
@@ -140,9 +139,10 @@
                                     </a>
                                 @endforeach
                             </div>
+
                         </div>
 
-                        <div class="doc-table-wrapper border-0">
+                        <div class="doc-table-wrapper border-0 {{ $documents->count() === 0 ? 'is-empty' : '' }}">
                             <table class="doc-table">
                                 <thead>
                                     <tr>
@@ -151,6 +151,8 @@
                                         <th>Folder Code</th>
                                         <th>Physical Location</th>
                                         <th>Received On</th>
+                                        <th>Expiry</th>
+                                        <th>Uploader</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -213,8 +215,11 @@
                                                 ? $folderPathMaps[$docFolder->id]['display_path'] ?? $docFolder->name
                                                 : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root');
                                         @endphp
-                                        <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }}">
-                                            <td class="cursor-pointer" 
+                                        @php
+                                            $isSelectedSearchDoc = (int) request('document_id') === (int) $doc->id;
+                                        @endphp
+                                        <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }} {{ $isSelectedSearchDoc ? 'doc-row--selected' : '' }}">
+                                            <td class="cursor-pointer"
                                                 title="Double-click to preview"
                                                 @if($previewable)
                                                     data-preview-dblclick
@@ -252,13 +257,36 @@
                                                 <div class="text-muted x-small mt-1">{{ $docFolderPath }}</div>
                                             </td>
                                             <td>
-                                                {{-- <div class="small">{{ $doc->folderLocation->name }} </div> --}}
                                                 <div class="text-muted x-small mt-1">
                                                     {{ $doc->folderLocation->full_location }}</div>
                                             </td>
                                             <td>
                                                 <div class="small">
                                                     {{ $doc->date_received?->format('F d, Y') ?? '-' }}</div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $expiryDate = $doc->expiry_date;
+                                                    $isExpired = $doc->is_expired;
+                                                    $isExpiringSoon = $doc->isExpiringSoon(30);
+                                                @endphp
+                                                @if (!$expiryDate)
+                                                    <span class="badge badge-soft-secondary">N/A</span>
+                                                @elseif($isExpired)
+                                                    <span class="badge badge-soft-danger">Expired</span>
+                                                    <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
+                                                @elseif($isExpiringSoon)
+                                                    <span class="badge badge-soft-warning">Expiring soon</span>
+                                                    <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
+                                                @else
+                                                    <span class="badge badge-soft-success">Valid</span>
+                                                    <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="small text-dark fw-medium text-truncate" title="{{ $doc->uploader?->name ?? 'Unknown' }}">
+                                                    {{ $doc->uploader?->name ?? 'Unknown' }}
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <div class="dropdown">
@@ -313,17 +341,18 @@
                                             </td>
                                         </tr>
                                     @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center py-5">
-                                                <div class="text-muted">
-                                                    <i class="fas fa-folder-open fa-3x mb-3 opacity-20"></i>
-                                                    <p>No documents found in this scope.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
+
+                            @if ($documents->count() === 0)
+                                <div class="doc-table-empty-overlay" aria-live="polite">
+                                    <div class="text-muted doc-table-empty-state">
+                                        <i class="fas fa-folder-open fa-3x mb-3 opacity-20"></i>
+                                        <p>No documents found in this scope.</p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
                         @if ($documents->hasPages())
@@ -614,7 +643,7 @@
                                             class="form-label small fw-bold text-uppercase text-muted">Expiry
                                             Date</label>
                                         <input type="date" id="upload_expiry_date" name="expiry_date"
-                                            class="form-control field-input">
+                                            class="form-control field-input" :required="showExpiry">
                                     </div>
                                 </div>
                             </div>
@@ -681,6 +710,29 @@
                     <i class="fas fa-times"></i>
                 </button>
                 <span class="preview-overlay__filename" id="document-preview-title">Preview</span>
+            </div>
+            <div class="preview-overlay__toolbar-center d-none" id="preview-pdf-controls">
+                <div class="preview-overlay__pager" aria-label="PDF page navigation">
+                    <span class="preview-overlay__pager-label">Page</span>
+                    <input type="text" inputmode="numeric" class="preview-overlay__pager-input" id="preview-page-input"
+                        aria-label="Current page">
+                    <span>/</span>
+                    <span id="preview-page-total">1</span>
+                </div>
+                <div class="preview-overlay__zoom" aria-label="PDF zoom controls">
+                    <button type="button" class="preview-overlay__btn" id="preview-zoom-out" title="Zoom out"
+                        aria-label="Zoom out">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button type="button" class="preview-overlay__btn" id="preview-zoom-reset" title="Reset zoom"
+                        aria-label="Reset zoom">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                    </button>
+                    <button type="button" class="preview-overlay__btn" id="preview-zoom-in" title="Zoom in"
+                        aria-label="Zoom in">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
             </div>
             <div class="preview-overlay__toolbar-right">
                 <a href="#" class="preview-overlay__btn" id="preview-download-btn" title="Download" download>
@@ -786,6 +838,14 @@
                 animation-name: fadeInNoTransform;
             }
 
+            .doc-table tbody tr.doc-row--selected td {
+                background: rgba(221, 39, 13, 0.08);
+            }
+
+            .doc-table tbody tr.doc-row--selected td:first-child {
+                border-left: 3px solid var(--company-primary);
+            }
+
             .animate-fade-out {
                 animation: fadeOut 0.4s ease-in-out forwards;
             }
@@ -818,6 +878,304 @@
                 background-color: var(--company-primary-light) !important;
                 color: var(--company-primary) !important;
                 border: 1px solid var(--company-primary-border) !important;
+            }
+
+            .badge-soft-danger {
+                background: #fee2e2;
+                color: #b91c1c;
+                border: 1px solid #fecaca;
+                font-weight: 600;
+            }
+
+            .badge-soft-warning {
+                background: #fef3c7;
+                color: #92400e;
+                border: 1px solid #fde68a;
+                font-weight: 600;
+            }
+
+            .badge-soft-success {
+                background: #dcfce7;
+                color: #166534;
+                border: 1px solid #bbf7d0;
+                font-weight: 600;
+            }
+
+            .badge-soft-secondary {
+                background: #e5e7eb;
+                color: #374151;
+                border: 1px solid #d1d5db;
+                font-weight: 600;
+            }
+
+            .doc-command-search {
+                position: relative;
+                width: 100%;
+                max-width: 760px;
+                flex: 1 1 680px;
+            }
+
+            .doc-command-search__shell {
+                position: relative;
+            }
+
+            .doc-command-search-row {
+                display: flex;
+                align-items: flex-start;
+                flex-wrap: nowrap;
+                gap: 0.5rem;
+            }
+
+            .doc-sidebar-department {
+                font-size: 2rem;
+                font-weight: 706;
+                color: #000;
+                line-height: 1.2;
+                margin-bottom: 2rem;
+            }
+
+            .doc-upload-btn {
+                min-height: 2.5rem;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                align-self: flex-start;
+                margin-top: 0.25rem;
+                margin-left: auto;
+                flex: 0 0 auto;
+            }
+
+            .explorer-main.gap-4 {
+                gap: 0.5rem !important;
+            }
+
+            #department-document-explorer {
+                height: calc(100dvh - 56px - 3rem);
+                min-height: 520px;
+                margin-bottom: 0 !important;
+            }
+
+            #department-document-explorer .explorer-sidebar,
+            #department-document-explorer .explorer-main {
+                min-height: 0;
+            }
+
+            .explorer-main .doc-list-card {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                min-height: 0;
+            }
+
+            .doc-table-wrapper {
+                flex: 1 1 auto;
+                min-height: 0;
+                overflow: auto;
+                position: relative;
+            }
+
+            .doc-table-wrapper.is-empty {
+                overflow: hidden;
+            }
+
+            .doc-table-context {
+                padding: 1rem 1rem 1rem !important;
+            }
+
+            .doc-table-empty-overlay {
+                position: absolute;
+                top: 44px;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+            }
+
+            .doc-table-empty-state {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+            }
+
+            .doc-table-empty-state p {
+                margin-bottom: 0;
+            }
+
+            .explorer-sidebar {
+                min-height: 420px;
+                background: transparent;
+            }
+
+            .explorer-sidebar__inner {
+                padding: 0.5rem 0.25rem;
+            }
+
+            .doc-command-search__bar {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                background: #eef2f6;
+                border: 1px solid #d9e1ea;
+                border-radius: 999px;
+                padding: 0.25rem 0.65rem;
+                min-height: 3rem;
+                transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            }
+
+            .doc-command-search__shell.is-open .doc-command-search__bar {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+                border-bottom-color: #e5e7eb;
+                background: #fff;
+            }
+
+            .doc-command-search__bar:focus-within {
+                background: #fff;
+                border-color: #cbd5e1;
+                box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+            }
+
+            .doc-command-search__icon {
+                color: #6b7280;
+                margin-left: 0.2rem;
+                font-size: 0.85rem;
+            }
+
+            .doc-command-search__input {
+                flex: 1;
+                border: none;
+                background: transparent;
+                outline: none;
+                min-width: 160px;
+                color: #111827;
+                font-size: 0.86rem;
+            }
+
+            .doc-command-search__input:focus {
+                box-shadow: none;
+            }
+
+            .doc-command-search__global {
+                border: none;
+                background: transparent;
+                color: #64748b;
+                padding: 0.1rem 0.2rem;
+                line-height: 1;
+                font-size: 0.95rem;
+            }
+
+            .doc-command-search__clear {
+                border: none;
+                background: transparent;
+                color: #6b7280;
+                padding: 0.1rem 0.25rem;
+                line-height: 1;
+                font-size: 0.85rem;
+            }
+
+            .doc-command-search__clear:hover,
+            .doc-command-search__clear:focus-visible {
+                color: #374151;
+                outline: none;
+            }
+
+            .doc-command-search__global:hover,
+            .doc-command-search__global:focus-visible {
+                color: #334155;
+                outline: none;
+            }
+
+            .doc-command-search__global.is-active {
+                color: #dc2626;
+            }
+
+            .doc-command-search__scope {
+                font-size: 0.75rem;
+                margin-top: 0.35rem;
+                padding-left: 0.75rem;
+            }
+
+            .doc-command-search__results {
+                position: absolute;
+                z-index: 1090;
+                top: calc(100% - 1px);
+                left: 0;
+                right: 0;
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-top: 0;
+                border-radius: 0 0 1rem 1rem;
+                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+                overflow: hidden;
+            }
+
+            .doc-command-search__results-inner {
+                max-height: 360px;
+                overflow-y: auto;
+                padding: 0.35rem;
+            }
+
+            .doc-command-search__result-item {
+                width: 100%;
+                border: none;
+                background: #fff;
+                padding: 0.65rem 0.85rem;
+                text-align: left;
+                border-bottom: 1px solid #f1f5f9;
+                border-radius: 0.6rem;
+            }
+
+            .doc-command-search__result-item:hover,
+            .doc-command-search__result-item:focus {
+                background: #fef2f2;
+                outline: none;
+            }
+
+            .doc-command-search__result-item.is-active {
+                background: #fee2e2;
+                outline: none;
+            }
+
+            .doc-command-search__result-title {
+                font-weight: 700;
+                color: #111827;
+                line-height: 1.25;
+            }
+
+            .doc-command-search__result-meta {
+                font-size: 0.76rem;
+                color: #6b7280;
+                margin-top: 0.18rem;
+                line-height: 1.2;
+            }
+
+            @media (max-width: 768px) {
+                .doc-command-search-row {
+                    flex-wrap: wrap;
+                }
+
+                #department-document-explorer {
+                    height: auto;
+                    min-height: auto;
+                }
+
+                .doc-upload-btn {
+                    min-height: 2.75rem;
+                    margin-left: 0;
+                }
+
+                .doc-command-search__bar {
+                    border-radius: 1rem;
+                    flex-wrap: wrap;
+                }
+
+                .doc-command-search__input {
+                    width: 100%;
+                    order: 1;
+                }
             }
 
             @keyframes fadeIn {
@@ -862,15 +1220,35 @@
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
                 let explorer = document.getElementById('department-document-explorer');
                 const previewOverlay = document.getElementById('document-preview-overlay');
+                const previewContent = previewOverlay?.querySelector('.preview-overlay__content');
                 const previewTitle = document.getElementById('document-preview-title');
                 const previewBody = document.getElementById('document-preview-body');
                 const previewDownloadBtn = document.getElementById('preview-download-btn');
                 const previewPrintBtn = document.getElementById('preview-print-btn');
+                const previewPdfControls = document.getElementById('preview-pdf-controls');
+                const previewPager = previewPdfControls?.querySelector('.preview-overlay__pager');
+                const previewPageInput = document.getElementById('preview-page-input');
+                const previewPageTotal = document.getElementById('preview-page-total');
+                const previewZoomOutBtn = document.getElementById('preview-zoom-out');
+                const previewZoomResetBtn = document.getElementById('preview-zoom-reset');
+                const previewZoomInBtn = document.getElementById('preview-zoom-in');
                 let currentPreviewUrl = '';
+                let currentPreviewKind = '';
+                const pdfPreviewState = {
+                    totalPages: 0,
+                    currentPage: 1,
+                    zoom: 1,
+                    minZoom: 0.5,
+                    maxZoom: 2.5,
+                };
+                let previewControlsHideTimer = null;
                 const liveSearchState = {
                     shouldRefocus: false,
                     caretStart: null,
                     caretEnd: null,
+                    requestId: 0,
+                    activeRequestId: 0,
+                    abortController: null,
                 };
 
                 const resetPreviewBody = () => {
@@ -885,6 +1263,162 @@
                 const clearFlash = () => {
                     document.querySelectorAll('[data-flash-success], [data-flash-error]').forEach((node) => node
                         .remove());
+                };
+
+                const setPreviewControlsMode = (mode) => {
+                    if (!previewPdfControls || !previewOverlay) {
+                        return;
+                    }
+
+                    const visible = mode === 'pdf' || mode === 'docx' || mode === 'zoom';
+                    previewPdfControls.classList.toggle('d-none', !visible);
+                    previewOverlay.classList.toggle('preview-overlay--pdf', mode === 'pdf');
+                    previewOverlay.classList.toggle('preview-overlay--has-controls', visible);
+                    previewOverlay.classList.toggle('preview-overlay--paged', false);
+                    previewOverlay.classList.toggle('preview-overlay--controls-hidden', false);
+
+                    if (previewPager) {
+                        previewPager.classList.toggle('d-none', !(mode === 'pdf' || mode === 'docx'));
+                    }
+
+                    if (previewControlsHideTimer) {
+                        clearTimeout(previewControlsHideTimer);
+                        previewControlsHideTimer = null;
+                    }
+                };
+
+                const revealPdfControlsTemporarily = () => {
+                    if (!previewOverlay || previewOverlay.hidden || !previewOverlay.classList.contains('preview-overlay--has-controls')) {
+                        return;
+                    }
+
+                    previewOverlay.classList.remove('preview-overlay--controls-hidden');
+                    if (previewControlsHideTimer) {
+                        clearTimeout(previewControlsHideTimer);
+                    }
+
+                    previewControlsHideTimer = setTimeout(() => {
+                        if (!previewOverlay.hidden && previewOverlay.classList.contains('preview-overlay--has-controls')) {
+                            previewOverlay.classList.add('preview-overlay--controls-hidden');
+                        }
+                    }, 1600);
+                };
+
+                const syncPdfControls = () => {
+                    if (previewPageInput) {
+                        previewPageInput.value = String(pdfPreviewState.currentPage || 1);
+                    }
+
+                    if (previewPageTotal) {
+                        previewPageTotal.textContent = String(pdfPreviewState.totalPages || 1);
+                    }
+                };
+
+                const applyPreviewZoom = () => {
+                    if (!previewBody) {
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'pdf') {
+                        const canvases = previewBody.querySelectorAll('.preview-overlay__pdf-canvas');
+                        const zoomPercent = Math.max(25, Math.round(pdfPreviewState.zoom * 100));
+                        canvases.forEach((canvas) => {
+                            canvas.style.width = `${zoomPercent}%`;
+                            canvas.style.maxWidth = 'none';
+                            canvas.style.position = '';
+                            canvas.style.left = '';
+                            canvas.style.transform = '';
+                            canvas.style.transformOrigin = '';
+                            canvas.style.marginLeft = '';
+                            canvas.style.marginRight = '';
+                            canvas.style.alignSelf = 'center';
+                        });
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'image') {
+                        const image = previewBody.querySelector('.preview-overlay__image');
+                        const imageCanvas = previewBody.querySelector('.preview-overlay__image-canvas');
+                        if (image) {
+                            image.style.width = '';
+                            image.style.maxWidth = '100%';
+                            image.style.transform = `scale(${pdfPreviewState.zoom})`;
+                            image.style.transformOrigin = 'center center';
+                            image.style.marginLeft = 'auto';
+                            image.style.marginRight = 'auto';
+                        }
+
+                        if (imageCanvas) {
+                            imageCanvas.style.transform = `scale(${pdfPreviewState.zoom})`;
+                            imageCanvas.style.transformOrigin = 'center center';
+                            imageCanvas.style.marginLeft = 'auto';
+                            imageCanvas.style.marginRight = 'auto';
+                        }
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'docx') {
+                        const docx = previewBody.querySelector('.preview-overlay__docx');
+                        if (docx) {
+                            docx.style.zoom = String(pdfPreviewState.zoom);
+                        }
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'sheet') {
+                        const sheet = previewBody.querySelector('.preview-overlay__sheet-wrap');
+                        if (sheet) {
+                            sheet.style.zoom = String(pdfPreviewState.zoom);
+                        }
+                    }
+                };
+
+                const scrollPdfToPage = (page) => {
+                    const scroller = previewContent || previewBody;
+                    if (!scroller) {
+                        return;
+                    }
+
+                    const index = Math.max(1, Math.min(page, pdfPreviewState.totalPages || 1));
+                    const target = previewBody?.querySelector(`.preview-overlay__pdf-canvas[data-page-number="${index}"]`);
+                    if (target) {
+                        const scrollerRect = scroller.getBoundingClientRect();
+                        const targetRect = target.getBoundingClientRect();
+                        const nextTop = scroller.scrollTop + (targetRect.top - scrollerRect.top) - 12;
+                        scroller.scrollTo({
+                            top: Math.max(0, nextTop),
+                            behavior: 'smooth',
+                        });
+                        pdfPreviewState.currentPage = index;
+                        syncPdfControls();
+                    }
+                };
+
+                const scrollDocxToPage = (page) => {
+                    const scroller = previewContent || previewBody;
+                    if (!scroller || !previewBody) {
+                        return;
+                    }
+
+                    const pages = Array.from(previewBody.querySelectorAll('.preview-overlay__docx .docx-wrapper section.docx'));
+                    if (pages.length === 0) {
+                        return;
+                    }
+
+                    const index = Math.max(1, Math.min(page, pages.length));
+                    const target = pages[index - 1];
+                    const scrollerRect = scroller.getBoundingClientRect();
+                    const targetRect = target.getBoundingClientRect();
+                    const nextTop = scroller.scrollTop + (targetRect.top - scrollerRect.top) - 12;
+
+                    scroller.scrollTo({
+                        top: Math.max(0, nextTop),
+                        behavior: 'smooth',
+                    });
+
+                    pdfPreviewState.currentPage = index;
+                    pdfPreviewState.totalPages = pages.length;
+                    syncPdfControls();
                 };
 
                 // Rename Document Modal logic
@@ -906,30 +1440,37 @@
                     });
                 }
 
-                // Double-click preview logic
-                document.querySelectorAll('[data-preview-dblclick]').forEach(cell => {
-                    cell.addEventListener('dblclick', function() {
-                        const previewUrl = this.getAttribute('data-preview-url');
-                        const previewKind = this.getAttribute('data-preview-kind');
-                        const previewMime = this.getAttribute('data-preview-mime');
-                        const previewName = this.getAttribute('data-preview-name');
-                        const previewExt = this.getAttribute('data-preview-ext');
-
-                        if (typeof window.triggerPreview === 'function') {
-                            window.triggerPreview({
-                                url: previewUrl,
-                                kind: previewKind,
-                                mime: previewMime,
-                                name: previewName,
-                                ext: previewExt
-                            });
-                        } else {
-                            // Fallback to finding a trigger button if function not globally exposed
-                            const trigger = this.closest('tr').querySelector('[data-preview-trigger]');
-                            if (trigger) trigger.click();
+                const bindPreviewDoubleClick = () => {
+                    document.querySelectorAll('[data-preview-dblclick]').forEach((cell) => {
+                        if (cell.dataset.previewDblclickBound === '1') {
+                            return;
                         }
+
+                        cell.dataset.previewDblclickBound = '1';
+                        cell.addEventListener('dblclick', function() {
+                            const previewUrl = this.getAttribute('data-preview-url');
+                            const previewKind = this.getAttribute('data-preview-kind');
+                            const previewMime = this.getAttribute('data-preview-mime');
+                            const previewName = this.getAttribute('data-preview-name');
+                            const previewExt = this.getAttribute('data-preview-ext');
+
+                            if (typeof window.triggerPreview === 'function') {
+                                window.triggerPreview({
+                                    url: previewUrl,
+                                    kind: previewKind,
+                                    mime: previewMime,
+                                    name: previewName,
+                                    ext: previewExt
+                                });
+                            } else {
+                                const trigger = this.closest('tr')?.querySelector('[data-preview-trigger]');
+                                if (trigger) {
+                                    trigger.click();
+                                }
+                            }
+                        });
                     });
-                });
+                };
 
                 const showFlash = (message, type = 'success') => {
                     clearFlash();
@@ -958,6 +1499,18 @@
                     });
                 };
 
+                const clearOneTimeDocumentFocusParam = () => {
+                    const currentUrl = new URL(window.location.href);
+                    if (!currentUrl.searchParams.has('document_id')) {
+                        return;
+                    }
+
+                    currentUrl.searchParams.delete('document_id');
+                    const nextQuery = currentUrl.searchParams.toString();
+                    const nextUrl = `${currentUrl.pathname}${nextQuery ? `?${nextQuery}` : ''}${currentUrl.hash || ''}`;
+                    window.history.replaceState({}, '', nextUrl);
+                };
+
                 const PREVIEW_LIBRARIES = {
                     jsZip: 'https://unpkg.com/jszip/dist/jszip.min.js',
                     pdfJs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js',
@@ -977,6 +1530,9 @@
                     previewRenderToken += 1;
                     previewOverlay.hidden = true;
                     document.body.classList.remove('preview-overlay-open');
+                    currentPreviewKind = '';
+                    setPreviewControlsMode('none');
+                    previewOverlay.classList.remove('preview-overlay--pdf', 'preview-overlay--paged', 'preview-overlay--has-controls', 'preview-overlay--controls-hidden', 'preview-overlay--sheet');
                     resetPreviewBody();
                 };
 
@@ -987,6 +1543,10 @@
 
                     previewOverlay.hidden = false;
                     document.body.classList.add('preview-overlay-open');
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                        previewContent.scrollLeft = 0;
+                    }
                 };
 
                 const escapeHtml = (value) => String(value || '')
@@ -1056,6 +1616,28 @@
                     return response.arrayBuffer();
                 };
 
+                const fetchFileBlob = async (url) => {
+                    const response = await fetch(url, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Unable to fetch preview file.');
+                    }
+
+                    return response.blob();
+                };
+
+                const loadImageElement = (src) => new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => reject(new Error('Image failed to load.'));
+                    img.src = src;
+                });
+
                 const showPreviewLoading = (message) => {
                     if (!previewBody) {
                         return;
@@ -1066,6 +1648,12 @@
                 };
 
                 const renderPdfWithPdfJs = async (url, token) => {
+                    const MAX_PDF_PREVIEW_PAGES = 20;
+                    const MAX_CANVAS_PIXELS = 5_000_000;
+                    const MAX_CANVAS_SIDE = 8192;
+                    const MIN_PDF_SCALE_FOR_CANVAS = 0.02;
+                    const MAX_PAGE_POINTS_FOR_CANVAS = 30000;
+
                     await loadScript(PREVIEW_LIBRARIES.pdfJs);
 
                     if (!window.pdfjsLib) {
@@ -1081,6 +1669,7 @@
 
                     const pdf = await window.pdfjsLib.getDocument({
                         data: buffer,
+                        maxImageSize: 20_000_000,
                     }).promise;
                     if (token !== previewRenderToken) {
                         return;
@@ -1090,9 +1679,21 @@
                     stack.className = 'preview-overlay__pdf-stack';
                     previewBody.innerHTML = '';
                     previewBody.appendChild(stack);
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    }
+
+                    pdfPreviewState.totalPages = Math.min(pdf.numPages, MAX_PDF_PREVIEW_PAGES);
+                    pdfPreviewState.currentPage = 1;
+                    pdfPreviewState.zoom = 1;
+                    syncPdfControls();
+                    setPreviewControlsMode('pdf');
+                    revealPdfControlsTemporarily();
 
                     const containerWidth = Math.max((previewBody.clientWidth || 900) - 24, 320);
-                    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                    const pagesToRender = Math.min(pdf.numPages, MAX_PDF_PREVIEW_PAGES);
+                    previewOverlay?.classList.toggle('preview-overlay--paged', pagesToRender > 1);
+                    for (let pageNumber = 1; pageNumber <= pagesToRender; pageNumber++) {
                         if (token !== previewRenderToken) {
                             return;
                         }
@@ -1101,16 +1702,51 @@
                         const baseViewport = page.getViewport({
                             scale: 1,
                         });
-                        const scale = Math.max(0.6, Math.min(1.75, containerWidth / Math.max(baseViewport.width,
-                            1)));
+
+                        const hasExtremePageDimension = baseViewport.width > MAX_PAGE_POINTS_FOR_CANVAS ||
+                            baseViewport.height > MAX_PAGE_POINTS_FOR_CANVAS;
+                        if (hasExtremePageDimension) {
+                            page.cleanup();
+                            const note = document.createElement('div');
+                            note.className = 'preview-overlay__sheet-note';
+                            note.innerHTML = `Page ${pageNumber} is too large for reliable inline canvas preview. <a href="${encodeURI(url)}" target="_blank" rel="noopener">Open / Download</a>.`;
+                            stack.appendChild(note);
+                            continue;
+                        }
+
+                        const fitScale = containerWidth / Math.max(baseViewport.width, 1);
+                        const baseScale = Math.max(0.02, Math.min(1.75, fitScale));
+                        const pagePixelAreaAtBaseScale = (baseViewport.width * baseScale) * (baseViewport.height * baseScale);
+                        const areaScale = pagePixelAreaAtBaseScale > MAX_CANVAS_PIXELS
+                            ? Math.sqrt(MAX_CANVAS_PIXELS / Math.max(pagePixelAreaAtBaseScale, 1))
+                            : 1;
+                        const sideScale = Math.min(
+                            1,
+                            MAX_CANVAS_SIDE / Math.max(baseViewport.width * baseScale, 1),
+                            MAX_CANVAS_SIDE / Math.max(baseViewport.height * baseScale, 1)
+                        );
+                        const scale = Math.max(0.005, baseScale * areaScale * sideScale);
+                        if (scale < MIN_PDF_SCALE_FOR_CANVAS) {
+                            page.cleanup();
+                            const note = document.createElement('div');
+                            note.className = 'preview-overlay__sheet-note';
+                            note.innerHTML = `Page ${pageNumber} is too large for readable inline preview. <a href="${encodeURI(url)}" target="_blank" rel="noopener">Open / Download</a>.`;
+                            stack.appendChild(note);
+                            continue;
+                        }
                         const viewport = page.getViewport({
                             scale,
                         });
 
                         const canvas = document.createElement('canvas');
                         canvas.className = 'preview-overlay__pdf-canvas';
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
+                        canvas.dataset.pageNumber = String(pageNumber);
+                        canvas.width = Math.floor(viewport.width);
+                        canvas.height = Math.floor(viewport.height);
+
+                        if (canvas.width < 2 || canvas.height < 2) {
+                            continue;
+                        }
 
                         const context = canvas.getContext('2d');
                         if (!context) {
@@ -1122,11 +1758,89 @@
                             viewport,
                         }).promise;
 
+                        const sample = context.getImageData(0, 0, 1, 1).data;
+                        if (sample[0] === 255 && sample[1] === 255 && sample[2] === 255 && sample[3] === 255) {
+                            const note = document.createElement('div');
+                            note.className = 'preview-overlay__sheet-note';
+                            note.innerHTML = `Inline preview may be limited on this page size. <a href="${encodeURI(url)}" target="_blank" rel="noopener">Open / Download</a>.`;
+                            stack.appendChild(note);
+                        }
+
                         if (token !== previewRenderToken) {
                             return;
                         }
 
                         stack.appendChild(canvas);
+                        page.cleanup();
+                    }
+
+                    applyPreviewZoom();
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    }
+
+                    if (previewContent && previewContent.dataset.pdfScrollBound !== '1') {
+                        previewContent.dataset.pdfScrollBound = '1';
+                        previewContent.addEventListener('scroll', () => {
+                            if (currentPreviewKind === 'pdf') {
+                                const canvases = Array.from((previewBody || document).querySelectorAll('.preview-overlay__pdf-canvas'));
+                                if (canvases.length === 0) {
+                                    return;
+                                }
+
+                                const bodyTop = previewContent.getBoundingClientRect().top;
+                                let closestPage = 1;
+                                let closestDistance = Number.POSITIVE_INFINITY;
+
+                                canvases.forEach((canvas) => {
+                                    const rect = canvas.getBoundingClientRect();
+                                    const distance = Math.abs(rect.top - bodyTop - 16);
+                                    if (distance < closestDistance) {
+                                        closestDistance = distance;
+                                        closestPage = Number(canvas.dataset.pageNumber || 1);
+                                    }
+                                });
+
+                                if (closestPage !== pdfPreviewState.currentPage) {
+                                    pdfPreviewState.currentPage = closestPage;
+                                    syncPdfControls();
+                                }
+                                return;
+                            }
+
+                            if (currentPreviewKind === 'docx') {
+                                const pages = Array.from(previewBody?.querySelectorAll('.preview-overlay__docx .docx-wrapper section.docx') || []);
+                                if (pages.length === 0) {
+                                    return;
+                                }
+
+                                const bodyTop = previewContent.getBoundingClientRect().top;
+                                let closestPage = 1;
+                                let closestDistance = Number.POSITIVE_INFINITY;
+
+                                pages.forEach((pageEl, index) => {
+                                    const rect = pageEl.getBoundingClientRect();
+                                    const distance = Math.abs(rect.top - bodyTop - 16);
+                                    if (distance < closestDistance) {
+                                        closestDistance = distance;
+                                        closestPage = index + 1;
+                                    }
+                                });
+
+                                if (closestPage !== pdfPreviewState.currentPage) {
+                                    pdfPreviewState.currentPage = closestPage;
+                                    pdfPreviewState.totalPages = pages.length;
+                                    syncPdfControls();
+                                }
+                            }
+                        });
+                    }
+
+                    if (pdf.numPages > pagesToRender) {
+                        const note = document.createElement('div');
+                        note.className = 'preview-overlay__sheet-note';
+                        note.textContent = `Preview limited to first ${pagesToRender} pages for performance. Use Open/Download for full file.`;
+                        stack.appendChild(note);
                     }
                 };
 
@@ -1158,6 +1872,61 @@
                         ignoreLastRenderedPageBreak: false,
                         useBase64URL: true,
                     });
+
+                    const pages = Array.from(previewBody.querySelectorAll('.preview-overlay__docx .docx-wrapper section.docx'));
+                    pdfPreviewState.totalPages = Math.max(1, pages.length || 1);
+                    pdfPreviewState.currentPage = 1;
+                    previewOverlay?.classList.toggle('preview-overlay--paged', pdfPreviewState.totalPages > 1);
+                    syncPdfControls();
+
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    }
+                };
+
+                const renderImageWithLimits = async (url, token, safeUrl, safeName) => {
+                    const MAX_IMAGE_SIDE = 8192;
+                    const MAX_IMAGE_PIXELS = 20_000_000;
+
+                    const blob = await fetchFileBlob(url);
+                    if (token !== previewRenderToken) {
+                        return;
+                    }
+
+                    const blobUrl = URL.createObjectURL(blob);
+                    try {
+                        const image = await loadImageElement(blobUrl);
+                        if (token !== previewRenderToken) {
+                            return;
+                        }
+
+                        const width = Math.max(1, image.naturalWidth || image.width || 1);
+                        const height = Math.max(1, image.naturalHeight || image.height || 1);
+                        const sideScale = Math.min(1, MAX_IMAGE_SIDE / width, MAX_IMAGE_SIDE / height);
+                        const areaScale = Math.min(1, Math.sqrt(MAX_IMAGE_PIXELS / (width * height)));
+                        const scale = Math.min(1, sideScale, areaScale);
+
+                        if (scale < 1) {
+                            const canvas = document.createElement('canvas');
+                            canvas.className = 'preview-overlay__image-canvas';
+                            canvas.width = Math.max(1, Math.floor(width * scale));
+                            canvas.height = Math.max(1, Math.floor(height * scale));
+
+                            const context = canvas.getContext('2d');
+                            if (!context) {
+                                throw new Error('Canvas rendering is unavailable.');
+                            }
+
+                            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                            previewBody.innerHTML = '';
+                            previewBody.appendChild(canvas);
+                        } else {
+                            previewBody.innerHTML =
+                                `<img src="${safeUrl}" alt="${safeName}" class="preview-overlay__image">`;
+                        }
+                    } finally {
+                        URL.revokeObjectURL(blobUrl);
+                    }
                 };
 
                 const renderSheetWithLibrary = async (url, token) => {
@@ -1216,6 +1985,7 @@
                     });
 
                     wrap.appendChild(table);
+                    wrap.scrollLeft = 0;
 
                     const wasTrimmed = rows.length > maxRows || rows.some((row) => Array.isArray(row) && row
                         .length > maxCols);
@@ -1225,6 +1995,11 @@
                         note.textContent = `Preview limited to first ${maxRows} rows and ${maxCols} columns.`;
                         wrap.appendChild(note);
                     }
+
+                    const horizontalHint = document.createElement('div');
+                    horizontalHint.className = 'preview-overlay__sheet-note';
+                    horizontalHint.textContent = 'Tip: Hold Shift while scrolling to move horizontally across columns.';
+                    wrap.appendChild(horizontalHint);
                 };
 
                 const renderPreview = async (url, kind, filename, ext) => {
@@ -1240,28 +2015,50 @@
 
                     try {
                         if (kind === 'image') {
-                            previewBody.innerHTML =
-                                `<img src="${safeUrl}" alt="${safeName}" class="preview-overlay__image">`;
+                            currentPreviewKind = 'image';
+                            pdfPreviewState.zoom = 1;
+                            setPreviewControlsMode('zoom');
+                            previewOverlay?.classList.remove('preview-overlay--sheet');
+                            await renderImageWithLimits(url, token, safeUrl, safeName);
+                            applyPreviewZoom();
+                            revealPdfControlsTemporarily();
                             return;
                         }
 
                         if (kind === 'pdf') {
+                            currentPreviewKind = 'pdf';
+                            previewOverlay?.classList.remove('preview-overlay--sheet');
                             showPreviewLoading('Rendering PDF preview...');
                             await renderPdfWithPdfJs(url, token);
                             return;
                         }
 
                         if (kind === 'docx') {
+                            currentPreviewKind = 'docx';
+                            pdfPreviewState.zoom = 1;
+                            setPreviewControlsMode('docx');
+                            previewOverlay?.classList.remove('preview-overlay--sheet');
                             showPreviewLoading('Rendering DOCX preview...');
                             await renderDocxWithLibrary(url, token);
+                            applyPreviewZoom();
+                            revealPdfControlsTemporarily();
                             return;
                         }
 
                         if (kind === 'sheet') {
+                            currentPreviewKind = 'sheet';
+                            pdfPreviewState.zoom = 1;
+                            setPreviewControlsMode('zoom');
+                            previewOverlay?.classList.add('preview-overlay--sheet');
                             showPreviewLoading('Rendering spreadsheet preview...');
                             await renderSheetWithLibrary(url, token);
+                            applyPreviewZoom();
+                            revealPdfControlsTemporarily();
                             return;
                         }
+
+                        currentPreviewKind = '';
+                        setPreviewControlsMode('none');
 
                         previewBody.innerHTML = `
                             <div class="preview-overlay__unsupported">
@@ -1270,6 +2067,8 @@
                             </div>
                         `;
                     } catch (error) {
+                        currentPreviewKind = '';
+                        setPreviewControlsMode('none');
                         if (token !== previewRenderToken) {
                             return;
                         }
@@ -1338,23 +2137,88 @@
                 const bindLiveSearch = () => {
                     const form = document.querySelector('[data-doc-live-search-form]');
                     const input = form?.querySelector('[data-doc-live-search-input]');
+                    const searchShell = form?.querySelector('.doc-command-search__shell');
+                    const clearSearchButton = form?.querySelector('[data-doc-search-clear]');
+                    const globalSearchInput = form?.querySelector('[data-doc-global-search]');
+                    const globalSearchToggle = form?.querySelector('[data-doc-global-search-toggle]');
+                    const scopeLabel = form?.querySelector('[data-doc-search-scope]');
+                    const suggestionPanel = form?.querySelector('[data-doc-search-suggestions]');
+                    const suggestionResults = form?.querySelector('[data-doc-search-results]');
+                    const suggestionUrl = form?.getAttribute('data-doc-suggest-url') || '';
+                    let suggestionRequestId = 0;
+                    let activeSuggestionRequestId = 0;
+                    let suggestionAbortController = null;
+                    let isFetchingSuggestions = false;
+                    let pendingEnterNavigation = false;
+                    let activeSuggestionIndex = 0;
 
                     if (!form || !input || input.dataset.liveSearchBound === '1') {
                         return;
                     }
 
                     input.dataset.liveSearchBound = '1';
-                    let searchTimer = null;
+                    let suggestionTimer = null;
 
-                    const triggerSearch = () => {
-                        liveSearchState.shouldRefocus = true;
-                        liveSearchState.caretStart = input.selectionStart;
-                        liveSearchState.caretEnd = input.selectionEnd;
+                    const hideSuggestions = () => {
+                        if (suggestionPanel) {
+                            suggestionPanel.classList.add('d-none');
+                        }
+                        if (searchShell) {
+                            searchShell.classList.remove('is-open');
+                        }
+                        if (suggestionResults) {
+                            suggestionResults.innerHTML = '';
+                        }
+                        activeSuggestionIndex = 0;
+                    };
 
+                    const showSuggestions = () => {
+                        if (suggestionPanel) {
+                            suggestionPanel.classList.remove('d-none');
+                        }
+                        if (searchShell) {
+                            searchShell.classList.add('is-open');
+                        }
+                    };
+
+                    const getSuggestionButtons = () => Array.from(suggestionResults?.querySelectorAll('[data-doc-search-url]') || []);
+
+                    const syncClearButtonState = () => {
+                        if (!clearSearchButton) {
+                            return;
+                        }
+
+                        const hasValue = input.value.trim() !== '';
+                        clearSearchButton.classList.toggle('d-none', !hasValue);
+                        clearSearchButton.disabled = !hasValue;
+                    };
+
+                    const paintActiveSuggestion = () => {
+                        const items = getSuggestionButtons();
+                        if (items.length === 0) {
+                            activeSuggestionIndex = 0;
+                            return;
+                        }
+
+                        const maxIndex = items.length - 1;
+                        activeSuggestionIndex = Math.max(0, Math.min(activeSuggestionIndex, maxIndex));
+
+                        items.forEach((item, index) => {
+                            const isActive = index === activeSuggestionIndex;
+                            item.classList.toggle('is-active', isActive);
+                            item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                        });
+                    };
+
+                    const buildSearchUrl = () => {
                         const url = new URL(form.action, window.location.origin);
                         const formData = new FormData(form);
 
                         for (const [key, value] of formData.entries()) {
+                            if (key === 'global_search') {
+                                continue;
+                            }
+
                             if (typeof value !== 'string') {
                                 continue;
                             }
@@ -1365,19 +2229,342 @@
                             }
                         }
 
-                        reloadExplorerFromUrl(url.toString());
+                        return url;
                     };
 
+                    const renderSuggestions = (items) => {
+                        if (!suggestionResults) {
+                            return;
+                        }
+
+                        if (!Array.isArray(items) || items.length === 0) {
+                            activeSuggestionIndex = 0;
+                            suggestionResults.innerHTML =
+                                '<div class="px-3 py-3 text-muted small">No quick matches found.</div>';
+                            showSuggestions();
+                            return;
+                        }
+
+                        suggestionResults.innerHTML = items.map((item) => {
+                            const title = escapeHtml(item?.title || 'Untitled');
+                            const department = escapeHtml(item?.department_name || 'Unknown department');
+                            const folder = escapeHtml(item?.folder_label || 'Root');
+                            const updatedAt = escapeHtml(item?.updated_at || '');
+                            const targetUrl = escapeHtml(item?.url || '#');
+
+                            return `
+                                <button type="button" class="doc-command-search__result-item" data-doc-search-url="${targetUrl}">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <div class="min-w-0">
+                                            <div class="doc-command-search__result-title text-truncate">${title}</div>
+                                            <div class="doc-command-search__result-meta">${department} • ${folder}</div>
+                                        </div>
+                                        <div class="doc-command-search__result-meta text-nowrap">${updatedAt}</div>
+                                    </div>
+                                </button>
+                            `;
+                        }).join('');
+
+                        activeSuggestionIndex = 0;
+                        paintActiveSuggestion();
+                        showSuggestions();
+                    };
+
+                    const navigateToActiveOrFirstSuggestion = () => {
+                        if (!suggestionResults) {
+                            return false;
+                        }
+
+                        const items = getSuggestionButtons();
+                        if (items.length === 0) {
+                            return false;
+                        }
+
+                        const activeElement = document.activeElement;
+                        const activeSuggestion = activeElement instanceof Element
+                            ? activeElement.closest('[data-doc-search-url]')
+                            : null;
+                        const candidate = activeSuggestion || items[Math.max(0, Math.min(activeSuggestionIndex, items.length - 1))] || items[0];
+                        const targetUrl = candidate?.getAttribute('data-doc-search-url');
+
+                        if (targetUrl) {
+                            window.location.assign(targetUrl);
+                            return true;
+                        }
+
+                        return false;
+                    };
+
+                    const fetchSuggestions = async () => {
+                        const query = input.value.trim();
+                        if (query === '' || !suggestionUrl) {
+                            hideSuggestions();
+                            isFetchingSuggestions = false;
+                            pendingEnterNavigation = false;
+                            return;
+                        }
+
+                        isFetchingSuggestions = true;
+
+                        const requestId = ++suggestionRequestId;
+                        activeSuggestionRequestId = requestId;
+
+                        if (suggestionAbortController) {
+                            suggestionAbortController.abort();
+                        }
+
+                        const abortController = new AbortController();
+                        suggestionAbortController = abortController;
+
+                        try {
+                            const url = new URL(suggestionUrl, window.location.origin);
+                            url.searchParams.set('q', query);
+                            url.searchParams.set('department_id', form.querySelector('[data-doc-search-department]')?.value || '');
+                            url.searchParams.set('global_search', globalSearchInput?.value === '1' ? '1' : '0');
+
+                            const response = await fetch(url.toString(), {
+                                headers: {
+                                    Accept: 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                signal: abortController.signal,
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Suggestion request failed');
+                            }
+
+                            const payload = await response.json().catch(() => ({
+                                results: [],
+                            }));
+
+                            if (requestId !== activeSuggestionRequestId) {
+                                return;
+                            }
+
+                            renderSuggestions(payload.results || []);
+                        } catch (error) {
+                            if (error?.name === 'AbortError') {
+                                return;
+                            }
+
+                            hideSuggestions();
+                        } finally {
+                            if (suggestionAbortController === abortController) {
+                                suggestionAbortController = null;
+                            }
+
+                            if (requestId === activeSuggestionRequestId) {
+                                isFetchingSuggestions = false;
+                                if (pendingEnterNavigation) {
+                                    pendingEnterNavigation = false;
+                                    if (!navigateToActiveOrFirstSuggestion()) {
+                                        triggerSearch();
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    const syncGlobalToggleState = () => {
+                        if (!globalSearchInput || !globalSearchToggle) {
+                            return;
+                        }
+
+                        const enabled = globalSearchInput.value === '1';
+                        globalSearchToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+                        globalSearchToggle.classList.toggle('is-active', enabled);
+
+                        if (scopeLabel) {
+                            scopeLabel.textContent = enabled
+                                ? 'Quick suggestions across all accessible departments'
+                                : 'Searching within this department';
+                        }
+                    };
+
+                    const triggerSearch = () => {
+                        liveSearchState.shouldRefocus = document.activeElement === input;
+                        liveSearchState.caretStart = input.selectionStart;
+                        liveSearchState.caretEnd = input.selectionEnd;
+                        hideSuggestions();
+                        reloadExplorerFromUrl(buildSearchUrl().toString());
+                    };
+
+                    syncGlobalToggleState();
+                    syncClearButtonState();
+
+                    if (globalSearchToggle && globalSearchInput && globalSearchToggle.dataset.liveSearchBound !== '1') {
+                        globalSearchToggle.dataset.liveSearchBound = '1';
+                        globalSearchToggle.addEventListener('click', () => {
+                            globalSearchInput.value = globalSearchInput.value === '1' ? '0' : '1';
+                            syncGlobalToggleState();
+                            input.focus({
+                                preventScroll: true,
+                            });
+                            clearTimeout(suggestionTimer);
+                            suggestionTimer = setTimeout(fetchSuggestions, 150);
+                        });
+                    }
+
                     input.addEventListener('input', () => {
-                        clearTimeout(searchTimer);
-                        searchTimer = setTimeout(triggerSearch, 250);
+                        clearTimeout(suggestionTimer);
+                        syncClearButtonState();
+
+                        if (input.value.trim() === '') {
+                            hideSuggestions();
+                            triggerSearch();
+                            return;
+                        }
+
+                        suggestionTimer = setTimeout(fetchSuggestions, 170);
+                    });
+
+                    input.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            hideSuggestions();
+                        }
+
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            clearTimeout(suggestionTimer);
+
+                            if (navigateToActiveOrFirstSuggestion()) {
+                                return;
+                            }
+
+                            if (isFetchingSuggestions) {
+                                pendingEnterNavigation = true;
+                                return;
+                            }
+
+                            if (input.value.trim() !== '') {
+                                pendingEnterNavigation = true;
+                                fetchSuggestions();
+                                return;
+                            }
+
+                            triggerSearch();
+                            return;
+                        }
+
+                        if (event.key === 'ArrowDown') {
+                            const firstItem = suggestionResults?.querySelector('[data-doc-search-url]');
+                            if (firstItem) {
+                                event.preventDefault();
+                                const items = getSuggestionButtons();
+                                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, Math.max(items.length - 1, 0));
+                                paintActiveSuggestion();
+                                (items[activeSuggestionIndex] || firstItem).focus();
+                            }
+                        } else if (event.key === 'ArrowUp') {
+                            const firstItem = suggestionResults?.querySelector('[data-doc-search-url]');
+                            if (firstItem) {
+                                event.preventDefault();
+                                const items = getSuggestionButtons();
+                                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                                paintActiveSuggestion();
+                                (items[activeSuggestionIndex] || firstItem).focus();
+                            }
+                        }
                     });
 
                     form.addEventListener('submit', (event) => {
                         event.preventDefault();
-                        clearTimeout(searchTimer);
+                        clearTimeout(suggestionTimer);
                         triggerSearch();
                     });
+
+                    if (clearSearchButton && clearSearchButton.dataset.liveSearchBound !== '1') {
+                        clearSearchButton.dataset.liveSearchBound = '1';
+                        clearSearchButton.addEventListener('click', () => {
+                            input.value = '';
+                            clearTimeout(suggestionTimer);
+                            syncClearButtonState();
+                            hideSuggestions();
+                            pendingEnterNavigation = false;
+                            triggerSearch();
+                            input.focus({
+                                preventScroll: true,
+                            });
+                        });
+                    }
+
+                    if (suggestionResults && suggestionResults.dataset.liveSearchBound !== '1') {
+                        suggestionResults.dataset.liveSearchBound = '1';
+
+                        suggestionResults.addEventListener('click', (event) => {
+                            const button = event.target.closest('[data-doc-search-url]');
+                            if (!button) {
+                                return;
+                            }
+
+                            const items = getSuggestionButtons();
+                            const clickedIndex = items.indexOf(button);
+                            if (clickedIndex >= 0) {
+                                activeSuggestionIndex = clickedIndex;
+                                paintActiveSuggestion();
+                            }
+
+                            const targetUrl = button.getAttribute('data-doc-search-url');
+                            if (targetUrl) {
+                                window.location.assign(targetUrl);
+                            }
+                        });
+
+                        suggestionResults.addEventListener('keydown', (event) => {
+                            const current = event.target.closest('[data-doc-search-url]');
+                            if (!current) {
+                                return;
+                            }
+
+                            if (event.key === 'ArrowDown') {
+                                event.preventDefault();
+                                const next = current.nextElementSibling?.matches('[data-doc-search-url]')
+                                    ? current.nextElementSibling
+                                    : current;
+                                const items = getSuggestionButtons();
+                                const currentIndex = items.indexOf(current);
+                                const nextIndex = items.indexOf(next);
+                                activeSuggestionIndex = nextIndex >= 0 ? nextIndex : Math.max(currentIndex, 0);
+                                paintActiveSuggestion();
+                                next.focus();
+                            } else if (event.key === 'ArrowUp') {
+                                event.preventDefault();
+                                const prev = current.previousElementSibling?.matches('[data-doc-search-url]')
+                                    ? current.previousElementSibling
+                                    : null;
+                                if (prev) {
+                                    const items = getSuggestionButtons();
+                                    const prevIndex = items.indexOf(prev);
+                                    activeSuggestionIndex = prevIndex >= 0 ? prevIndex : 0;
+                                    paintActiveSuggestion();
+                                    prev.focus();
+                                } else {
+                                    activeSuggestionIndex = 0;
+                                    paintActiveSuggestion();
+                                    input.focus({
+                                        preventScroll: true,
+                                    });
+                                }
+                            } else if (event.key === 'Enter') {
+                                event.preventDefault();
+                                const targetUrl = current.getAttribute('data-doc-search-url');
+                                if (targetUrl) {
+                                    window.location.assign(targetUrl);
+                                }
+                            }
+                        });
+                    }
+
+                    if (form.dataset.liveSearchOutsideBound !== '1') {
+                        form.dataset.liveSearchOutsideBound = '1';
+                        document.addEventListener('click', (event) => {
+                            if (!form.contains(event.target)) {
+                                hideSuggestions();
+                            }
+                        });
+                    }
                 };
 
                 // Extended modal setup logic
@@ -1516,6 +2703,15 @@
                     }
 
                     const normalizedUrl = String(url).replace(/&amp;/g, '&');
+                    const requestId = ++liveSearchState.requestId;
+                    liveSearchState.activeRequestId = requestId;
+
+                    if (liveSearchState.abortController) {
+                        liveSearchState.abortController.abort();
+                    }
+
+                    const abortController = new AbortController();
+                    liveSearchState.abortController = abortController;
 
                     try {
                         const response = await fetch(normalizedUrl, {
@@ -1524,6 +2720,7 @@
                                 'X-Requested-With': 'XMLHttpRequest',
                             },
                             credentials: 'same-origin',
+                            signal: abortController.signal,
                         });
 
                         if (!response.ok) {
@@ -1534,6 +2731,10 @@
                         const parser = new DOMParser();
                         const nextDoc = parser.parseFromString(html, 'text/html');
                         const nextExplorer = nextDoc.getElementById('department-document-explorer');
+
+                        if (requestId !== liveSearchState.activeRequestId) {
+                            return;
+                        }
 
                         if (!nextExplorer || !explorer || !explorer.parentElement) {
                             window.location.assign(normalizedUrl);
@@ -1546,20 +2747,25 @@
                         bindFolderCreateUi();
                         bindFolderAjaxForms();
                         bindPreviewButtons();
+                        bindPreviewDoubleClick();
                         bindActionDropdownZIndexFix();
                         bindLiveSearch();
 
                         if (liveSearchState.shouldRefocus) {
                             const nextInput = explorer.querySelector('[data-doc-live-search-input]');
                             if (nextInput) {
-                                nextInput.focus({ preventScroll: true });
-                                const start = liveSearchState.caretStart;
-                                const end = liveSearchState.caretEnd;
-                                const fallbackPos = nextInput.value.length;
-                                nextInput.setSelectionRange(
-                                    typeof start === 'number' ? Math.min(start, fallbackPos) : fallbackPos,
-                                    typeof end === 'number' ? Math.min(end, fallbackPos) : fallbackPos
-                                );
+                                window.requestAnimationFrame(() => {
+                                    nextInput.focus({
+                                        preventScroll: true,
+                                    });
+                                    const start = liveSearchState.caretStart;
+                                    const end = liveSearchState.caretEnd;
+                                    const fallbackPos = nextInput.value.length;
+                                    nextInput.setSelectionRange(
+                                        typeof start === 'number' ? Math.min(start, fallbackPos) : fallbackPos,
+                                        typeof end === 'number' ? Math.min(end, fallbackPos) : fallbackPos
+                                    );
+                                });
                             }
 
                             liveSearchState.shouldRefocus = false;
@@ -1567,7 +2773,15 @@
                             liveSearchState.caretEnd = null;
                         }
                     } catch (error) {
+                        if (error?.name === 'AbortError') {
+                            return;
+                        }
+
                         window.location.assign(normalizedUrl);
+                    } finally {
+                        if (liveSearchState.abortController === abortController) {
+                            liveSearchState.abortController = null;
+                        }
                     }
                 };
 
@@ -1622,6 +2836,8 @@
                 bindFolderCreateUi();
                 bindFolderAjaxForms();
                 bindPreviewButtons();
+                bindPreviewDoubleClick();
+                clearOneTimeDocumentFocusParam();
 
                 document.querySelectorAll('[data-preview-close]').forEach((button) => {
                     button.addEventListener('click', (e) => {
@@ -1641,6 +2857,97 @@
                             });
                         }
                     });
+                }
+
+                if (previewDownloadBtn && previewDownloadBtn.dataset.bound !== '1') {
+                    previewDownloadBtn.dataset.bound = '1';
+                    previewDownloadBtn.addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        if (!currentPreviewUrl) {
+                            return;
+                        }
+
+                        const downloadName = previewDownloadBtn.getAttribute('download') || 'download';
+
+                        try {
+                            const response = await fetch(currentPreviewUrl, {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Download request failed.');
+                            }
+
+                            const blob = await response.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = downloadName;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+                        } catch (error) {
+                            window.location.assign(currentPreviewUrl);
+                        }
+                    });
+                }
+
+                if (previewZoomInBtn) {
+                    previewZoomInBtn.addEventListener('click', () => {
+                        pdfPreviewState.zoom = Math.min(pdfPreviewState.maxZoom, Number((pdfPreviewState.zoom + 0.1).toFixed(2)));
+                        applyPreviewZoom();
+                    });
+                }
+
+                if (previewZoomOutBtn) {
+                    previewZoomOutBtn.addEventListener('click', () => {
+                        pdfPreviewState.zoom = Math.max(pdfPreviewState.minZoom, Number((pdfPreviewState.zoom - 0.1).toFixed(2)));
+                        applyPreviewZoom();
+                    });
+                }
+
+                if (previewZoomResetBtn) {
+                    previewZoomResetBtn.addEventListener('click', () => {
+                        pdfPreviewState.zoom = 1;
+                        applyPreviewZoom();
+                    });
+                }
+
+                if (previewPageInput) {
+                    previewPageInput.addEventListener('keydown', (event) => {
+                        if (event.key !== 'Enter') {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        const requestedPage = Number.parseInt(previewPageInput.value, 10);
+                        if (!Number.isFinite(requestedPage)) {
+                            syncPdfControls();
+                            return;
+                        }
+
+                        if (currentPreviewKind === 'pdf') {
+                            scrollPdfToPage(requestedPage);
+                            return;
+                        }
+
+                        if (currentPreviewKind === 'docx') {
+                            scrollDocxToPage(requestedPage);
+                            return;
+                        }
+
+                        syncPdfControls();
+                    });
+                }
+
+                if (previewOverlay && previewOverlay.dataset.previewMouseBound !== '1') {
+                    previewOverlay.dataset.previewMouseBound = '1';
+                    previewOverlay.addEventListener('mousemove', revealPdfControlsTemporarily);
+                    previewOverlay.addEventListener('mouseenter', revealPdfControlsTemporarily);
                 }
 
                 document.addEventListener('keydown', (event) => {

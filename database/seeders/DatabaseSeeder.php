@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         $finance = Department::where('name', 'Finance')->first();
 
         $documentTypes = [
-            ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true, 'max_pages' => 2],
+            ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true],
         ];
 
         foreach ($documentTypes as $type) {

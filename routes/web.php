@@ -1,26 +1,30 @@
 <?php
 
+use App\Http\Controllers\Auth\ForcePasswordChangeController;
+use App\Http\Controllers\BankTypeController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\FolderLocationController;
-use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\DepartmentDocumentController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DocumentTypeController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeSearchController;
+use App\Http\Controllers\FolderLocationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\BankTypeController;
-use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
+
     return view('auth.login');
 });
 
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ArchiveController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
@@ -37,15 +41,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->prefix('settings')->name('settings.')->group(function () {
         Route::resource('companies', CompanyController::class)->except(['show']);
         Route::patch('companies/{company}/toggle-active', [CompanyController::class, 'toggleActive'])
-             ->name('companies.toggle-active');
-             
+            ->name('companies.toggle-active');
+
         Route::resource('departments', DepartmentController::class)->except(['show']);
         Route::patch('departments/{department}/toggle-active', [DepartmentController::class, 'toggleActive'])
-             ->name('departments.toggle-active');
+            ->name('departments.toggle-active');
 
         Route::resource('bank-types', BankTypeController::class)->except(['show']);
         Route::patch('bank-types/{bankType}/toggle-active', [BankTypeController::class, 'toggleActive'])
-             ->name('bank-types.toggle-active');
+            ->name('bank-types.toggle-active');
 
         // Folder Locations (Physical Storage)
         Route::prefix('folder-locations')->name('folder-locations.')->group(function () {
@@ -57,7 +61,7 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('document-types', DocumentTypeController::class)->except(['show', 'create', 'edit']);
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
-             ->name('users.reset-password');
+            ->name('users.reset-password');
         Route::resource('users', UserController::class)->except(['show']);
     });
 
@@ -71,7 +75,7 @@ Route::middleware('auth')->group(function () {
 
     // ── Archive (admin only) ──
     Route::middleware('role:admin')->group(function () {
-        Route::get('/archives', [\App\Http\Controllers\ArchiveController::class, 'index'])
+        Route::get('/archives', [ArchiveController::class, 'index'])
             ->name('archives.index');
         Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
             ->name('employees.details');
@@ -85,29 +89,33 @@ Route::middleware('auth')->group(function () {
             ->name('employees.forceDestroy');
 
         // Audit & Activity Logs
-        Route::get('/reports/audit-log', [\App\Http\Controllers\ActivityLogController::class, 'index'])
+        Route::get('/reports/audit-log', [ActivityLogController::class, 'index'])
             ->name('reports.audit-log');
 
         // Reports & Exporting
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/generate', [\App\Http\Controllers\ReportController::class, 'index'])->name('generate');
-            Route::get('/export/employees', [\App\Http\Controllers\ReportController::class, 'exportEmployees'])->name('export-employees');
-            Route::get('/export/audit-logs', [\App\Http\Controllers\ReportController::class, 'exportAuditLogs'])->name('export-audit-logs');
-            Route::get('/export/company-summary', [\App\Http\Controllers\ReportController::class, 'exportCompanySummary'])->name('export-company-summary');
-            Route::get('/export/storage-utilization', [\App\Http\Controllers\ReportController::class, 'exportStorageUtilization'])->name('export-storage-utilization');
-            Route::get('/export/available-folders', [\App\Http\Controllers\ReportController::class, 'exportAvailableFolders'])->name('export-available-folders');
+            Route::get('/generate', [ReportController::class, 'index'])->name('generate');
+            Route::get('/export/employees', [ReportController::class, 'exportEmployees'])->name('export-employees');
+            Route::get('/export/audit-logs', [ReportController::class, 'exportAuditLogs'])->name('export-audit-logs');
+            Route::get('/export/company-summary', [ReportController::class, 'exportCompanySummary'])->name('export-company-summary');
+            Route::get('/export/storage-utilization', [ReportController::class, 'exportStorageUtilization'])->name('export-storage-utilization');
+            Route::get('/export/available-folders', [ReportController::class, 'exportAvailableFolders'])->name('export-available-folders');
         });
     });
 
-    Route::get('/201files',              [EmployeeController::class, 'create'])->name('201files');
-    Route::post('/employees',            [EmployeeController::class, 'store'])->name('employees.store');
-    Route::get('/employees/{employee}',  [EmployeeController::class, 'show'])->name('employees.show');
-    Route::put('/employees/{employee}',  [EmployeeController::class, 'update'])->name('employees.update');
+    Route::get('/201files', [EmployeeController::class, 'create'])->name('201files');
+    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+    Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
 
     Route::prefix('department-documents')->name('department-documents.')->group(function () {
         Route::get('/', [DepartmentDocumentController::class, 'index'])
             ->middleware('can:viewAny,App\Models\Document')
             ->name('index');
+
+        Route::get('/search', [DepartmentDocumentController::class, 'search'])
+            ->middleware('can:viewAny,App\Models\Document')
+            ->name('search');
 
         Route::post('/folders', [DepartmentDocumentController::class, 'storeFolder'])
             ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
