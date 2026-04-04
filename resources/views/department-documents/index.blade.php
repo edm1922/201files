@@ -1130,13 +1130,17 @@
 
                     if (currentPreviewKind === 'pdf') {
                         const canvases = previewBody.querySelectorAll('.preview-overlay__pdf-canvas');
+                        const zoomPercent = Math.max(25, Math.round(pdfPreviewState.zoom * 100));
                         canvases.forEach((canvas) => {
-                            canvas.style.width = `${Math.max(25, Math.round(pdfPreviewState.zoom * 100))}%`;
+                            canvas.style.width = `${zoomPercent}%`;
                             canvas.style.maxWidth = 'none';
+                            canvas.style.position = '';
+                            canvas.style.left = '';
                             canvas.style.transform = '';
                             canvas.style.transformOrigin = '';
-                            canvas.style.marginLeft = 'auto';
-                            canvas.style.marginRight = 'auto';
+                            canvas.style.marginLeft = '';
+                            canvas.style.marginRight = '';
+                            canvas.style.alignSelf = 'center';
                         });
                         return;
                     }
