@@ -5,6 +5,7 @@
             <form method="POST" :action="editUrl">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="id" x-model="editData.id">
                 <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
                     <h5 class="modal-title fw-bold" id="editDocTypeLabel" style="color: #111827; letter-spacing: -0.025em; font-size: 1.25rem;">Edit Document Type</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em; opacity: 0.5;"></button>

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Department;
 
 class Document extends Model
 {
@@ -15,6 +14,7 @@ class Document extends Model
         'department_id',
         'document_type_id',
         'folder_location_id',
+        'document_location_id',
         'document_folder_id',
         'uploaded_by',
         'file_path',
@@ -78,6 +78,11 @@ class Document extends Model
     public function documentFolder(): BelongsTo
     {
         return $this->belongsTo(DocumentFolder::class);
+    }
+
+    public function documentLocation(): BelongsTo
+    {
+        return $this->belongsTo(DocumentLocation::class);
     }
 
     public function uploader(): BelongsTo
