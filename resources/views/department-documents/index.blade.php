@@ -26,8 +26,11 @@
             <form action="{{ route('department-documents.index') }}" method="GET"
                 class="doc-command-search mb-4" data-doc-live-search-form
                 data-doc-suggest-url="{{ route('department-documents.search') }}">
-                <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-doc-search-department>
-                <input type="hidden" name="global_search" value="{{ request('global_search') ? '1' : '0' }}" data-doc-global-search>
+                                    <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}" data-doc-search-department>
+                                    <input type="hidden" name="global_search" value="{{ request('global_search') ? '1' : '0' }}" data-doc-global-search>
+                                    @if (request('document_folder_id'))
+                                        <input type="hidden" name="document_folder_id" value="{{ (int) request('document_folder_id') }}">
+                                    @endif
 
                 <div class="doc-command-search__bar">
                     <i class="fas fa-search doc-command-search__icon"></i>
@@ -140,12 +143,6 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-3">
-                                @if (request('search'))
-                                    <span class="badge rounded-pill {{ request('global_search') ? 'text-bg-danger' : 'text-bg-secondary' }}">
-                                        <i class="fas fa-search me-1"></i>
-                                        {{ request('global_search') ? 'Global search' : 'Department search' }}
-                                    </span>
-                                @endif
                                 @if($canUploadAndEdit)
                                 <button type="button"
                                     class="btn btn-accent-red btn-sm px-3 shadow-sm d-flex align-items-center gap-2 fw-medium"
@@ -168,6 +165,7 @@
                                     </a>
                                 @endforeach
                             </div>
+
                         </div>
 
                         <div class="doc-table-wrapper border-0">
@@ -241,8 +239,11 @@
                                                 ? $folderPathMaps[$docFolder->id]['display_path'] ?? $docFolder->name
                                                 : ($selectedDepartmentName ? $selectedDepartmentName . ' (Root)' : 'Root');
                                         @endphp
-                                        <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }}">
-                                            <td class="cursor-pointer" 
+                                        @php
+                                            $isSelectedSearchDoc = (int) request('document_id') === (int) $doc->id;
+                                        @endphp
+                                        <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }} {{ $isSelectedSearchDoc ? 'doc-row--selected' : '' }}">
+                                            <td class="cursor-pointer"
                                                 title="Double-click to preview"
                                                 @if($previewable)
                                                     data-preview-dblclick
@@ -710,6 +711,29 @@
                 </button>
                 <span class="preview-overlay__filename" id="document-preview-title">Preview</span>
             </div>
+            <div class="preview-overlay__toolbar-center d-none" id="preview-pdf-controls">
+                <div class="preview-overlay__pager" aria-label="PDF page navigation">
+                    <span class="preview-overlay__pager-label">Page</span>
+                    <input type="text" inputmode="numeric" class="preview-overlay__pager-input" id="preview-page-input"
+                        aria-label="Current page">
+                    <span>/</span>
+                    <span id="preview-page-total">1</span>
+                </div>
+                <div class="preview-overlay__zoom" aria-label="PDF zoom controls">
+                    <button type="button" class="preview-overlay__btn" id="preview-zoom-out" title="Zoom out"
+                        aria-label="Zoom out">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button type="button" class="preview-overlay__btn" id="preview-zoom-reset" title="Reset zoom"
+                        aria-label="Reset zoom">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                    </button>
+                    <button type="button" class="preview-overlay__btn" id="preview-zoom-in" title="Zoom in"
+                        aria-label="Zoom in">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </div>
+            </div>
             <div class="preview-overlay__toolbar-right">
                 <a href="#" class="preview-overlay__btn" id="preview-download-btn" title="Download" download>
                     <i class="fas fa-download"></i>
@@ -812,6 +836,14 @@
 
             .doc-table tbody tr.animate-fade-in {
                 animation-name: fadeInNoTransform;
+            }
+
+            .doc-table tbody tr.doc-row--selected td {
+                background: rgba(221, 39, 13, 0.08);
+            }
+
+            .doc-table tbody tr.doc-row--selected td:first-child {
+                border-left: 3px solid var(--company-primary);
             }
 
             .animate-fade-out {
@@ -997,11 +1029,28 @@
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
                 let explorer = document.getElementById('department-document-explorer');
                 const previewOverlay = document.getElementById('document-preview-overlay');
+                const previewContent = previewOverlay?.querySelector('.preview-overlay__content');
                 const previewTitle = document.getElementById('document-preview-title');
                 const previewBody = document.getElementById('document-preview-body');
                 const previewDownloadBtn = document.getElementById('preview-download-btn');
                 const previewPrintBtn = document.getElementById('preview-print-btn');
+                const previewPdfControls = document.getElementById('preview-pdf-controls');
+                const previewPager = previewPdfControls?.querySelector('.preview-overlay__pager');
+                const previewPageInput = document.getElementById('preview-page-input');
+                const previewPageTotal = document.getElementById('preview-page-total');
+                const previewZoomOutBtn = document.getElementById('preview-zoom-out');
+                const previewZoomResetBtn = document.getElementById('preview-zoom-reset');
+                const previewZoomInBtn = document.getElementById('preview-zoom-in');
                 let currentPreviewUrl = '';
+                let currentPreviewKind = '';
+                const pdfPreviewState = {
+                    totalPages: 0,
+                    currentPage: 1,
+                    zoom: 1,
+                    minZoom: 0.5,
+                    maxZoom: 2.5,
+                };
+                let previewControlsHideTimer = null;
                 const liveSearchState = {
                     shouldRefocus: false,
                     caretStart: null,
@@ -1025,6 +1074,158 @@
                         .remove());
                 };
 
+                const setPreviewControlsMode = (mode) => {
+                    if (!previewPdfControls || !previewOverlay) {
+                        return;
+                    }
+
+                    const visible = mode === 'pdf' || mode === 'docx' || mode === 'zoom';
+                    previewPdfControls.classList.toggle('d-none', !visible);
+                    previewOverlay.classList.toggle('preview-overlay--pdf', mode === 'pdf');
+                    previewOverlay.classList.toggle('preview-overlay--has-controls', visible);
+                    previewOverlay.classList.toggle('preview-overlay--paged', false);
+                    previewOverlay.classList.toggle('preview-overlay--controls-hidden', false);
+
+                    if (previewPager) {
+                        previewPager.classList.toggle('d-none', !(mode === 'pdf' || mode === 'docx'));
+                    }
+
+                    if (previewControlsHideTimer) {
+                        clearTimeout(previewControlsHideTimer);
+                        previewControlsHideTimer = null;
+                    }
+                };
+
+                const revealPdfControlsTemporarily = () => {
+                    if (!previewOverlay || previewOverlay.hidden || !previewOverlay.classList.contains('preview-overlay--has-controls')) {
+                        return;
+                    }
+
+                    previewOverlay.classList.remove('preview-overlay--controls-hidden');
+                    if (previewControlsHideTimer) {
+                        clearTimeout(previewControlsHideTimer);
+                    }
+
+                    previewControlsHideTimer = setTimeout(() => {
+                        if (!previewOverlay.hidden && previewOverlay.classList.contains('preview-overlay--has-controls')) {
+                            previewOverlay.classList.add('preview-overlay--controls-hidden');
+                        }
+                    }, 1600);
+                };
+
+                const syncPdfControls = () => {
+                    if (previewPageInput) {
+                        previewPageInput.value = String(pdfPreviewState.currentPage || 1);
+                    }
+
+                    if (previewPageTotal) {
+                        previewPageTotal.textContent = String(pdfPreviewState.totalPages || 1);
+                    }
+                };
+
+                const applyPreviewZoom = () => {
+                    if (!previewBody) {
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'pdf') {
+                        const canvases = previewBody.querySelectorAll('.preview-overlay__pdf-canvas');
+                        canvases.forEach((canvas) => {
+                            canvas.style.width = '100%';
+                            canvas.style.maxWidth = '100%';
+                            canvas.style.transform = `scale(${pdfPreviewState.zoom})`;
+                            canvas.style.transformOrigin = 'center top';
+                            canvas.style.marginLeft = 'auto';
+                            canvas.style.marginRight = 'auto';
+                        });
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'image') {
+                        const image = previewBody.querySelector('.preview-overlay__image');
+                        const imageCanvas = previewBody.querySelector('.preview-overlay__image-canvas');
+                        if (image) {
+                            image.style.width = '';
+                            image.style.maxWidth = '100%';
+                            image.style.transform = `scale(${pdfPreviewState.zoom})`;
+                            image.style.transformOrigin = 'center center';
+                            image.style.marginLeft = 'auto';
+                            image.style.marginRight = 'auto';
+                        }
+
+                        if (imageCanvas) {
+                            imageCanvas.style.transform = `scale(${pdfPreviewState.zoom})`;
+                            imageCanvas.style.transformOrigin = 'center center';
+                            imageCanvas.style.marginLeft = 'auto';
+                            imageCanvas.style.marginRight = 'auto';
+                        }
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'docx') {
+                        const docx = previewBody.querySelector('.preview-overlay__docx');
+                        if (docx) {
+                            docx.style.zoom = String(pdfPreviewState.zoom);
+                        }
+                        return;
+                    }
+
+                    if (currentPreviewKind === 'sheet') {
+                        const sheet = previewBody.querySelector('.preview-overlay__sheet-wrap');
+                        if (sheet) {
+                            sheet.style.zoom = String(pdfPreviewState.zoom);
+                        }
+                    }
+                };
+
+                const scrollPdfToPage = (page) => {
+                    const scroller = previewContent || previewBody;
+                    if (!scroller) {
+                        return;
+                    }
+
+                    const index = Math.max(1, Math.min(page, pdfPreviewState.totalPages || 1));
+                    const target = previewBody?.querySelector(`.preview-overlay__pdf-canvas[data-page-number="${index}"]`);
+                    if (target) {
+                        const scrollerRect = scroller.getBoundingClientRect();
+                        const targetRect = target.getBoundingClientRect();
+                        const nextTop = scroller.scrollTop + (targetRect.top - scrollerRect.top) - 12;
+                        scroller.scrollTo({
+                            top: Math.max(0, nextTop),
+                            behavior: 'smooth',
+                        });
+                        pdfPreviewState.currentPage = index;
+                        syncPdfControls();
+                    }
+                };
+
+                const scrollDocxToPage = (page) => {
+                    const scroller = previewContent || previewBody;
+                    if (!scroller || !previewBody) {
+                        return;
+                    }
+
+                    const pages = Array.from(previewBody.querySelectorAll('.preview-overlay__docx .docx-wrapper section.docx'));
+                    if (pages.length === 0) {
+                        return;
+                    }
+
+                    const index = Math.max(1, Math.min(page, pages.length));
+                    const target = pages[index - 1];
+                    const scrollerRect = scroller.getBoundingClientRect();
+                    const targetRect = target.getBoundingClientRect();
+                    const nextTop = scroller.scrollTop + (targetRect.top - scrollerRect.top) - 12;
+
+                    scroller.scrollTo({
+                        top: Math.max(0, nextTop),
+                        behavior: 'smooth',
+                    });
+
+                    pdfPreviewState.currentPage = index;
+                    pdfPreviewState.totalPages = pages.length;
+                    syncPdfControls();
+                };
+
                 // Rename Document Modal logic
                 const renameDocumentModal = document.getElementById('renameDocumentModal');
                 if (renameDocumentModal) {
@@ -1044,30 +1245,37 @@
                     });
                 }
 
-                // Double-click preview logic
-                document.querySelectorAll('[data-preview-dblclick]').forEach(cell => {
-                    cell.addEventListener('dblclick', function() {
-                        const previewUrl = this.getAttribute('data-preview-url');
-                        const previewKind = this.getAttribute('data-preview-kind');
-                        const previewMime = this.getAttribute('data-preview-mime');
-                        const previewName = this.getAttribute('data-preview-name');
-                        const previewExt = this.getAttribute('data-preview-ext');
-
-                        if (typeof window.triggerPreview === 'function') {
-                            window.triggerPreview({
-                                url: previewUrl,
-                                kind: previewKind,
-                                mime: previewMime,
-                                name: previewName,
-                                ext: previewExt
-                            });
-                        } else {
-                            // Fallback to finding a trigger button if function not globally exposed
-                            const trigger = this.closest('tr').querySelector('[data-preview-trigger]');
-                            if (trigger) trigger.click();
+                const bindPreviewDoubleClick = () => {
+                    document.querySelectorAll('[data-preview-dblclick]').forEach((cell) => {
+                        if (cell.dataset.previewDblclickBound === '1') {
+                            return;
                         }
+
+                        cell.dataset.previewDblclickBound = '1';
+                        cell.addEventListener('dblclick', function() {
+                            const previewUrl = this.getAttribute('data-preview-url');
+                            const previewKind = this.getAttribute('data-preview-kind');
+                            const previewMime = this.getAttribute('data-preview-mime');
+                            const previewName = this.getAttribute('data-preview-name');
+                            const previewExt = this.getAttribute('data-preview-ext');
+
+                            if (typeof window.triggerPreview === 'function') {
+                                window.triggerPreview({
+                                    url: previewUrl,
+                                    kind: previewKind,
+                                    mime: previewMime,
+                                    name: previewName,
+                                    ext: previewExt
+                                });
+                            } else {
+                                const trigger = this.closest('tr')?.querySelector('[data-preview-trigger]');
+                                if (trigger) {
+                                    trigger.click();
+                                }
+                            }
+                        });
                     });
-                });
+                };
 
                 const showFlash = (message, type = 'success') => {
                     clearFlash();
@@ -1096,6 +1304,18 @@
                     });
                 };
 
+                const clearOneTimeDocumentFocusParam = () => {
+                    const currentUrl = new URL(window.location.href);
+                    if (!currentUrl.searchParams.has('document_id')) {
+                        return;
+                    }
+
+                    currentUrl.searchParams.delete('document_id');
+                    const nextQuery = currentUrl.searchParams.toString();
+                    const nextUrl = `${currentUrl.pathname}${nextQuery ? `?${nextQuery}` : ''}${currentUrl.hash || ''}`;
+                    window.history.replaceState({}, '', nextUrl);
+                };
+
                 const PREVIEW_LIBRARIES = {
                     jsZip: 'https://unpkg.com/jszip/dist/jszip.min.js',
                     pdfJs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js',
@@ -1115,6 +1335,9 @@
                     previewRenderToken += 1;
                     previewOverlay.hidden = true;
                     document.body.classList.remove('preview-overlay-open');
+                    currentPreviewKind = '';
+                    setPreviewControlsMode('none');
+                    previewOverlay.classList.remove('preview-overlay--pdf', 'preview-overlay--paged', 'preview-overlay--has-controls', 'preview-overlay--controls-hidden', 'preview-overlay--sheet');
                     resetPreviewBody();
                 };
 
@@ -1125,6 +1348,10 @@
 
                     previewOverlay.hidden = false;
                     document.body.classList.add('preview-overlay-open');
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                        previewContent.scrollLeft = 0;
+                    }
                 };
 
                 const escapeHtml = (value) => String(value || '')
@@ -1194,6 +1421,28 @@
                     return response.arrayBuffer();
                 };
 
+                const fetchFileBlob = async (url) => {
+                    const response = await fetch(url, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Unable to fetch preview file.');
+                    }
+
+                    return response.blob();
+                };
+
+                const loadImageElement = (src) => new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => reject(new Error('Image failed to load.'));
+                    img.src = src;
+                });
+
                 const showPreviewLoading = (message) => {
                     if (!previewBody) {
                         return;
@@ -1204,6 +1453,12 @@
                 };
 
                 const renderPdfWithPdfJs = async (url, token) => {
+                    const MAX_PDF_PREVIEW_PAGES = 20;
+                    const MAX_CANVAS_PIXELS = 5_000_000;
+                    const MAX_CANVAS_SIDE = 8192;
+                    const MIN_PDF_SCALE_FOR_CANVAS = 0.02;
+                    const MAX_PAGE_POINTS_FOR_CANVAS = 30000;
+
                     await loadScript(PREVIEW_LIBRARIES.pdfJs);
 
                     if (!window.pdfjsLib) {
@@ -1219,6 +1474,7 @@
 
                     const pdf = await window.pdfjsLib.getDocument({
                         data: buffer,
+                        maxImageSize: 20_000_000,
                     }).promise;
                     if (token !== previewRenderToken) {
                         return;
@@ -1228,9 +1484,21 @@
                     stack.className = 'preview-overlay__pdf-stack';
                     previewBody.innerHTML = '';
                     previewBody.appendChild(stack);
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    }
+
+                    pdfPreviewState.totalPages = Math.min(pdf.numPages, MAX_PDF_PREVIEW_PAGES);
+                    pdfPreviewState.currentPage = 1;
+                    pdfPreviewState.zoom = 1;
+                    syncPdfControls();
+                    setPreviewControlsMode('pdf');
+                    revealPdfControlsTemporarily();
 
                     const containerWidth = Math.max((previewBody.clientWidth || 900) - 24, 320);
-                    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                    const pagesToRender = Math.min(pdf.numPages, MAX_PDF_PREVIEW_PAGES);
+                    previewOverlay?.classList.toggle('preview-overlay--paged', pagesToRender > 1);
+                    for (let pageNumber = 1; pageNumber <= pagesToRender; pageNumber++) {
                         if (token !== previewRenderToken) {
                             return;
                         }
@@ -1239,16 +1507,51 @@
                         const baseViewport = page.getViewport({
                             scale: 1,
                         });
-                        const scale = Math.max(0.6, Math.min(1.75, containerWidth / Math.max(baseViewport.width,
-                            1)));
+
+                        const hasExtremePageDimension = baseViewport.width > MAX_PAGE_POINTS_FOR_CANVAS ||
+                            baseViewport.height > MAX_PAGE_POINTS_FOR_CANVAS;
+                        if (hasExtremePageDimension) {
+                            page.cleanup();
+                            const note = document.createElement('div');
+                            note.className = 'preview-overlay__sheet-note';
+                            note.innerHTML = `Page ${pageNumber} is too large for reliable inline canvas preview. <a href="${encodeURI(url)}" target="_blank" rel="noopener">Open / Download</a>.`;
+                            stack.appendChild(note);
+                            continue;
+                        }
+
+                        const fitScale = containerWidth / Math.max(baseViewport.width, 1);
+                        const baseScale = Math.max(0.02, Math.min(1.75, fitScale));
+                        const pagePixelAreaAtBaseScale = (baseViewport.width * baseScale) * (baseViewport.height * baseScale);
+                        const areaScale = pagePixelAreaAtBaseScale > MAX_CANVAS_PIXELS
+                            ? Math.sqrt(MAX_CANVAS_PIXELS / Math.max(pagePixelAreaAtBaseScale, 1))
+                            : 1;
+                        const sideScale = Math.min(
+                            1,
+                            MAX_CANVAS_SIDE / Math.max(baseViewport.width * baseScale, 1),
+                            MAX_CANVAS_SIDE / Math.max(baseViewport.height * baseScale, 1)
+                        );
+                        const scale = Math.max(0.005, baseScale * areaScale * sideScale);
+                        if (scale < MIN_PDF_SCALE_FOR_CANVAS) {
+                            page.cleanup();
+                            const note = document.createElement('div');
+                            note.className = 'preview-overlay__sheet-note';
+                            note.innerHTML = `Page ${pageNumber} is too large for readable inline preview. <a href="${encodeURI(url)}" target="_blank" rel="noopener">Open / Download</a>.`;
+                            stack.appendChild(note);
+                            continue;
+                        }
                         const viewport = page.getViewport({
                             scale,
                         });
 
                         const canvas = document.createElement('canvas');
                         canvas.className = 'preview-overlay__pdf-canvas';
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
+                        canvas.dataset.pageNumber = String(pageNumber);
+                        canvas.width = Math.floor(viewport.width);
+                        canvas.height = Math.floor(viewport.height);
+
+                        if (canvas.width < 2 || canvas.height < 2) {
+                            continue;
+                        }
 
                         const context = canvas.getContext('2d');
                         if (!context) {
@@ -1260,11 +1563,89 @@
                             viewport,
                         }).promise;
 
+                        const sample = context.getImageData(0, 0, 1, 1).data;
+                        if (sample[0] === 255 && sample[1] === 255 && sample[2] === 255 && sample[3] === 255) {
+                            const note = document.createElement('div');
+                            note.className = 'preview-overlay__sheet-note';
+                            note.innerHTML = `Inline preview may be limited on this page size. <a href="${encodeURI(url)}" target="_blank" rel="noopener">Open / Download</a>.`;
+                            stack.appendChild(note);
+                        }
+
                         if (token !== previewRenderToken) {
                             return;
                         }
 
                         stack.appendChild(canvas);
+                        page.cleanup();
+                    }
+
+                    applyPreviewZoom();
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    }
+
+                    if (previewContent && previewContent.dataset.pdfScrollBound !== '1') {
+                        previewContent.dataset.pdfScrollBound = '1';
+                        previewContent.addEventListener('scroll', () => {
+                            if (currentPreviewKind === 'pdf') {
+                                const canvases = Array.from((previewBody || document).querySelectorAll('.preview-overlay__pdf-canvas'));
+                                if (canvases.length === 0) {
+                                    return;
+                                }
+
+                                const bodyTop = previewContent.getBoundingClientRect().top;
+                                let closestPage = 1;
+                                let closestDistance = Number.POSITIVE_INFINITY;
+
+                                canvases.forEach((canvas) => {
+                                    const rect = canvas.getBoundingClientRect();
+                                    const distance = Math.abs(rect.top - bodyTop - 16);
+                                    if (distance < closestDistance) {
+                                        closestDistance = distance;
+                                        closestPage = Number(canvas.dataset.pageNumber || 1);
+                                    }
+                                });
+
+                                if (closestPage !== pdfPreviewState.currentPage) {
+                                    pdfPreviewState.currentPage = closestPage;
+                                    syncPdfControls();
+                                }
+                                return;
+                            }
+
+                            if (currentPreviewKind === 'docx') {
+                                const pages = Array.from(previewBody?.querySelectorAll('.preview-overlay__docx .docx-wrapper section.docx') || []);
+                                if (pages.length === 0) {
+                                    return;
+                                }
+
+                                const bodyTop = previewContent.getBoundingClientRect().top;
+                                let closestPage = 1;
+                                let closestDistance = Number.POSITIVE_INFINITY;
+
+                                pages.forEach((pageEl, index) => {
+                                    const rect = pageEl.getBoundingClientRect();
+                                    const distance = Math.abs(rect.top - bodyTop - 16);
+                                    if (distance < closestDistance) {
+                                        closestDistance = distance;
+                                        closestPage = index + 1;
+                                    }
+                                });
+
+                                if (closestPage !== pdfPreviewState.currentPage) {
+                                    pdfPreviewState.currentPage = closestPage;
+                                    pdfPreviewState.totalPages = pages.length;
+                                    syncPdfControls();
+                                }
+                            }
+                        });
+                    }
+
+                    if (pdf.numPages > pagesToRender) {
+                        const note = document.createElement('div');
+                        note.className = 'preview-overlay__sheet-note';
+                        note.textContent = `Preview limited to first ${pagesToRender} pages for performance. Use Open/Download for full file.`;
+                        stack.appendChild(note);
                     }
                 };
 
@@ -1296,6 +1677,61 @@
                         ignoreLastRenderedPageBreak: false,
                         useBase64URL: true,
                     });
+
+                    const pages = Array.from(previewBody.querySelectorAll('.preview-overlay__docx .docx-wrapper section.docx'));
+                    pdfPreviewState.totalPages = Math.max(1, pages.length || 1);
+                    pdfPreviewState.currentPage = 1;
+                    previewOverlay?.classList.toggle('preview-overlay--paged', pdfPreviewState.totalPages > 1);
+                    syncPdfControls();
+
+                    if (previewContent) {
+                        previewContent.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    }
+                };
+
+                const renderImageWithLimits = async (url, token, safeUrl, safeName) => {
+                    const MAX_IMAGE_SIDE = 8192;
+                    const MAX_IMAGE_PIXELS = 20_000_000;
+
+                    const blob = await fetchFileBlob(url);
+                    if (token !== previewRenderToken) {
+                        return;
+                    }
+
+                    const blobUrl = URL.createObjectURL(blob);
+                    try {
+                        const image = await loadImageElement(blobUrl);
+                        if (token !== previewRenderToken) {
+                            return;
+                        }
+
+                        const width = Math.max(1, image.naturalWidth || image.width || 1);
+                        const height = Math.max(1, image.naturalHeight || image.height || 1);
+                        const sideScale = Math.min(1, MAX_IMAGE_SIDE / width, MAX_IMAGE_SIDE / height);
+                        const areaScale = Math.min(1, Math.sqrt(MAX_IMAGE_PIXELS / (width * height)));
+                        const scale = Math.min(1, sideScale, areaScale);
+
+                        if (scale < 1) {
+                            const canvas = document.createElement('canvas');
+                            canvas.className = 'preview-overlay__image-canvas';
+                            canvas.width = Math.max(1, Math.floor(width * scale));
+                            canvas.height = Math.max(1, Math.floor(height * scale));
+
+                            const context = canvas.getContext('2d');
+                            if (!context) {
+                                throw new Error('Canvas rendering is unavailable.');
+                            }
+
+                            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                            previewBody.innerHTML = '';
+                            previewBody.appendChild(canvas);
+                        } else {
+                            previewBody.innerHTML =
+                                `<img src="${safeUrl}" alt="${safeName}" class="preview-overlay__image">`;
+                        }
+                    } finally {
+                        URL.revokeObjectURL(blobUrl);
+                    }
                 };
 
                 const renderSheetWithLibrary = async (url, token) => {
@@ -1354,6 +1790,7 @@
                     });
 
                     wrap.appendChild(table);
+                    wrap.scrollLeft = 0;
 
                     const wasTrimmed = rows.length > maxRows || rows.some((row) => Array.isArray(row) && row
                         .length > maxCols);
@@ -1363,6 +1800,11 @@
                         note.textContent = `Preview limited to first ${maxRows} rows and ${maxCols} columns.`;
                         wrap.appendChild(note);
                     }
+
+                    const horizontalHint = document.createElement('div');
+                    horizontalHint.className = 'preview-overlay__sheet-note';
+                    horizontalHint.textContent = 'Tip: Hold Shift while scrolling to move horizontally across columns.';
+                    wrap.appendChild(horizontalHint);
                 };
 
                 const renderPreview = async (url, kind, filename, ext) => {
@@ -1378,28 +1820,50 @@
 
                     try {
                         if (kind === 'image') {
-                            previewBody.innerHTML =
-                                `<img src="${safeUrl}" alt="${safeName}" class="preview-overlay__image">`;
+                            currentPreviewKind = 'image';
+                            pdfPreviewState.zoom = 1;
+                            setPreviewControlsMode('zoom');
+                            previewOverlay?.classList.remove('preview-overlay--sheet');
+                            await renderImageWithLimits(url, token, safeUrl, safeName);
+                            applyPreviewZoom();
+                            revealPdfControlsTemporarily();
                             return;
                         }
 
                         if (kind === 'pdf') {
+                            currentPreviewKind = 'pdf';
+                            previewOverlay?.classList.remove('preview-overlay--sheet');
                             showPreviewLoading('Rendering PDF preview...');
                             await renderPdfWithPdfJs(url, token);
                             return;
                         }
 
                         if (kind === 'docx') {
+                            currentPreviewKind = 'docx';
+                            pdfPreviewState.zoom = 1;
+                            setPreviewControlsMode('docx');
+                            previewOverlay?.classList.remove('preview-overlay--sheet');
                             showPreviewLoading('Rendering DOCX preview...');
                             await renderDocxWithLibrary(url, token);
+                            applyPreviewZoom();
+                            revealPdfControlsTemporarily();
                             return;
                         }
 
                         if (kind === 'sheet') {
+                            currentPreviewKind = 'sheet';
+                            pdfPreviewState.zoom = 1;
+                            setPreviewControlsMode('zoom');
+                            previewOverlay?.classList.add('preview-overlay--sheet');
                             showPreviewLoading('Rendering spreadsheet preview...');
                             await renderSheetWithLibrary(url, token);
+                            applyPreviewZoom();
+                            revealPdfControlsTemporarily();
                             return;
                         }
+
+                        currentPreviewKind = '';
+                        setPreviewControlsMode('none');
 
                         previewBody.innerHTML = `
                             <div class="preview-overlay__unsupported">
@@ -1408,6 +1872,8 @@
                             </div>
                         `;
                     } catch (error) {
+                        currentPreviewKind = '';
+                        setPreviewControlsMode('none');
                         if (token !== previewRenderToken) {
                             return;
                         }
@@ -1943,6 +2409,7 @@
                         bindFolderCreateUi();
                         bindFolderAjaxForms();
                         bindPreviewButtons();
+                        bindPreviewDoubleClick();
                         bindActionDropdownZIndexFix();
                         bindLiveSearch();
 
@@ -2031,6 +2498,8 @@
                 bindFolderCreateUi();
                 bindFolderAjaxForms();
                 bindPreviewButtons();
+                bindPreviewDoubleClick();
+                clearOneTimeDocumentFocusParam();
 
                 document.querySelectorAll('[data-preview-close]').forEach((button) => {
                     button.addEventListener('click', (e) => {
@@ -2050,6 +2519,97 @@
                             });
                         }
                     });
+                }
+
+                if (previewDownloadBtn && previewDownloadBtn.dataset.bound !== '1') {
+                    previewDownloadBtn.dataset.bound = '1';
+                    previewDownloadBtn.addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        if (!currentPreviewUrl) {
+                            return;
+                        }
+
+                        const downloadName = previewDownloadBtn.getAttribute('download') || 'download';
+
+                        try {
+                            const response = await fetch(currentPreviewUrl, {
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Download request failed.');
+                            }
+
+                            const blob = await response.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = downloadName;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+                        } catch (error) {
+                            window.location.assign(currentPreviewUrl);
+                        }
+                    });
+                }
+
+                if (previewZoomInBtn) {
+                    previewZoomInBtn.addEventListener('click', () => {
+                        pdfPreviewState.zoom = Math.min(pdfPreviewState.maxZoom, Number((pdfPreviewState.zoom + 0.1).toFixed(2)));
+                        applyPreviewZoom();
+                    });
+                }
+
+                if (previewZoomOutBtn) {
+                    previewZoomOutBtn.addEventListener('click', () => {
+                        pdfPreviewState.zoom = Math.max(pdfPreviewState.minZoom, Number((pdfPreviewState.zoom - 0.1).toFixed(2)));
+                        applyPreviewZoom();
+                    });
+                }
+
+                if (previewZoomResetBtn) {
+                    previewZoomResetBtn.addEventListener('click', () => {
+                        pdfPreviewState.zoom = 1;
+                        applyPreviewZoom();
+                    });
+                }
+
+                if (previewPageInput) {
+                    previewPageInput.addEventListener('keydown', (event) => {
+                        if (event.key !== 'Enter') {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        const requestedPage = Number.parseInt(previewPageInput.value, 10);
+                        if (!Number.isFinite(requestedPage)) {
+                            syncPdfControls();
+                            return;
+                        }
+
+                        if (currentPreviewKind === 'pdf') {
+                            scrollPdfToPage(requestedPage);
+                            return;
+                        }
+
+                        if (currentPreviewKind === 'docx') {
+                            scrollDocxToPage(requestedPage);
+                            return;
+                        }
+
+                        syncPdfControls();
+                    });
+                }
+
+                if (previewOverlay && previewOverlay.dataset.previewMouseBound !== '1') {
+                    previewOverlay.dataset.previewMouseBound = '1';
+                    previewOverlay.addEventListener('mousemove', revealPdfControlsTemporarily);
+                    previewOverlay.addEventListener('mouseenter', revealPdfControlsTemporarily);
                 }
 
                 document.addEventListener('keydown', (event) => {

@@ -76,8 +76,7 @@ class DepartmentDocumentController extends Controller
         $folderLocations = FolderLocation::query()->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
 
         $query = Document::with(['department', 'documentType', 'folderLocation', 'documentFolder'])
-            ->whereIn('department_id', $accessibleDepartmentIds)
-            ->latest();
+            ->whereIn('department_id', $accessibleDepartmentIds);
 
         if ($selectedDepartmentId > 0) {
             $query->where('department_id', $selectedDepartmentId);
@@ -86,6 +85,8 @@ class DepartmentDocumentController extends Controller
         if ($currentFolderId > 0) {
             $query->where('document_folder_id', $currentFolderId);
         }
+
+        $selectedDocumentId = (int) $request->integer('document_id');
 
         if ($request->filled('document_type_id')) {
             $query->where('document_type_id', (int) $request->input('document_type_id'));
@@ -132,7 +133,13 @@ class DepartmentDocumentController extends Controller
             });
         }
 
-        $documents = $query->paginate(20)->withQueryString();
+        if ($selectedDocumentId > 0) {
+            $query->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$selectedDocumentId]);
+        }
+
+        $query->latest();
+
+        $documents = $query->paginate(20)->appends($request->except('document_id'));
 
         return view('department-documents.index', compact(
             'departments',
@@ -201,6 +208,7 @@ class DepartmentDocumentController extends Controller
         $results = $documents->map(function (Document $document) {
             $redirectParams = [
                 'department_id' => (int) $document->department_id,
+                'document_id' => (int) $document->id,
             ];
 
             if ($document->document_folder_id) {
