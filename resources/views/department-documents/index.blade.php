@@ -955,6 +955,11 @@
                 outline: none;
             }
 
+            .doc-command-search__result-item.is-active {
+                background: #fee2e2;
+                outline: none;
+            }
+
             .doc-command-search__result-title {
                 font-weight: 700;
                 color: #111827;
@@ -1956,6 +1961,9 @@
                     let suggestionRequestId = 0;
                     let activeSuggestionRequestId = 0;
                     let suggestionAbortController = null;
+                    let isFetchingSuggestions = false;
+                    let pendingEnterNavigation = false;
+                    let activeSuggestionIndex = 0;
 
                     if (!form || !input || input.dataset.liveSearchBound === '1') {
                         return;
@@ -1971,12 +1979,32 @@
                         if (suggestionResults) {
                             suggestionResults.innerHTML = '';
                         }
+                        activeSuggestionIndex = 0;
                     };
 
                     const showSuggestions = () => {
                         if (suggestionPanel) {
                             suggestionPanel.classList.remove('d-none');
                         }
+                    };
+
+                    const getSuggestionButtons = () => Array.from(suggestionResults?.querySelectorAll('[data-doc-search-url]') || []);
+
+                    const paintActiveSuggestion = () => {
+                        const items = getSuggestionButtons();
+                        if (items.length === 0) {
+                            activeSuggestionIndex = 0;
+                            return;
+                        }
+
+                        const maxIndex = items.length - 1;
+                        activeSuggestionIndex = Math.max(0, Math.min(activeSuggestionIndex, maxIndex));
+
+                        items.forEach((item, index) => {
+                            const isActive = index === activeSuggestionIndex;
+                            item.classList.toggle('is-active', isActive);
+                            item.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                        });
                     };
 
                     const buildSearchUrl = () => {
@@ -2007,6 +2035,7 @@
                         }
 
                         if (!Array.isArray(items) || items.length === 0) {
+                            activeSuggestionIndex = 0;
                             suggestionResults.innerHTML =
                                 '<div class="px-3 py-3 text-muted small">No quick matches found.</div>';
                             showSuggestions();
@@ -2033,15 +2062,46 @@
                             `;
                         }).join('');
 
+                        activeSuggestionIndex = 0;
+                        paintActiveSuggestion();
                         showSuggestions();
+                    };
+
+                    const navigateToActiveOrFirstSuggestion = () => {
+                        if (!suggestionResults) {
+                            return false;
+                        }
+
+                        const items = getSuggestionButtons();
+                        if (items.length === 0) {
+                            return false;
+                        }
+
+                        const activeElement = document.activeElement;
+                        const activeSuggestion = activeElement instanceof Element
+                            ? activeElement.closest('[data-doc-search-url]')
+                            : null;
+                        const candidate = activeSuggestion || items[Math.max(0, Math.min(activeSuggestionIndex, items.length - 1))] || items[0];
+                        const targetUrl = candidate?.getAttribute('data-doc-search-url');
+
+                        if (targetUrl) {
+                            window.location.assign(targetUrl);
+                            return true;
+                        }
+
+                        return false;
                     };
 
                     const fetchSuggestions = async () => {
                         const query = input.value.trim();
                         if (query === '' || !suggestionUrl) {
                             hideSuggestions();
+                            isFetchingSuggestions = false;
+                            pendingEnterNavigation = false;
                             return;
                         }
+
+                        isFetchingSuggestions = true;
 
                         const requestId = ++suggestionRequestId;
                         activeSuggestionRequestId = requestId;
@@ -2090,6 +2150,16 @@
                         } finally {
                             if (suggestionAbortController === abortController) {
                                 suggestionAbortController = null;
+                            }
+
+                            if (requestId === activeSuggestionRequestId) {
+                                isFetchingSuggestions = false;
+                                if (pendingEnterNavigation) {
+                                    pendingEnterNavigation = false;
+                                    if (!navigateToActiveOrFirstSuggestion()) {
+                                        triggerSearch();
+                                    }
+                                }
                             }
                         }
                     };
@@ -2152,11 +2222,46 @@
                             hideSuggestions();
                         }
 
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            clearTimeout(suggestionTimer);
+
+                            if (navigateToActiveOrFirstSuggestion()) {
+                                return;
+                            }
+
+                            if (isFetchingSuggestions) {
+                                pendingEnterNavigation = true;
+                                return;
+                            }
+
+                            if (input.value.trim() !== '') {
+                                pendingEnterNavigation = true;
+                                fetchSuggestions();
+                                return;
+                            }
+
+                            triggerSearch();
+                            return;
+                        }
+
                         if (event.key === 'ArrowDown') {
                             const firstItem = suggestionResults?.querySelector('[data-doc-search-url]');
                             if (firstItem) {
                                 event.preventDefault();
-                                firstItem.focus();
+                                const items = getSuggestionButtons();
+                                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, Math.max(items.length - 1, 0));
+                                paintActiveSuggestion();
+                                (items[activeSuggestionIndex] || firstItem).focus();
+                            }
+                        } else if (event.key === 'ArrowUp') {
+                            const firstItem = suggestionResults?.querySelector('[data-doc-search-url]');
+                            if (firstItem) {
+                                event.preventDefault();
+                                const items = getSuggestionButtons();
+                                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+                                paintActiveSuggestion();
+                                (items[activeSuggestionIndex] || firstItem).focus();
                             }
                         }
                     });
@@ -2183,6 +2288,13 @@
                                 return;
                             }
 
+                            const items = getSuggestionButtons();
+                            const clickedIndex = items.indexOf(button);
+                            if (clickedIndex >= 0) {
+                                activeSuggestionIndex = clickedIndex;
+                                paintActiveSuggestion();
+                            }
+
                             const targetUrl = button.getAttribute('data-doc-search-url');
                             if (targetUrl) {
                                 window.location.assign(targetUrl);
@@ -2200,6 +2312,11 @@
                                 const next = current.nextElementSibling?.matches('[data-doc-search-url]')
                                     ? current.nextElementSibling
                                     : current;
+                                const items = getSuggestionButtons();
+                                const currentIndex = items.indexOf(current);
+                                const nextIndex = items.indexOf(next);
+                                activeSuggestionIndex = nextIndex >= 0 ? nextIndex : Math.max(currentIndex, 0);
+                                paintActiveSuggestion();
                                 next.focus();
                             } else if (event.key === 'ArrowUp') {
                                 event.preventDefault();
@@ -2207,8 +2324,14 @@
                                     ? current.previousElementSibling
                                     : null;
                                 if (prev) {
+                                    const items = getSuggestionButtons();
+                                    const prevIndex = items.indexOf(prev);
+                                    activeSuggestionIndex = prevIndex >= 0 ? prevIndex : 0;
+                                    paintActiveSuggestion();
                                     prev.focus();
                                 } else {
+                                    activeSuggestionIndex = 0;
+                                    paintActiveSuggestion();
                                     input.focus({
                                         preventScroll: true,
                                     });
