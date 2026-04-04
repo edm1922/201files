@@ -10,6 +10,15 @@ use Illuminate\Validation\Rule;
 
 class StoreDepartmentDocumentRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('date_received')) {
+            $this->merge([
+                'date_received' => now()->toDateString(),
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->hasRole('admin', 'encoder') ?? false;
@@ -22,15 +31,14 @@ class StoreDepartmentDocumentRequest extends FormRequest
             'document_type_id' => [
                 'required',
                 'integer',
-                Rule::exists('document_types', 'id')->where(fn ($query) =>
-                    $query->where('department_id', (int) $this->input('department_id'))
+                Rule::exists('document_types', 'id')->where(fn ($query) => $query->where('department_id', (int) $this->input('department_id'))
                 ),
             ],
             'folder_location_id' => ['required', 'integer', 'exists:folder_locations,id'],
             'document_folder_id' => ['nullable', 'integer', 'exists:document_folders,id'],
             'upload_mode' => ['required', Rule::in(['standard', 'scan_packet'])],
             'date_received' => ['required', 'date'],
-            'expiry_date' => ['nullable', 'date', 'after_or_equal:date_received'],
+            'expiry_date' => ['nullable', 'date'],
             'files' => ['required', 'array', 'min:1'],
             'files.*' => ['required', 'file', 'max:10240'],
             'force_fail_after_store' => ['nullable', 'boolean'],
@@ -56,6 +64,10 @@ class StoreDepartmentDocumentRequest extends FormRequest
 
             if ((int) $documentType->department_id !== $departmentId) {
                 $validator->errors()->add('document_type_id', 'The selected document type does not belong to the selected department.');
+            }
+
+            if ((bool) $documentType->has_expiry && ! $this->filled('expiry_date')) {
+                $validator->errors()->add('expiry_date', 'Expiry date is required for the selected document type.');
             }
 
             if ($selectedFolderId > 0) {

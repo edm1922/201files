@@ -75,7 +75,7 @@ class DepartmentDocumentController extends Controller
 
         $folderLocations = FolderLocation::query()->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
 
-        $query = Document::with(['department', 'documentType', 'folderLocation', 'documentFolder'])
+        $query = Document::with(['department', 'documentType', 'folderLocation', 'documentFolder', 'uploader'])
             ->whereIn('department_id', $accessibleDepartmentIds);
 
         if ($selectedDepartmentId > 0) {
@@ -453,6 +453,12 @@ class DepartmentDocumentController extends Controller
             $newName .= '.'.$oldExt;
         }
 
+        $newName = $this->resolveUniqueFilenameForDocument(
+            document: $document,
+            desiredFilename: $newName,
+            ignoreDocumentId: (int) $document->id
+        );
+
         $document->update([
             'original_filename' => $newName,
         ]);
@@ -470,12 +476,65 @@ class DepartmentDocumentController extends Controller
         $document = Document::withTrashed()->findOrFail($id);
         $this->authorize('restore', $document);
 
+        $restoredFilename = $this->resolveUniqueFilenameForDocument($document, $document->original_filename);
+
         $document->restore();
-        $document->update(['status' => 'active']);
+        $document->update([
+            'status' => 'active',
+            'original_filename' => $restoredFilename,
+        ]);
 
         AuditService::logDepartmentDocumentLifecycle('restored', $document);
 
         return back()->with('success', 'Document restored successfully.');
+    }
+
+    private function resolveUniqueFilenameForDocument(Document $document, string $desiredFilename, ?int $ignoreDocumentId = null): string
+    {
+        $original = trim((string) $desiredFilename);
+        $original = $original !== '' ? $original : 'file';
+
+        if (! $this->activeFilenameExistsForLocation($document, $original, $ignoreDocumentId)) {
+            return $original;
+        }
+
+        $extension = pathinfo($original, PATHINFO_EXTENSION);
+        $baseName = pathinfo($original, PATHINFO_FILENAME);
+        $baseName = $baseName !== '' ? $baseName : 'file';
+        $extensionWithDot = $extension !== '' ? '.'.$extension : '';
+
+        $counter = 1;
+        while (true) {
+            $suffix = " ({$counter})";
+            $maxBaseLength = max(1, 255 - strlen($suffix) - strlen($extensionWithDot));
+            $truncatedBase = mb_substr($baseName, 0, $maxBaseLength);
+            $candidate = "{$truncatedBase}{$suffix}{$extensionWithDot}";
+
+            if (! $this->activeFilenameExistsForLocation($document, $candidate, $ignoreDocumentId)) {
+                return $candidate;
+            }
+
+            $counter++;
+        }
+    }
+
+    private function activeFilenameExistsForLocation(Document $document, string $filename, ?int $ignoreDocumentId = null): bool
+    {
+        return Document::query()
+            ->where('department_id', (int) $document->department_id)
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->when(
+                $document->document_folder_id === null,
+                fn ($query) => $query->whereNull('document_folder_id'),
+                fn ($query) => $query->where('document_folder_id', (int) $document->document_folder_id)
+            )
+            ->when(
+                $ignoreDocumentId !== null,
+                fn ($query) => $query->whereKeyNot($ignoreDocumentId)
+            )
+            ->where('original_filename', $filename)
+            ->exists();
     }
 
     public function forceDelete(Request $request, $id)

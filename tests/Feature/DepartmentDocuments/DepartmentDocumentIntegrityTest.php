@@ -113,7 +113,7 @@ it('rejects document type from another department', function () {
     $response->assertSessionHasErrors(['document_type_id']);
 });
 
-it('rejects expiry date earlier than date received', function () {
+it('allows expiry date earlier than date received for backlogged records', function () {
     $department = Department::create([
         'name' => 'Integrity Dept Expiry',
         'code' => 'IDEXP',
@@ -147,7 +147,9 @@ it('rejects expiry date earlier than date received', function () {
         'files' => [UploadedFile::fake()->create('expiry.pdf', 100, 'application/pdf')],
     ]);
 
-    $response->assertSessionHasErrors(['expiry_date']);
+    $response->assertSessionHasNoErrors();
+
+    expect(Document::query()->where('department_id', $department->id)->exists())->toBeTrue();
 });
 
 it('rejects files count above selected document type max_pages', function () {
@@ -190,8 +192,6 @@ it('rejects files count above selected document type max_pages', function () {
 
     $response->assertSessionHasErrors(['files']);
 });
-
-
 
 it('rejects document folder from another department', function () {
     $deptA = Department::create([
@@ -284,5 +284,5 @@ it('cleans up stored file when persistence fails', function () {
     $response->assertSessionHasErrors();
 
     expect(Document::count())->toBe(0);
-    expect(Storage::disk('local')->allFiles('documents/departments/' . $department->id))->toBe([]);
+    expect(Storage::disk('local')->allFiles('documents/departments/'.$department->id))->toBe([]);
 });

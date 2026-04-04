@@ -151,6 +151,8 @@
                                         <th>Folder Code</th>
                                         <th>Physical Location</th>
                                         <th>Received On</th>
+                                        <th>Expiry</th>
+                                        <th>Uploader</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -255,13 +257,36 @@
                                                 <div class="text-muted x-small mt-1">{{ $docFolderPath }}</div>
                                             </td>
                                             <td>
-                                                {{-- <div class="small">{{ $doc->folderLocation->name }} </div> --}}
                                                 <div class="text-muted x-small mt-1">
                                                     {{ $doc->folderLocation->full_location }}</div>
                                             </td>
                                             <td>
                                                 <div class="small">
                                                     {{ $doc->date_received?->format('F d, Y') ?? '-' }}</div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $expiryDate = $doc->expiry_date;
+                                                    $isExpired = $doc->is_expired;
+                                                    $isExpiringSoon = $doc->isExpiringSoon(30);
+                                                @endphp
+                                                @if (!$expiryDate)
+                                                    <span class="badge badge-soft-secondary">N/A</span>
+                                                @elseif($isExpired)
+                                                    <span class="badge badge-soft-danger">Expired</span>
+                                                    <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
+                                                @elseif($isExpiringSoon)
+                                                    <span class="badge badge-soft-warning">Expiring soon</span>
+                                                    <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
+                                                @else
+                                                    <span class="badge badge-soft-success">Valid</span>
+                                                    <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="small text-dark fw-medium text-truncate" title="{{ $doc->uploader?->name ?? 'Unknown' }}">
+                                                    {{ $doc->uploader?->name ?? 'Unknown' }}
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <div class="dropdown">
@@ -618,7 +643,7 @@
                                             class="form-label small fw-bold text-uppercase text-muted">Expiry
                                             Date</label>
                                         <input type="date" id="upload_expiry_date" name="expiry_date"
-                                            class="form-control field-input">
+                                            class="form-control field-input" :required="showExpiry">
                                     </div>
                                 </div>
                             </div>
@@ -853,6 +878,34 @@
                 background-color: var(--company-primary-light) !important;
                 color: var(--company-primary) !important;
                 border: 1px solid var(--company-primary-border) !important;
+            }
+
+            .badge-soft-danger {
+                background: #fee2e2;
+                color: #b91c1c;
+                border: 1px solid #fecaca;
+                font-weight: 600;
+            }
+
+            .badge-soft-warning {
+                background: #fef3c7;
+                color: #92400e;
+                border: 1px solid #fde68a;
+                font-weight: 600;
+            }
+
+            .badge-soft-success {
+                background: #dcfce7;
+                color: #166534;
+                border: 1px solid #bbf7d0;
+                font-weight: 600;
+            }
+
+            .badge-soft-secondary {
+                background: #e5e7eb;
+                color: #374151;
+                border: 1px solid #d1d5db;
+                font-weight: 600;
             }
 
             .doc-command-search {
