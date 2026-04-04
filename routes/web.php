@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('document-locations')->name('document-locations.')->group(function () {
             Route::get('/', [DocumentLocationController::class, 'index'])->name('index');
             Route::post('/', [DocumentLocationController::class, 'store'])->name('store');
+            Route::put('/{documentLocation}', [DocumentLocationController::class, 'update'])->name('update');
             Route::delete('/{documentLocation}', [DocumentLocationController::class, 'destroy'])->name('destroy');
         });
 

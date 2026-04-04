@@ -4,8 +4,8 @@
     <div class="px-4 py-3">
 
         {{-- ── Header & Tabs Container ── --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 border-bottom pb-3">
-            <div class="mb-3 mb-md-0">
+        <div class="mb-4 border-bottom pb-3">
+            <div class="mb-3">
                 <h2 class="h4 mb-1 fw-bold text-dark d-flex align-items-center gap-2">
                     <i class="fas fa-box-archive text-muted"></i> System Archives
                 </h2>

@@ -29,6 +29,21 @@ class DocumentLocationController extends Controller
             ->with('success', "Document location '{$name}' created successfully.");
     }
 
+    public function update(Request $request, DocumentLocation $documentLocation): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120', 'unique:document_locations,name,'.$documentLocation->id],
+        ]);
+
+        $name = trim((string) $validated['name']);
+        $documentLocation->update([
+            'name' => $name,
+        ]);
+
+        return redirect()->route('settings.folder-locations.index', ['tab' => 'document-locations'])
+            ->with('success', "Document location updated to '{$name}' successfully.");
+    }
+
     public function destroy(DocumentLocation $documentLocation): RedirectResponse
     {
         if ($documentLocation->documents()->exists()) {

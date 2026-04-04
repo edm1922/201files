@@ -6,13 +6,16 @@
         }
     @endphp
 
-    <div x-data="locationManager('{{ $activeTab }}')">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div x-data="locationManager('{{ $activeTab }}')" class="px-4 py-3">
+        <div class="d-flex justify-content-between align-items-start mb-3">
             <div>
-                <h2 class="h4 mb-1 fw-bold">Folder Locations</h2>
+                <h2 class="h4 mb-1 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-folder-tree text-muted"></i> Folder Locations
+                </h2>
                 <p class="text-muted mb-0" style="font-size: 0.85rem;">Manage physical locations for 201 files and department documents.</p>
             </div>
 
+            <div>
             <template x-if="activeTab === 'file-locations'">
                 <form action="{{ route('settings.folder-locations.store-row') }}" method="POST">
                     @csrf
@@ -27,6 +30,28 @@
                     <i class="fas fa-plus"></i> Add Location
                 </button>
             </template>
+            </div>
+        </div>
+
+        <div class="mb-4 border-bottom">
+            <ul class="nav nav-tabs border-0" style="margin-bottom: -1px;">
+                <li class="nav-item">
+                    <button type="button" class="nav-link border-0 text-decoration-none fw-semibold transition-colors duration-200"
+                        @click="setTab('file-locations')"
+                        style="font-size: 0.95rem; padding: 10px 20px;"
+                        :style="`border-bottom: 3px solid ${activeTab === 'file-locations' ? '#dd270d' : 'transparent'} !important; color: ${activeTab === 'file-locations' ? '#dd270d' : '#64748b'};`">
+                        <i class="fas fa-users me-2"></i>201 File Locations
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link border-0 text-decoration-none fw-semibold transition-colors duration-200"
+                        @click="setTab('document-locations')"
+                        style="font-size: 0.95rem; padding: 10px 20px;"
+                        :style="`border-bottom: 3px solid ${activeTab === 'document-locations' ? '#dd270d' : 'transparent'} !important; color: ${activeTab === 'document-locations' ? '#dd270d' : '#64748b'};`">
+                        <i class="fas fa-file-contract me-2"></i>Document Locations
+                    </button>
+                </li>
+            </ul>
         </div>
 
         @if (session('success'))
@@ -44,19 +69,6 @@
                 <i class="fas fa-exclamation-circle me-2"></i>{{ $errors->first() }}
             </div>
         @endif
-
-        <div class="mb-3 d-inline-flex bg-light rounded-pill p-1">
-            <button type="button" class="btn btn-sm rounded-pill px-3"
-                :class="activeTab === 'file-locations' ? 'btn-danger text-white' : 'btn-light text-muted'"
-                @click="setTab('file-locations')">
-                201 File Locations
-            </button>
-            <button type="button" class="btn btn-sm rounded-pill px-3"
-                :class="activeTab === 'document-locations' ? 'btn-danger text-white' : 'btn-light text-muted'"
-                @click="setTab('document-locations')">
-                Document Locations
-            </button>
-        </div>
 
         <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;" x-show="activeTab === 'file-locations'" x-cloak>
             <div class="table-responsive">
@@ -154,6 +166,12 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary border-0 me-1"
+                                        @click="openDocumentEditModal('{{ $location->id }}', '{{ addslashes($location->name) }}')"
+                                        style="padding: 6px 10px; border-radius: 6px; transition: all 0.2s;"
+                                        title="Edit location name">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-outline-danger border-0"
                                         @if($location->documents_count > 0) disabled title="Cannot delete location with assigned documents" @else @click="openDocumentConfirmModal('{{ $location->id }}', '{{ addslashes($location->name) }}')" @endif
                                         style="padding: 6px 10px; border-radius: 6px; transition: all 0.2s;">
@@ -252,6 +270,32 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="editDocumentLocationModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                    <form method="POST" :action="documentEditActionUrl">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="id" x-model="documentEditId">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold">Edit Document Location</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body pt-2">
+                            <label for="edit_document_location_name" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">
+                                Location Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="edit_document_location_name" name="name" class="form-control field-input bg-light" maxlength="120" required x-model="documentEditName">
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger fw-semibold">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -262,6 +306,9 @@
                 fileConfirmMessage: '',
                 documentConfirmActionUrl: '',
                 documentConfirmMessage: '',
+                documentEditId: '{{ old('id') }}',
+                documentEditActionUrl: '{{ old('id') ? url("settings/document-locations") . '/' . old('id') : '' }}',
+                documentEditName: '{!! addslashes(old('name', '')) !!}',
 
                 setTab(tab) {
                     this.activeTab = tab;
@@ -284,8 +331,44 @@
 
                     var modal = new bootstrap.Modal(document.getElementById('confirmDocumentLocationModal'));
                     modal.show();
+                },
+
+                openDocumentEditModal(id, name) {
+                    this.documentEditId = id;
+                    this.documentEditActionUrl = `{{ url('settings/document-locations') }}/${id}`;
+                    this.documentEditName = name;
+
+                    var modal = new bootstrap.Modal(document.getElementById('editDocumentLocationModal'));
+                    modal.show();
                 }
             }));
         });
+
+        @if($errors->any() && old('_method') === 'PUT' && request('tab') === 'document-locations')
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = new bootstrap.Modal(document.getElementById('editDocumentLocationModal'));
+                modal.show();
+            });
+        @endif
     </script>
+
+    @push('styles')
+        <style>
+            .transition-colors {
+                transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .duration-200 {
+                transition-duration: 200ms;
+            }
+
+            .nav-tabs .nav-link:hover {
+                color: #dd270d !important;
+                background-color: transparent !important;
+                border-color: transparent !important;
+                border-bottom: 3px solid rgba(221, 39, 13, 0.3) !important;
+            }
+        </style>
+    @endpush
 </x-app-layout>

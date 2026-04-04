@@ -38,15 +38,6 @@
             </a>
         </li>
 
-        @if(Auth::user()->isAdmin())
-        {{-- Archive (admin only) --}}
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('archives.index') ? 'active' : '' }}" href="{{ route('archives.index', ['tab' => 'employees']) }}">
-                <i class="fas fa-box-archive"></i> Archives
-            </a>
-        </li>
-        @endif
-
         {{-- ═══ DOCUMENT MANAGEMENT ═══ --}}
         <li class="sidebar-section-label">DOCUMENT MANAGEMENT</li>
 
@@ -64,11 +55,6 @@
                 </div>
             </a>
             <ul class="nav flex-column ms-3" x-show="open" x-transition x-cloak>
-                <li class="nav-item">
-                    <a class="nav-link {{ !request('department_id') && request()->is('department-documents*') ? 'active' : '' }}" href="{{ route('department-documents.index') }}">
-                        <i class="fas fa-layer-group"></i> Department Home
-                    </a>
-                </li>
                 @php
                     $sidebarUser = Auth::user();
                     $sidebarDepartments = $sidebarUser->isAdmin()
@@ -179,6 +165,13 @@
                     </a>
                 </li>
             </ul>
+        </li>
+
+        {{-- Archive (admin only) --}}
+        <li class="nav-item mt-2">
+            <a class="nav-link {{ request()->routeIs('archives.index') ? 'active' : '' }}" href="{{ route('archives.index', ['tab' => 'employees']) }}">
+                <i class="fas fa-box-archive"></i> Archives
+            </a>
         </li>
         @endif
 
