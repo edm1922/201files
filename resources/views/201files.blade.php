@@ -32,7 +32,7 @@
                     autocomplete="off"
                     value="{{ $employee ? $employee->last_name . ', ' . $employee->first_name : '' }}"
                 >
-                <div id="milliResults" class="milli-results-container" style="display:none;"></div>
+                <div id="meiliResults" class="meili-results-container" style="display:none;"></div>
             </div>
         </div>
     </div>

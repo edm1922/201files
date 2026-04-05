@@ -75,9 +75,9 @@ Route::middleware('auth')->group(function () {
     });
 
     // ── 201 Files / Employee Profile Hub ──
-    // NOTE: milli-search must be defined BEFORE {employee} wildcard route
-    Route::get('/employees/milli-search', [EmployeeSearchController::class, 'milliSearch'])
-        ->name('employees.milliSearch');
+    // NOTE: meili-search must be defined BEFORE {employee} wildcard route
+    Route::get('/employees/meili-search', [EmployeeSearchController::class, 'meiliSearch'])
+        ->name('employees.meiliSearch');
 
     Route::get('/employees/{id}/update-history', [EmployeeController::class, 'updateHistory'])
         ->name('employees.update-history');

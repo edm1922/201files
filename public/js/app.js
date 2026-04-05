@@ -30,27 +30,46 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// Milli-Search Functionality
+// Meili-Search Functionality
 $(document).ready(function () {
-    let milliTimer;
+    let meiliTimer;
+    let activeSearchRequest = null;
+    let latestQuery = '';
     let selectedIndex = -1; // Track currently highlighted index
 
     function performSearch(query, autoSelectFirst = false) {
+        const normalizedQuery = String(query || '').trim();
         selectedIndex = -1; // reset on new search
-        if (query.length < 1) {
-            $('#milliResults').hide().empty();
+
+        if (normalizedQuery.length < 2) {
+            latestQuery = '';
+            if (activeSearchRequest) {
+                activeSearchRequest.abort();
+                activeSearchRequest = null;
+            }
+            $('#meiliResults').hide().empty();
             return;
         }
 
-        const milliSearchUrl = document.querySelector('meta[name="milli-search-url"]')?.getAttribute('content');
-        if (!milliSearchUrl) return;
+        latestQuery = normalizedQuery;
+        const meiliSearchUrl = document.querySelector('meta[name="meili-search-url"]')?.getAttribute('content');
+        if (!meiliSearchUrl) return;
 
-        $.ajax({
-            url: milliSearchUrl,
+        if (activeSearchRequest) {
+            activeSearchRequest.abort();
+            activeSearchRequest = null;
+        }
+
+        activeSearchRequest = $.ajax({
+            url: meiliSearchUrl,
             type: 'GET',
-            data: { query: query },
+            data: { query: normalizedQuery },
             success: function (data) {
-                const container = $('#milliResults');
+                if (normalizedQuery !== latestQuery) {
+                    return;
+                }
+
+                const container = $('#meiliResults');
                 container.empty().show();
 
                 if (data.length > 0) {
@@ -59,19 +78,15 @@ $(document).ready(function () {
                         return;
                     }
 
-                    // --- milliSearchUrl result ---
-                    // data.forEach(emp => {
-                    //     const item = $(`
-
                     data.forEach(emp => {
                         // Check if middle_name exists; if not, use an empty string
                         const middleName = emp.middle_name && emp.middle_name !== 'NULL' ? emp.middle_name : '';
                         const item = $(`
         
-                            <div class="milli-item">
+                            <div class="meili-item">
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="text-uppercase">${emp.last_name}, ${emp.first_name} ${middleName}</span>
-                                    <span class="milli-folder-code"> ${emp.folder?.folder_code || emp.folder_code || ''}</span>
+                                    <span class="meili-folder-code"> ${emp.folder?.folder_code || emp.folder_code || ''}</span>
                                 </div>
                             </div>
                         `);
@@ -86,8 +101,15 @@ $(document).ready(function () {
                     container.append('<div class="p-2 text-muted">No results found.</div>');
                 }
             },
-            error: function (xhr) {
-                console.error('Milli-search failed:', xhr.status, xhr.responseText);
+            error: function (xhr, status) {
+                if (status === 'abort') {
+                    return;
+                }
+
+                console.error('Meili-search failed:', xhr.status, xhr.responseText);
+            },
+            complete: function () {
+                activeSearchRequest = null;
             }
         });
     }
@@ -101,22 +123,39 @@ $(document).ready(function () {
 
     // Typing search (debounced)
     $('#employeeSearch').on('input', function () {
-        clearTimeout(milliTimer);
-        const query = $(this).val();
+        clearTimeout(meiliTimer);
+        const query = String($(this).val() || '').trim();
 
-        if (query.length < 1) {
-            $('#milliResults').hide().empty();
+        if (query.length < 2) {
+            latestQuery = '';
+            if (activeSearchRequest) {
+                activeSearchRequest.abort();
+                activeSearchRequest = null;
+            }
+            $('#meiliResults').hide().empty();
             return;
         }
 
-        milliTimer = setTimeout(function () {
+        meiliTimer = setTimeout(function () {
             performSearch(query, false);
-        }, 150);
+        }, 100);
     });
 
     // Keyboard navigation (Up, Down, Enter)
     $('#employeeSearch').on('keydown', function (e) {
-        const items = $('.milli-item');
+        const items = $('.meili-item');
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(meiliTimer);
+
+            if (selectedIndex >= 0 && selectedIndex < items.length) {
+                items.eq(selectedIndex).click();
+            } else {
+                performSearch($(this).val(), true);
+            }
+            return;
+        }
 
         if (items.length === 0) return; // ignore if no results open
 
@@ -128,17 +167,6 @@ $(document).ready(function () {
             e.preventDefault();
             selectedIndex = (selectedIndex - 1 + items.length) % items.length;
             updateHighlight(items);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            clearTimeout(milliTimer);
-
-            if (selectedIndex >= 0 && selectedIndex < items.length) {
-                // An item is highlighted, click it
-                items.eq(selectedIndex).click();
-            } else {
-                // No item highlighted, just auto-select the first result
-                performSearch($(this).val(), true);
-            }
         }
     });
 
@@ -149,7 +177,7 @@ $(document).ready(function () {
             activeItem.addClass('active');
 
             // Auto scroll container if needed
-            const container = $('#milliResults');
+            const container = $('#meiliResults');
             const itemTop = activeItem.position().top;
             const itemBottom = itemTop + activeItem.outerHeight();
             const containerScroll = container.scrollTop();
@@ -166,7 +194,7 @@ $(document).ready(function () {
     // Hide dropdown when clicking outside
     $(document).on('click', function (e) {
         if (!$(e.target).closest('.search-wrapper').length) {
-            $('#milliResults').hide();
+            $('#meiliResults').hide();
         }
     });
 

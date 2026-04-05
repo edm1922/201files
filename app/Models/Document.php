@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Document extends Model
 {
+    use Searchable;
     use SoftDeletes;
 
     protected $fillable = [
@@ -93,5 +95,36 @@ class Document extends Model
     public function auditLogs()
     {
         return $this->hasMany(AuditLog::class);
+    }
+
+    public function searchableAs(): string
+    {
+        return 'documents';
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === 'active' && $this->deleted_at === null;
+    }
+
+    public function toSearchableArray(): array
+    {
+        $this->loadMissing([
+            'department:id,name,code',
+            'documentFolder:id,name,folder_code',
+        ]);
+
+        return [
+            'id' => (int) $this->id,
+            'original_filename' => (string) ($this->original_filename ?? ''),
+            'department_id' => (int) ($this->department_id ?? 0),
+            'department_name' => (string) ($this->department?->name ?? ''),
+            'department_code' => (string) ($this->department?->code ?? ''),
+            'document_folder_id' => $this->document_folder_id ? (int) $this->document_folder_id : null,
+            'folder_name' => (string) ($this->documentFolder?->name ?? ''),
+            'folder_code' => (string) ($this->documentFolder?->folder_code ?? ''),
+            'status' => (string) ($this->status ?? ''),
+            'updated_at' => optional($this->updated_at)?->timestamp,
+        ];
     }
 }

@@ -2149,7 +2149,6 @@
                     let activeSuggestionRequestId = 0;
                     let suggestionAbortController = null;
                     let isFetchingSuggestions = false;
-                    let pendingEnterNavigation = false;
                     let activeSuggestionIndex = 0;
 
                     if (!form || !input || input.dataset.liveSearchBound === '1') {
@@ -2210,28 +2209,6 @@
                         });
                     };
 
-                    const buildSearchUrl = () => {
-                        const url = new URL(form.action, window.location.origin);
-                        const formData = new FormData(form);
-
-                        for (const [key, value] of formData.entries()) {
-                            if (key === 'global_search') {
-                                continue;
-                            }
-
-                            if (typeof value !== 'string') {
-                                continue;
-                            }
-
-                            const trimmed = value.trim();
-                            if (trimmed !== '') {
-                                url.searchParams.set(key, trimmed);
-                            }
-                        }
-
-                        return url;
-                    };
-
                     const renderSuggestions = (items) => {
                         if (!suggestionResults) {
                             return;
@@ -2270,37 +2247,11 @@
                         showSuggestions();
                     };
 
-                    const navigateToActiveOrFirstSuggestion = () => {
-                        if (!suggestionResults) {
-                            return false;
-                        }
-
-                        const items = getSuggestionButtons();
-                        if (items.length === 0) {
-                            return false;
-                        }
-
-                        const activeElement = document.activeElement;
-                        const activeSuggestion = activeElement instanceof Element
-                            ? activeElement.closest('[data-doc-search-url]')
-                            : null;
-                        const candidate = activeSuggestion || items[Math.max(0, Math.min(activeSuggestionIndex, items.length - 1))] || items[0];
-                        const targetUrl = candidate?.getAttribute('data-doc-search-url');
-
-                        if (targetUrl) {
-                            window.location.assign(targetUrl);
-                            return true;
-                        }
-
-                        return false;
-                    };
-
                     const fetchSuggestions = async () => {
                         const query = input.value.trim();
-                        if (query === '' || !suggestionUrl) {
+                        if (query.length < 2 || !suggestionUrl) {
                             hideSuggestions();
                             isFetchingSuggestions = false;
-                            pendingEnterNavigation = false;
                             return;
                         }
 
@@ -2357,12 +2308,6 @@
 
                             if (requestId === activeSuggestionRequestId) {
                                 isFetchingSuggestions = false;
-                                if (pendingEnterNavigation) {
-                                    pendingEnterNavigation = false;
-                                    if (!navigateToActiveOrFirstSuggestion()) {
-                                        triggerSearch();
-                                    }
-                                }
                             }
                         }
                     };
@@ -2383,14 +2328,6 @@
                         }
                     };
 
-                    const triggerSearch = () => {
-                        liveSearchState.shouldRefocus = document.activeElement === input;
-                        liveSearchState.caretStart = input.selectionStart;
-                        liveSearchState.caretEnd = input.selectionEnd;
-                        hideSuggestions();
-                        reloadExplorerFromUrl(buildSearchUrl().toString());
-                    };
-
                     syncGlobalToggleState();
                     syncClearButtonState();
 
@@ -2403,7 +2340,7 @@
                                 preventScroll: true,
                             });
                             clearTimeout(suggestionTimer);
-                            suggestionTimer = setTimeout(fetchSuggestions, 150);
+                            suggestionTimer = setTimeout(fetchSuggestions, 100);
                         });
                     }
 
@@ -2413,11 +2350,10 @@
 
                         if (input.value.trim() === '') {
                             hideSuggestions();
-                            triggerSearch();
                             return;
                         }
 
-                        suggestionTimer = setTimeout(fetchSuggestions, 170);
+                        suggestionTimer = setTimeout(fetchSuggestions, 100);
                     });
 
                     input.addEventListener('keydown', (event) => {
@@ -2429,23 +2365,10 @@
                             event.preventDefault();
                             clearTimeout(suggestionTimer);
 
-                            if (navigateToActiveOrFirstSuggestion()) {
-                                return;
-                            }
-
-                            if (isFetchingSuggestions) {
-                                pendingEnterNavigation = true;
-                                return;
-                            }
-
                             if (input.value.trim() !== '') {
-                                pendingEnterNavigation = true;
                                 fetchSuggestions();
                                 return;
                             }
-
-                            triggerSearch();
-                            return;
                         }
 
                         if (event.key === 'ArrowDown') {
@@ -2472,7 +2395,11 @@
                     form.addEventListener('submit', (event) => {
                         event.preventDefault();
                         clearTimeout(suggestionTimer);
-                        triggerSearch();
+                        if (input.value.trim() !== '') {
+                            fetchSuggestions();
+                        } else {
+                            hideSuggestions();
+                        }
                     });
 
                     if (clearSearchButton && clearSearchButton.dataset.liveSearchBound !== '1') {
@@ -2482,8 +2409,6 @@
                             clearTimeout(suggestionTimer);
                             syncClearButtonState();
                             hideSuggestions();
-                            pendingEnterNavigation = false;
-                            triggerSearch();
                             input.focus({
                                 preventScroll: true,
                             });
