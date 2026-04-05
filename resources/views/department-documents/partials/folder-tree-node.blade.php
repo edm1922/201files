@@ -71,6 +71,17 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
                                 <li>
                                     <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                        data-folder-history-trigger
+                                        data-folder-name="{{ $folder->name }}"
+                                        data-folder-history-url="{{ route('department-documents.folders.update-history', $folder) }}">
+                                        <i class="fas fa-history text-secondary" style="width: 16px;"></i><span class="fw-medium">Update History</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider opacity-50 my-1">
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
                                         data-bs-toggle="modal" data-bs-target="#renameFolderModal"
                                         data-folder-name="{{ $folder->name }}" data-folder-code="{{ $folder->folder_code }}"
                                         data-folder-action="{{ route('department-documents.folders.update', $folder) }}">

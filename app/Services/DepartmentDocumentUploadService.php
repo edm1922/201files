@@ -101,24 +101,39 @@ class DepartmentDocumentUploadService
                 $fileSize = filesize($tempPath);
                 Storage::disk('local')->put($relativePath, file_get_contents($tempPath));
 
-                $document = Document::create([
-                    'department_id' => $departmentId,
-                    'document_type_id' => $documentType->id,
-                    'document_location_id' => $documentLocationId,
-                    'document_folder_id' => $documentFolderId,
-                    'uploaded_by' => $user->id,
-                    'file_path' => $relativePath,
-                    'original_filename' => substr($resolvedFilename, 0, 255),
-                    'system_filename' => $resolvedFilename,
-                    'page_count' => $pageCount,
-                    'file_size_bytes' => $fileSize,
-                    'mime_type' => 'application/pdf',
-                    'upload_mode' => 'scan_packet',
-                    'status' => 'active',
-                    'date_received' => $dateReceived,
-                    'expiry_date' => $expiryDate,
-                    'source_filenames' => $sourceNames,
-                ]);
+                $document = Document::withoutSyncingToSearch(function () use (
+                    $departmentId,
+                    $documentType,
+                    $documentLocationId,
+                    $documentFolderId,
+                    $user,
+                    $relativePath,
+                    $resolvedFilename,
+                    $pageCount,
+                    $fileSize,
+                    $dateReceived,
+                    $expiryDate,
+                    $sourceNames
+                ) {
+                    return Document::create([
+                        'department_id' => $departmentId,
+                        'document_type_id' => $documentType->id,
+                        'document_location_id' => $documentLocationId,
+                        'document_folder_id' => $documentFolderId,
+                        'uploaded_by' => $user->id,
+                        'file_path' => $relativePath,
+                        'original_filename' => substr($resolvedFilename, 0, 255),
+                        'system_filename' => $resolvedFilename,
+                        'page_count' => $pageCount,
+                        'file_size_bytes' => $fileSize,
+                        'mime_type' => 'application/pdf',
+                        'upload_mode' => 'scan_packet',
+                        'status' => 'active',
+                        'date_received' => $dateReceived,
+                        'expiry_date' => $expiryDate,
+                        'source_filenames' => $sourceNames,
+                    ]);
+                });
 
                 AuditService::logDepartmentDocumentLifecycle('uploaded', $document);
 
@@ -185,24 +200,38 @@ class DepartmentDocumentUploadService
                     throw new \RuntimeException('Unable to store uploaded file.');
                 }
 
-                $document = Document::create([
-                    'department_id' => $departmentId,
-                    'document_type_id' => $documentType->id,
-                    'document_location_id' => $documentLocationId,
-                    'document_folder_id' => $documentFolderId,
-                    'uploaded_by' => $user->id,
-                    'file_path' => $relativePath,
-                    'original_filename' => $resolvedOriginalFilename,
-                    'system_filename' => $resolvedFilename,
-                    'page_count' => 1,
-                    'file_size_bytes' => (int) $file->getSize(),
-                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
-                    'upload_mode' => 'standard',
-                    'status' => 'active',
-                    'date_received' => $dateReceived,
-                    'expiry_date' => $expiryDate,
-                    'source_filenames' => [$file->getClientOriginalName()],
-                ]);
+                $document = Document::withoutSyncingToSearch(function () use (
+                    $departmentId,
+                    $documentType,
+                    $documentLocationId,
+                    $documentFolderId,
+                    $user,
+                    $relativePath,
+                    $resolvedOriginalFilename,
+                    $resolvedFilename,
+                    $file,
+                    $dateReceived,
+                    $expiryDate
+                ) {
+                    return Document::create([
+                        'department_id' => $departmentId,
+                        'document_type_id' => $documentType->id,
+                        'document_location_id' => $documentLocationId,
+                        'document_folder_id' => $documentFolderId,
+                        'uploaded_by' => $user->id,
+                        'file_path' => $relativePath,
+                        'original_filename' => $resolvedOriginalFilename,
+                        'system_filename' => $resolvedFilename,
+                        'page_count' => 1,
+                        'file_size_bytes' => (int) $file->getSize(),
+                        'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+                        'upload_mode' => 'standard',
+                        'status' => 'active',
+                        'date_received' => $dateReceived,
+                        'expiry_date' => $expiryDate,
+                        'source_filenames' => [$file->getClientOriginalName()],
+                    ]);
+                });
 
                 AuditService::logDepartmentDocumentLifecycle('uploaded', $document);
 

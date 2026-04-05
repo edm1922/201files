@@ -35,7 +35,7 @@ class StoreDepartmentDocumentRequest extends FormRequest
                 ),
             ],
             'document_location_id' => ['required', 'integer', 'exists:document_locations,id'],
-            'document_folder_id' => ['nullable', 'integer', 'exists:document_folders,id'],
+            'document_folder_id' => ['required', 'integer', 'exists:document_folders,id'],
             'upload_mode' => ['required', Rule::in(['standard', 'scan_packet'])],
             'date_received' => ['required', 'date'],
             'expiry_date' => ['nullable', 'date'],
@@ -77,6 +77,10 @@ class StoreDepartmentDocumentRequest extends FormRequest
                 if ($receivedDate !== false && $expiryDate !== false && $receivedDate > $expiryDate) {
                     $validator->errors()->add('date_received', 'Date received must be on or before the expiry date.');
                 }
+            }
+
+            if ($selectedFolderId <= 0) {
+                $validator->errors()->add('document_folder_id', 'Please select a folder before uploading documents.');
             }
 
             if ($selectedFolderId > 0) {

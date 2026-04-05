@@ -6,11 +6,16 @@
         $canCreateFolders = auth()->user()->hasRole('admin', 'encoder') && $selectedDepartmentId > 0;
         $canEditDeleteFolders = auth()->user()->isAdmin() && $selectedDepartmentId > 0;
         $canUploadAndEdit = auth()->user()->hasRole('admin', 'encoder');
+        $canUploadInCurrentContext = $canUploadAndEdit && (int) ($currentFolderId ?? 0) > 0;
 
         $activePathIds = isset($folderBreadcrumbs) ? $folderBreadcrumbs->pluck('id')->toArray() : [];
         if ($currentFolderId) {
             $activePathIds[] = $currentFolderId;
         }
+
+        $currentFolderHistoryUrl = $currentFolder
+            ? route('department-documents.folders.update-history', $currentFolder)
+            : null;
     @endphp
 
     <div class="animate-fade-in stagger-1">
@@ -45,6 +50,15 @@
                                 @if ($selectedDepartmentId)
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
                                         class="text-decoration-none small">Root</a>
+                                @endif
+                                @if ($currentFolder && $currentFolderHistoryUrl)
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small"
+                                        data-folder-history-trigger
+                                        data-folder-name="{{ $currentFolder->name }}"
+                                        data-folder-history-url="{{ $currentFolderHistoryUrl }}"
+                                        title="View folder update history">
+                                        History
+                                    </button>
                                 @endif
                                   @if ($canCreateFolders)
                                       <button type="button" class="btn-action-round btn-action-round--xs"
@@ -117,12 +131,14 @@
 
                         </form>
 
-                        @if($canUploadAndEdit)
+                        @if($canUploadInCurrentContext)
                             <button type="button"
                                 class="btn btn-accent-red btn-sm px-3 shadow-sm d-inline-flex align-items-center gap-2 fw-medium doc-upload-btn"
                                 data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload
                             </button>
+                        @elseif($canUploadAndEdit && $selectedDepartmentId)
+                            <span class="text-muted small">Select a folder to upload.</span>
                         @endif
                     </div>
 
@@ -150,9 +166,7 @@
                                         <th>Department & Type</th>
                                         <th>Folder Code</th>
                                         <th>Physical Location</th>
-                                        <th>Received On</th>
                                         <th>Expiry</th>
-                                        <th>Uploader</th>
                                         <th class="text-center">Actions</th>
                                     </tr>
                                 </thead>
@@ -217,8 +231,33 @@
                                         @endphp
                                         @php
                                             $isSelectedSearchDoc = (int) request('document_id') === (int) $doc->id;
+                                            $receivedOnDisplay = $doc->date_received?->format('F d, Y') ?? '-';
+                                            $receivedOnInput = $doc->date_received?->format('Y-m-d') ?? '';
+                                            $updatedDateDisplay = $doc->updated_at?->format('M d, Y') ?? '-';
+                                            $updatedTimeDisplay = $doc->updated_at?->format('h:i A') ?? '-';
+                                            $fileSizeDisplay = number_format(($doc->file_size_bytes ?? 0) / 1024, 2);
+
+                                            $expiryDate = $doc->expiry_date;
+                                            $isExpired = $doc->is_expired;
+                                            $isExpiringSoon = $doc->isExpiringSoon(30);
+
+                                            if (!$expiryDate) {
+                                                $expiryStatus = 'N/A';
+                                                $expiryDisplay = 'N/A';
+                                            } elseif ($isExpired) {
+                                                $expiryStatus = 'Expired';
+                                                $expiryDisplay = $expiryDate->format('M d, Y');
+                                            } elseif ($isExpiringSoon) {
+                                                $expiryStatus = 'Expiring soon';
+                                                $expiryDisplay = $expiryDate->format('M d, Y');
+                                            } else {
+                                                $expiryStatus = 'Valid';
+                                                $expiryDisplay = $expiryDate->format('M d, Y');
+                                            }
+
+                                            $expiryInput = $expiryDate?->format('Y-m-d') ?? '';
                                         @endphp
-                                        <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }} {{ $isSelectedSearchDoc ? 'doc-row--selected' : '' }}">
+                                        <tr class="animate-fade-in stagger-{{ ($index % 5) + 1 }} {{ $isSelectedSearchDoc ? 'doc-row--selected' : '' }}" data-document-row-id="{{ $doc->id }}">
                                             <td class="cursor-pointer"
                                                 title="Double-click to preview"
                                                 @if($previewable)
@@ -236,11 +275,30 @@
                                                             class="fas fa-{{ $ext === 'pdf' ? 'file-pdf' : (in_array($ext, ['jpg', 'jpeg', 'png']) ? 'file-image' : 'file-lines') }}"></i>
                                                     </div>
                                                     <div>
-                                                        <div class="fw-bold text-dark d-flex align-items-center gap-2 text-break">
+                                                        <button type="button"
+                                                            class="btn btn-link p-0 fw-bold text-dark d-inline-flex align-items-center gap-2 text-break text-start text-decoration-none doc-detail-trigger"
+                                                            data-doc-detail-trigger
+                                                            data-doc-id="{{ $doc->id }}"
+                                                            data-doc-name="{{ $doc->original_filename }}"
+                                                            data-doc-department="{{ $doc->department->name }}"
+                                                            data-doc-type="{{ $doc->documentType->name }}"
+                                                            data-doc-folder="{{ $docFolderPath }}"
+                                                            data-doc-folder-code="{{ $docFolderCode ?? '—' }}"
+                                                            data-doc-location="{{ $doc->documentLocation?->name ?? '—' }}"
+                                                            data-doc-uploader="{{ $doc->uploader?->name ?? 'Unknown' }}"
+                                                            data-doc-size="{{ $fileSizeDisplay }}"
+                                                            data-doc-ext="{{ strtoupper($ext) }}"
+                                                            data-doc-received="{{ $receivedOnDisplay }}"
+                                                            data-doc-expiry-status="{{ $expiryStatus }}"
+                                                            data-doc-expiry-date="{{ $expiryDisplay }}"
+                                                            data-doc-updated-date="{{ $updatedDateDisplay }}"
+                                                            data-doc-updated-time="{{ $updatedTimeDisplay }}"
+                                                            data-doc-updated-by="{{ $doc->uploader?->name ?? 'Unknown' }}"
+                                                            data-doc-history-url="{{ route('department-documents.update-history', $doc) }}">
                                                             {{ $doc->original_filename }}
-                                                        </div>
+                                                        </button>
                                                         <div class="text-muted small">{{ strtoupper($ext) }} &bull;
-                                                            {{ number_format(($doc->file_size_bytes ?? 0) / 1024, 2) }}
+                                                            {{ $fileSizeDisplay }}
                                                             KB</div>
                                                     </div>
                                                 </div>
@@ -261,15 +319,6 @@
                                                     {{ $doc->documentLocation?->name ?? '—' }}</div>
                                             </td>
                                             <td>
-                                                <div class="small">
-                                                    {{ $doc->date_received?->format('F d, Y') ?? '-' }}</div>
-                                            </td>
-                                            <td>
-                                                @php
-                                                    $expiryDate = $doc->expiry_date;
-                                                    $isExpired = $doc->is_expired;
-                                                    $isExpiringSoon = $doc->isExpiringSoon(30);
-                                                @endphp
                                                 @if (!$expiryDate)
                                                     <span class="badge badge-soft-secondary">N/A</span>
                                                 @elseif($isExpired)
@@ -282,11 +331,6 @@
                                                     <span class="badge badge-soft-success">Valid</span>
                                                     <div class="text-muted x-small mt-1">{{ $expiryDate->format('M d, Y') }}</div>
                                                 @endif
-                                            </td>
-                                            <td>
-                                                <div class="small text-dark fw-medium text-truncate" title="{{ $doc->uploader?->name ?? 'Unknown' }}">
-                                                    {{ $doc->uploader?->name ?? 'Unknown' }}
-                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <div class="dropdown">
@@ -312,10 +356,62 @@
                                                         @if($canUploadAndEdit)
                                                         <li>
                                                             <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
-                                                                data-bs-toggle="modal" data-bs-target="#renameDocumentModal"
+                                                                data-doc-detail-trigger
+                                                                data-doc-id="{{ $doc->id }}"
                                                                 data-doc-name="{{ $doc->original_filename }}"
+                                                                data-doc-department="{{ $doc->department->name }}"
+                                                                data-doc-type="{{ $doc->documentType->name }}"
+                                                                data-doc-folder="{{ $docFolderPath }}"
+                                                                data-doc-folder-code="{{ $docFolderCode ?? '—' }}"
+                                                                data-doc-location="{{ $doc->documentLocation?->name ?? '—' }}"
+                                                                data-doc-uploader="{{ $doc->uploader?->name ?? 'Unknown' }}"
+                                                                data-doc-size="{{ $fileSizeDisplay }}"
+                                                                data-doc-ext="{{ strtoupper($ext) }}"
+                                                                data-doc-received="{{ $receivedOnDisplay }}"
+                                                                data-doc-expiry-status="{{ $expiryStatus }}"
+                                                                data-doc-expiry-date="{{ $expiryDisplay }}"
+                                                                data-doc-updated-date="{{ $updatedDateDisplay }}"
+                                                                data-doc-updated-time="{{ $updatedTimeDisplay }}"
+                                                                data-doc-updated-by="{{ $doc->uploader?->name ?? 'Unknown' }}"
+                                                                data-doc-history-url="{{ route('department-documents.update-history', $doc) }}">
+                                                                <i class="fas fa-circle-info text-secondary" style="width: 16px;"></i><span class="fw-medium">Details</span>
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                data-bs-toggle="modal" data-bs-target="#editDocumentDetailsModal"
+                                                                data-doc-name="{{ $doc->original_filename }}"
+                                                                data-doc-type-id="{{ $doc->document_type_id }}"
+                                                                data-doc-location-id="{{ $doc->document_location_id }}"
+                                                                data-doc-folder-id="{{ $doc->document_folder_id ?? '' }}"
+                                                                data-doc-date-received="{{ $receivedOnInput }}"
+                                                                data-doc-expiry-date="{{ $expiryInput }}"
                                                                 data-doc-action="{{ route('department-documents.update', $doc) }}">
-                                                                <i class="fas fa-edit text-secondary" style="width: 16px;"></i><span class="fw-medium">Rename</span>
+                                                                <i class="fas fa-pen-to-square text-secondary" style="width: 16px;"></i><span class="fw-medium">Edit Details</span>
+                                                            </button>
+                                                        </li>
+                                                        @else
+                                                        <li>
+                                                            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                data-doc-detail-trigger
+                                                                data-doc-id="{{ $doc->id }}"
+                                                                data-doc-name="{{ $doc->original_filename }}"
+                                                                data-doc-department="{{ $doc->department->name }}"
+                                                                data-doc-type="{{ $doc->documentType->name }}"
+                                                                data-doc-folder="{{ $docFolderPath }}"
+                                                                data-doc-folder-code="{{ $docFolderCode ?? '—' }}"
+                                                                data-doc-location="{{ $doc->documentLocation?->name ?? '—' }}"
+                                                                data-doc-uploader="{{ $doc->uploader?->name ?? 'Unknown' }}"
+                                                                data-doc-size="{{ $fileSizeDisplay }}"
+                                                                data-doc-ext="{{ strtoupper($ext) }}"
+                                                                data-doc-received="{{ $receivedOnDisplay }}"
+                                                                data-doc-expiry-status="{{ $expiryStatus }}"
+                                                                data-doc-expiry-date="{{ $expiryDisplay }}"
+                                                                data-doc-updated-date="{{ $updatedDateDisplay }}"
+                                                                data-doc-updated-time="{{ $updatedTimeDisplay }}"
+                                                                data-doc-updated-by="{{ $doc->uploader?->name ?? 'Unknown' }}"
+                                                                data-doc-history-url="{{ route('department-documents.update-history', $doc) }}">
+                                                                <i class="fas fa-circle-info text-secondary" style="width: 16px;"></i><span class="fw-medium">Details</span>
                                                             </button>
                                                         </li>
                                                         @endif
@@ -355,9 +451,31 @@
                             @endif
                         </div>
 
-                        @if ($documents->hasPages())
-                            <div class="card-footer bg-white border-top-0 py-3">
-                                {{ $documents->links('pagination::bootstrap-5') }}
+                        @if ($documents->count() > 0)
+                            <div class="card-footer doc-table-footer bg-white border-top-0 py-2 d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                                <div class="text-muted small d-inline-flex align-items-center gap-1">
+                                    <span>Showing</span>
+                                    <span>{{ $documents->count() }}</span>
+                                    @if (method_exists($documents, 'total'))
+                                        <span>of {{ $documents->total() }}</span>
+                                    @endif
+                                    <span>documents</span>
+                                </div>
+
+                                @if ($documents->hasMorePages())
+                                    @php
+                                        $nextPerPage = max(15, (int) request('per_page', 15)) + 10;
+                                        $loadMoreParams = array_merge(
+                                            request()->except(['document_id', 'page']),
+                                            ['per_page' => $nextPerPage]
+                                        );
+                                    @endphp
+                                    <a href="{{ route('department-documents.index', $loadMoreParams) }}"
+                                        class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2"
+                                        data-doc-load-more>
+                                        <i class="fas fa-plus"></i> Load 10 more
+                                    </a>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -366,6 +484,145 @@
                 </div>
             </div>
         @endif
+    </div>
+
+    <aside class="doc-details-panel" data-doc-details-panel aria-hidden="true">
+        <div class="doc-details-panel__backdrop" data-doc-details-close></div>
+        <div class="doc-details-panel__sheet" role="dialog" aria-modal="true" aria-labelledby="doc-details-title">
+            <div class="doc-details-panel__header">
+                <h5 id="doc-details-title" class="mb-0 fw-bold">Document Details</h5>
+                <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-doc-details-close aria-label="Close details panel">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="doc-details-panel__body">
+                <div class="mb-3">
+                    <div class="text-muted x-small text-uppercase mb-1">File Name</div>
+                    <div class="fw-semibold text-dark" data-doc-detail-name>—</div>
+                </div>
+
+                <div class="doc-details-grid">
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Department</div>
+                        <div class="doc-detail-item__value" data-doc-detail-department>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Document Type</div>
+                        <div class="doc-detail-item__value" data-doc-detail-type>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Folder</div>
+                        <div class="doc-detail-item__value" data-doc-detail-folder>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Folder Code</div>
+                        <div class="doc-detail-item__value" data-doc-detail-folder-code>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Location</div>
+                        <div class="doc-detail-item__value" data-doc-detail-location>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">File Type</div>
+                        <div class="doc-detail-item__value" data-doc-detail-ext>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">File Size</div>
+                        <div class="doc-detail-item__value" data-doc-detail-size>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Uploader</div>
+                        <div class="doc-detail-item__value" data-doc-detail-uploader>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Received On</div>
+                        <div class="doc-detail-item__value" data-doc-detail-received>—</div>
+                    </div>
+                    <div class="doc-detail-item">
+                        <div class="doc-detail-item__label">Expiry</div>
+                        <div class="doc-detail-item__value" data-doc-detail-expiry>—</div>
+                    </div>
+                </div>
+
+                <div class="doc-details-last-updated mt-4">
+                    <span data-doc-detail-last-updated>—</span>
+                    <a href="javascript:void(0)" class="text-primary fw-bold text-decoration-none ms-2"
+                        style="font-size: 0.72rem; letter-spacing: 0.05em;" data-doc-detail-history-link>
+                        SEE MORE <i class="fas fa-chevron-right ms-1" style="font-size: 0.65rem;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="modal fade" id="documentUpdateHistoryModal" tabindex="-1" aria-labelledby="documentUpdateHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark" id="documentUpdateHistoryModalLabel">
+                        <i class="fas fa-history me-2 text-danger"></i>Update History
+                    </h5>
+                </div>
+                <div class="modal-body pt-4">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0" id="documentUpdateHistoryTable">
+                            <thead class="bg-light sticky-top" style="z-index: 1;">
+                                <tr>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold ps-3">User</th>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold">Description</th>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold">Changes</th>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold pe-3">Date &amp; Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documentUpdateHistoryContent">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No update history loaded.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius:6px; background-color: red; font-size:0.85rem; font-weight: 500;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="folderUpdateHistoryModal" tabindex="-1" aria-labelledby="folderUpdateHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark" id="folderUpdateHistoryModalLabel">
+                        <i class="fas fa-folder-tree me-2 text-danger"></i>Folder Activity History
+                    </h5>
+                </div>
+                <div class="modal-body pt-4">
+                    <div class="small text-muted mb-2" id="folderUpdateHistoryFolderName"></div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0" id="folderUpdateHistoryTable">
+                            <thead class="bg-light sticky-top" style="z-index: 1;">
+                                <tr>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold ps-3">User</th>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold">Description</th>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold">Changes</th>
+                                    <th class="border-0 text-muted small text-uppercase fw-bold pe-3">Date &amp; Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="folderUpdateHistoryContent">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No folder history loaded.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius:6px; background-color: red; font-size:0.85rem; font-weight: 500;">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" id="createDepartmentFolderModal" tabindex="-1" aria-hidden="true">
@@ -523,15 +780,15 @@
         </div>
     </div>
 
-    <!-- Rename Document Modal -->
-    <div class="modal fade" id="renameDocumentModal" tabindex="-1" aria-hidden="true">
+    <!-- Edit Document Details Modal -->
+    <div class="modal fade" id="editDocumentDetailsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
-                <form id="renameDocumentForm" method="POST">
+                <form id="editDocumentDetailsForm" method="POST">
                     @csrf
                     @method('PATCH')
                     <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
-                        <h5 class="modal-title fw-bold text-dark fs-5">Rename Document</h5>
+                        <h5 class="modal-title fw-bold text-dark fs-5">Edit Document Details</h5>
                         <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
@@ -543,12 +800,52 @@
                                 class="form-control field-input bg-light" required>
                             <div class="form-text small">Extension will be preserved automatically.</div>
                         </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="edit_doc_type" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Document Type <span class="text-danger">*</span></label>
+                                <select id="edit_doc_type" name="document_type_id" class="form-select field-input" required>
+                                    @foreach ($documentTypes as $type)
+                                        <option value="{{ $type->id }}" data-has-expiry="{{ $type->has_expiry ? '1' : '0' }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_doc_location" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Physical Location <span class="text-danger">*</span></label>
+                                <select id="edit_doc_location" name="document_location_id" class="form-select field-input" required>
+                                    @foreach ($documentLocations as $location)
+                                        <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_doc_folder" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Folder</label>
+                                <select id="edit_doc_folder" name="document_folder_id" class="form-select field-input">
+                                    <option value="">Root</option>
+                                    @foreach ($allFolders as $folderOption)
+                                        <option value="{{ $folderOption->id }}">{{ $folderPathMaps[$folderOption->id]['display_path'] ?? $folderOption->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_doc_received" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Date Received <span class="text-danger">*</span></label>
+                                <input type="date" id="edit_doc_received" name="date_received" class="form-control field-input" required>
+                            </div>
+                            <div class="col-md-6 d-none" id="edit_doc_expiry_wrap">
+                                <label for="edit_doc_expiry" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Expiry Date</label>
+                                <input type="date" id="edit_doc_expiry" name="expiry_date" class="form-control field-input">
+                            </div>
+                            <div class="col-12 d-none" id="edit_doc_expiry_reason_wrap">
+                                <label for="edit_doc_expiry_reason" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Reason for Expiry Change</label>
+                                <textarea id="edit_doc_expiry_reason" name="expiry_change_reason" class="form-control field-input" rows="2" maxlength="500" placeholder="Required when expiry date is changed."></textarea>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
                         <button type="button" class="btn btn-light fw-semibold text-secondary"
                             data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary fw-semibold shadow-sm btn-submit-loading">
-                            <i class="fas fa-save me-1"></i> Save Changes
+                            <i class="fas fa-save me-1"></i> Save Details
                         </button>
                     </div>
                 </form>
@@ -573,9 +870,7 @@
                         x-init="$nextTick(() => { const select = $refs.typeSelect; if (select && select.selectedIndex >= 0) showExpiry = select.options[select.selectedIndex].dataset.hasExpiry === '1'; })" data-loading-target>
                         @csrf
                         <input type="hidden" name="department_id" value="{{ $selectedDepartmentId }}">
-                        @if ($currentFolderId)
-                            <input type="hidden" name="document_folder_id" value="{{ $currentFolderId }}">
-                        @endif
+                        <input type="hidden" name="document_folder_id" value="{{ $currentFolderId ? (int) $currentFolderId : '' }}">
 
                         <div class="row g-4">
                             <div class="col-lg-7">
@@ -617,6 +912,12 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-uppercase text-muted">Selected Folder</label>
+                                        <input type="text" class="form-control field-input bg-light" value="{{ $currentFolder ? ($folderPathMaps[$currentFolder->id]['display_path'] ?? $currentFolder->name) : 'No folder selected' }}" readonly>
+                                        <div class="form-text small text-muted">Uploads are only allowed inside a folder.</div>
                                     </div>
 
                                     <div class="col-md-6">
@@ -951,6 +1252,7 @@
             #department-document-explorer {
                 height: calc(100dvh - 56px - 3rem);
                 min-height: 520px;
+                overflow: hidden;
                 margin-bottom: 0 !important;
             }
 
@@ -959,18 +1261,65 @@
                 min-height: 0;
             }
 
-            .explorer-main .doc-list-card {
-                display: flex;
-                flex-direction: column;
-                flex: 1 1 auto;
-                min-height: 0;
+            #department-document-explorer .explorer-main {
+                overflow: hidden;
             }
 
-            .doc-table-wrapper {
+            .explorer-main .doc-list-card {
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr) auto;
                 flex: 1 1 auto;
                 min-height: 0;
-                overflow: auto;
+                overflow: hidden !important;
+            }
+
+            .explorer-main .doc-table-wrapper {
+                grid-row: 2;
+                min-height: 0;
+                height: 100%;
+                overflow-x: auto !important;
+                overflow-y: scroll !important;
+                scrollbar-gutter: stable;
                 position: relative;
+            }
+
+            .explorer-main .doc-table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                background: #f8fafc;
+            }
+
+            .explorer-main .doc-table-wrapper::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            .explorer-main .doc-table-wrapper::-webkit-scrollbar-track {
+                background: #eef1f4;
+                border-radius: 999px;
+            }
+
+            .explorer-main .doc-table-wrapper::-webkit-scrollbar-thumb {
+                background: #b0b7c3;
+                border-radius: 999px;
+            }
+
+            .explorer-main .doc-table-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #8f99a8;
+            }
+
+            .doc-table {
+                margin-bottom: 0;
+            }
+
+            .doc-table-footer {
+                margin-top: 0 !important;
+                position: relative;
+                flex: 0 0 auto;
+                min-height: 0 !important;
+                height: auto !important;
+                border-top: 1px solid #e5e7eb !important;
             }
 
             .doc-table-wrapper.is-empty {
@@ -1152,14 +1501,158 @@
                 line-height: 1.2;
             }
 
+            .doc-detail-trigger {
+                font: inherit;
+                border: none;
+            }
+
+            .doc-detail-trigger:hover,
+            .doc-detail-trigger:focus-visible {
+                color: var(--company-primary) !important;
+                text-decoration: underline !important;
+            }
+
+            .doc-details-panel {
+                position: fixed;
+                inset: 0;
+                z-index: 2060;
+                pointer-events: none;
+            }
+
+            .doc-details-panel__backdrop {
+                position: absolute;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.45);
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+
+            .doc-details-panel__sheet {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: min(440px, 100%);
+                height: 100%;
+                background: #fff;
+                box-shadow: -10px 0 30px rgba(15, 23, 42, 0.2);
+                transform: translateX(100%);
+                transition: transform 0.2s ease;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .doc-details-panel.is-open {
+                pointer-events: auto;
+            }
+
+            .doc-details-panel.is-open .doc-details-panel__backdrop {
+                opacity: 1;
+            }
+
+            .doc-details-panel.is-open .doc-details-panel__sheet {
+                transform: translateX(0);
+            }
+
+            body.doc-details-open {
+                overflow: hidden;
+            }
+
+            .doc-details-panel__header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 1rem 1rem 0.85rem;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .doc-details-panel__body {
+                overflow-y: auto;
+                padding: 1rem;
+            }
+
+            .doc-details-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.85rem;
+            }
+
+            .doc-detail-item {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.7rem;
+                padding: 0.6rem 0.7rem;
+            }
+
+            .doc-detail-item__label {
+                font-size: 0.68rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #64748b;
+                margin-bottom: 0.25rem;
+            }
+
+            .doc-detail-item__value {
+                font-size: 0.83rem;
+                color: #111827;
+                word-break: break-word;
+            }
+
+            .doc-details-last-updated {
+                padding: 0.75rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.75rem;
+                background: #f8fafc;
+                font-size: 0.82rem;
+                color: #374151;
+            }
+
+            body.doc-details-open .modal-backdrop.show {
+                z-index: 2080;
+            }
+
+            body.doc-details-open .modal.show {
+                z-index: 2090;
+            }
+
+            #documentUpdateHistoryTable thead th {
+                font-size: 0.7rem;
+                letter-spacing: 0.08em;
+                padding-top: 12px;
+                padding-bottom: 12px;
+                background-color: #f9fafb;
+            }
+
+            #documentUpdateHistoryTable tbody td {
+                padding-top: 14px;
+                padding-bottom: 14px;
+                font-size: 0.85rem;
+            }
+
+            .history-user-avatar {
+                width: 32px;
+                height: 32px;
+                background: #f3f4f6;
+                color: #6b7280;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.8rem;
+            }
+
             @media (max-width: 768px) {
                 .doc-command-search-row {
                     flex-wrap: wrap;
                 }
 
                 #department-document-explorer {
-                    height: auto;
-                    min-height: auto;
+                    height: calc(100dvh - 56px - 2rem);
+                    min-height: 420px;
+                }
+
+                .explorer-main .doc-table-wrapper {
+                    height: 100%;
+                    min-height: 0;
                 }
 
                 .doc-upload-btn {
@@ -1170,6 +1663,14 @@
                 .doc-command-search__bar {
                     border-radius: 1rem;
                     flex-wrap: wrap;
+                }
+
+                .doc-details-panel__sheet {
+                    width: 100%;
+                }
+
+                .doc-details-grid {
+                    grid-template-columns: 1fr;
                 }
 
                 .doc-command-search__input {
@@ -1250,6 +1751,33 @@
                     activeRequestId: 0,
                     abortController: null,
                 };
+                const detailsPanel = document.querySelector('[data-doc-details-panel]');
+                const detailsName = detailsPanel?.querySelector('[data-doc-detail-name]');
+                const detailsDepartment = detailsPanel?.querySelector('[data-doc-detail-department]');
+                const detailsType = detailsPanel?.querySelector('[data-doc-detail-type]');
+                const detailsFolder = detailsPanel?.querySelector('[data-doc-detail-folder]');
+                const detailsFolderCode = detailsPanel?.querySelector('[data-doc-detail-folder-code]');
+                const detailsLocation = detailsPanel?.querySelector('[data-doc-detail-location]');
+                const detailsExt = detailsPanel?.querySelector('[data-doc-detail-ext]');
+                const detailsSize = detailsPanel?.querySelector('[data-doc-detail-size]');
+                const detailsUploader = detailsPanel?.querySelector('[data-doc-detail-uploader]');
+                const detailsReceived = detailsPanel?.querySelector('[data-doc-detail-received]');
+                const detailsExpiry = detailsPanel?.querySelector('[data-doc-detail-expiry]');
+                const detailsLastUpdated = detailsPanel?.querySelector('[data-doc-detail-last-updated]');
+                const detailsHistoryLink = detailsPanel?.querySelector('[data-doc-detail-history-link]');
+                const historyModalElement = document.getElementById('documentUpdateHistoryModal');
+                const historyModal = historyModalElement && typeof bootstrap !== 'undefined' && bootstrap.Modal
+                    ? new bootstrap.Modal(historyModalElement)
+                    : null;
+                const historyContent = document.getElementById('documentUpdateHistoryContent');
+                const folderHistoryModalElement = document.getElementById('folderUpdateHistoryModal');
+                const folderHistoryModal = folderHistoryModalElement && typeof bootstrap !== 'undefined' && bootstrap.Modal
+                    ? new bootstrap.Modal(folderHistoryModalElement)
+                    : null;
+                const folderHistoryContent = document.getElementById('folderUpdateHistoryContent');
+                const folderHistoryName = document.getElementById('folderUpdateHistoryFolderName');
+                let detailsOpenTimer = null;
+                let currentDocumentHistoryUrl = '';
 
                 const resetPreviewBody = () => {
                     if (!previewBody) {
@@ -1421,22 +1949,90 @@
                     syncPdfControls();
                 };
 
-                // Rename Document Modal logic
-                const renameDocumentModal = document.getElementById('renameDocumentModal');
-                if (renameDocumentModal) {
-                    renameDocumentModal.addEventListener('show.bs.modal', function(event) {
+                const editDocumentDetailsModal = document.getElementById('editDocumentDetailsModal');
+                if (editDocumentDetailsModal) {
+                    const detailsForm = editDocumentDetailsModal.querySelector('#editDocumentDetailsForm');
+                    const nameInput = editDocumentDetailsModal.querySelector('#rename_doc_name');
+                    const typeInput = editDocumentDetailsModal.querySelector('#edit_doc_type');
+                    const locationInput = editDocumentDetailsModal.querySelector('#edit_doc_location');
+                    const folderInput = editDocumentDetailsModal.querySelector('#edit_doc_folder');
+                    const receivedInput = editDocumentDetailsModal.querySelector('#edit_doc_received');
+                    const expiryWrap = editDocumentDetailsModal.querySelector('#edit_doc_expiry_wrap');
+                    const expiryInput = editDocumentDetailsModal.querySelector('#edit_doc_expiry');
+                    const expiryReasonWrap = editDocumentDetailsModal.querySelector('#edit_doc_expiry_reason_wrap');
+                    const expiryReasonInput = editDocumentDetailsModal.querySelector('#edit_doc_expiry_reason');
+                    let initialExpiryValue = '';
+
+                    const syncExpiryVisibility = () => {
+                        if (!typeInput || !expiryWrap || !expiryInput || !expiryReasonWrap || !expiryReasonInput) {
+                            return;
+                        }
+
+                        const selected = typeInput.options[typeInput.selectedIndex];
+                        const hasExpiry = selected?.getAttribute('data-has-expiry') === '1';
+
+                        expiryWrap.classList.toggle('d-none', !hasExpiry);
+                        expiryInput.required = hasExpiry;
+
+                        if (!hasExpiry) {
+                            expiryInput.value = '';
+                        }
+
+                        if (receivedInput) {
+                            receivedInput.max = expiryInput.value || '';
+                        }
+
+                        expiryInput.min = receivedInput?.value || '';
+                        syncExpiryReasonVisibility();
+                    };
+
+                    const syncExpiryReasonVisibility = () => {
+                        if (!expiryReasonWrap || !expiryReasonInput || !expiryInput) {
+                            return;
+                        }
+
+                        const changed = (expiryInput.value || '') !== (initialExpiryValue || '');
+                        expiryReasonWrap.classList.toggle('d-none', !changed);
+                        expiryReasonInput.required = changed;
+
+                        if (!changed) {
+                            expiryReasonInput.value = '';
+                        }
+                    };
+
+                    typeInput?.addEventListener('change', syncExpiryVisibility);
+                    receivedInput?.addEventListener('change', () => {
+                        if (expiryInput) {
+                            expiryInput.min = receivedInput.value || '';
+                        }
+                    });
+
+                    expiryInput?.addEventListener('change', () => {
+                        if (receivedInput) {
+                            receivedInput.max = expiryInput.value || '';
+                        }
+                        syncExpiryReasonVisibility();
+                    });
+
+                    editDocumentDetailsModal.addEventListener('show.bs.modal', (event) => {
                         const button = event.relatedTarget;
-                        const docName = button.getAttribute('data-doc-name');
-                        const actionUrl = button.getAttribute('data-doc-action');
+                        if (!button || !detailsForm || !nameInput || !typeInput || !locationInput || !folderInput || !receivedInput || !expiryInput || !expiryReasonInput) {
+                            return;
+                        }
 
-                        const form = renameDocumentModal.querySelector('#renameDocumentForm');
-                        const input = renameDocumentModal.querySelector('#rename_doc_name');
+                        detailsForm.action = button.getAttribute('data-doc-action') || '';
+                        nameInput.value = button.getAttribute('data-doc-name') || '';
+                        typeInput.value = button.getAttribute('data-doc-type-id') || '';
+                        locationInput.value = button.getAttribute('data-doc-location-id') || '';
+                        folderInput.value = button.getAttribute('data-doc-folder-id') || '';
+                        receivedInput.value = button.getAttribute('data-doc-date-received') || '';
+                        expiryInput.value = button.getAttribute('data-doc-expiry-date') || '';
+                        initialExpiryValue = expiryInput.value || '';
+                        expiryReasonInput.value = '';
 
-                        form.action = actionUrl;
-                        input.value = docName;
-                        
-                        // Focus after a short delay to allow modal animation
-                        setTimeout(() => input.select(), 500);
+                        syncExpiryVisibility();
+                        syncExpiryReasonVisibility();
+                        setTimeout(() => nameInput.select(), 250);
                     });
                 }
 
@@ -2134,6 +2730,404 @@
                     });
                 };
 
+                const openDetailsPanel = () => {
+                    if (!detailsPanel) {
+                        return;
+                    }
+
+                    detailsPanel.classList.add('is-open');
+                    detailsPanel.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('doc-details-open');
+                };
+
+                const closeDetailsPanel = () => {
+                    if (!detailsPanel) {
+                        return;
+                    }
+
+                    detailsPanel.classList.remove('is-open');
+                    detailsPanel.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('doc-details-open');
+                };
+
+                const setDetailValue = (node, value) => {
+                    if (!node) {
+                        return;
+                    }
+                    node.textContent = value && String(value).trim() !== '' ? String(value) : '—';
+                };
+
+                const fillDetailsFromTrigger = (trigger) => {
+                    if (!trigger) {
+                        return;
+                    }
+
+                    const name = trigger.getAttribute('data-doc-name') || '—';
+                    const department = trigger.getAttribute('data-doc-department') || '—';
+                    const type = trigger.getAttribute('data-doc-type') || '—';
+                    const folder = trigger.getAttribute('data-doc-folder') || '—';
+                    const folderCode = trigger.getAttribute('data-doc-folder-code') || '—';
+                    const location = trigger.getAttribute('data-doc-location') || '—';
+                    const ext = trigger.getAttribute('data-doc-ext') || '—';
+                    const size = trigger.getAttribute('data-doc-size') || '0';
+                    const uploader = trigger.getAttribute('data-doc-uploader') || 'Unknown';
+                    const received = trigger.getAttribute('data-doc-received') || '—';
+                    const expiryStatus = trigger.getAttribute('data-doc-expiry-status') || 'N/A';
+                    const expiryDate = trigger.getAttribute('data-doc-expiry-date') || 'N/A';
+                    const updatedBy = trigger.getAttribute('data-doc-updated-by') || 'Unknown';
+                    const updatedDate = trigger.getAttribute('data-doc-updated-date') || '—';
+                    const updatedTime = trigger.getAttribute('data-doc-updated-time') || '—';
+                    currentDocumentHistoryUrl = trigger.getAttribute('data-doc-history-url') || '';
+
+                    setDetailValue(detailsName, name);
+                    setDetailValue(detailsDepartment, department);
+                    setDetailValue(detailsType, type);
+                    setDetailValue(detailsFolder, folder);
+                    setDetailValue(detailsFolderCode, folderCode);
+                    setDetailValue(detailsLocation, location);
+                    setDetailValue(detailsExt, ext);
+                    setDetailValue(detailsSize, `${size} KB`);
+                    setDetailValue(detailsUploader, uploader);
+                    setDetailValue(detailsReceived, received);
+                    setDetailValue(detailsExpiry, `${expiryStatus}${expiryDate !== 'N/A' ? ` (${expiryDate})` : ''}`);
+
+                    if (detailsLastUpdated) {
+                        detailsLastUpdated.innerHTML = `<span class="fw-bold text-danger text-uppercase">${escapeHtml(name)}</span>'s data was last updated by <span class="fw-bold text-danger text-uppercase">${escapeHtml(updatedBy)}</span> on <span class="fw-bold text-danger">${escapeHtml(updatedDate)}</span> at <span class="fw-bold text-danger">${escapeHtml(updatedTime)}</span>.`;
+                    }
+
+                    if (detailsHistoryLink) {
+                        detailsHistoryLink.setAttribute('data-doc-id', trigger.getAttribute('data-doc-id') || '');
+                    }
+                };
+
+                const renderHistoryChanges = (changes) => {
+                    if (!changes || typeof changes !== 'object') {
+                        return '<span class="text-muted small">—</span>';
+                    }
+
+                    if (changes.before && changes.after) {
+                        const keys = Array.from(new Set([
+                            ...Object.keys(changes.before || {}),
+                            ...Object.keys(changes.after || {}),
+                        ]));
+
+                        let html = '<div class="mt-2" style="font-size: 0.75rem; border-left: 2px solid #fecaca; padding-left: 12px; margin-left: 4px;">';
+                        let changedCount = 0;
+
+                        keys.forEach((key) => {
+                            const beforeVal = changes.before[key];
+                            const afterVal = changes.after[key];
+                            const bStr = (beforeVal === null || beforeVal === '') ? 'NONE' : String(beforeVal);
+                            const aStr = (afterVal === null || afterVal === '') ? 'NONE' : String(afterVal);
+                            if (bStr !== aStr) {
+                                html += `<div class="mb-1"><span class="fw-semibold text-secondary" style="font-size: 0.65rem;">${escapeHtml(key.replace(/_/g, ' ').toUpperCase())}:</span> <span class="text-decoration-line-through text-muted small">${escapeHtml(bStr)}</span> <i class="fas fa-arrow-right mx-1 text-danger opacity-50" style="font-size: 0.6rem;"></i> <span class="text-danger fw-semibold">${escapeHtml(aStr)}</span></div>`;
+                                changedCount += 1;
+                            }
+                        });
+
+                        html += '</div>';
+                        return changedCount > 0 ? html : '<span class="text-muted small">—</span>';
+                    }
+
+                    const fallback = Object.entries(changes)
+                        .map(([key, value]) => `<div class="mb-1"><span class="fw-semibold text-secondary" style="font-size: 0.65rem;">${escapeHtml(key.replace(/_/g, ' ').toUpperCase())}:</span> <span class="text-danger fw-semibold">${escapeHtml(String(value ?? 'NONE'))}</span></div>`)
+                        .join('');
+
+                    return fallback ? `<div class="mt-2" style="font-size: 0.75rem; border-left: 2px solid #fecaca; padding-left: 12px; margin-left: 4px;">${fallback}</div>` : '<span class="text-muted small">—</span>';
+                };
+
+                const renderHistoryTable = (targetBody, data, emptyMessage) => {
+                    if (!targetBody) {
+                        return;
+                    }
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        targetBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">${escapeHtml(emptyMessage)}</td></tr>`;
+                        return;
+                    }
+
+                    targetBody.innerHTML = data.map((log) => `
+                        <tr>
+                            <td class="ps-3" style="width: 15%; vertical-align: top;">
+                                <div class="d-flex align-items-center">
+                                    <div class="history-user-avatar me-2" style="width: 28px; height: 28px; flex-shrink: 0;">
+                                        <i class="fas fa-user" style="font-size: 0.7rem;"></i>
+                                    </div>
+                                    <div style="min-width: 0;">
+                                        <div class="fw-semibold text-dark text-truncate" style="font-size: 0.8rem;" title="${escapeHtml(log.user_name || 'System')}">${escapeHtml(log.user_name || 'System')}</div>
+                                        <div class="text-muted text-uppercase" style="font-size: 0.55rem; font-weight: 700; letter-spacing: 0.5px;">${escapeHtml(log.user_role || 'System')}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="width: 30%; vertical-align: top;">
+                                <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${escapeHtml(log.description || 'Updated')}</div>
+                            </td>
+                            <td style="width: 35%; vertical-align: top;">
+                                ${renderHistoryChanges(log.changes)}
+                            </td>
+                            <td class="pe-3 text-end" style="width: 20%; vertical-align: top;">
+                                <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${escapeHtml(log.date || '-')}</div>
+                                <div class="small text-muted" style="font-size: 0.7rem;">${escapeHtml(log.time || '-')}</div>
+                            </td>
+                        </tr>
+                    `).join('');
+                };
+
+                const bindDocumentDetails = () => {
+                    document.querySelectorAll('[data-doc-detail-trigger]').forEach((trigger) => {
+                        if (trigger.dataset.docDetailBound === '1') {
+                            return;
+                        }
+
+                        trigger.dataset.docDetailBound = '1';
+
+                        trigger.addEventListener('click', (event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            if (detailsOpenTimer) {
+                                clearTimeout(detailsOpenTimer);
+                            }
+
+                            detailsOpenTimer = window.setTimeout(() => {
+                                fillDetailsFromTrigger(trigger);
+                                openDetailsPanel();
+                            }, 220);
+                        });
+
+                        trigger.addEventListener('dblclick', () => {
+                            if (detailsOpenTimer) {
+                                clearTimeout(detailsOpenTimer);
+                                detailsOpenTimer = null;
+                            }
+                        });
+                    });
+
+                    if (detailsPanel && detailsPanel.dataset.detailsCloseBound !== '1') {
+                        detailsPanel.dataset.detailsCloseBound = '1';
+                        detailsPanel.querySelectorAll('[data-doc-details-close]').forEach((closeBtn) => {
+                            closeBtn.addEventListener('click', () => {
+                                closeDetailsPanel();
+                            });
+                        });
+                    }
+
+                    if (detailsHistoryLink && detailsHistoryLink.dataset.historyBound !== '1') {
+                        detailsHistoryLink.dataset.historyBound = '1';
+                        detailsHistoryLink.addEventListener('click', (event) => {
+                            event.preventDefault();
+                            if (!currentDocumentHistoryUrl || !historyContent) {
+                                return;
+                            }
+
+                            historyContent.innerHTML = `
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <div class="spinner-border spinner-border-sm me-2 text-danger" role="status"></div>
+                                        Loading history...
+                                    </td>
+                                </tr>
+                            `;
+
+                            if (historyModal) {
+                                closeDetailsPanel();
+                                window.setTimeout(() => {
+                                    historyModal.show();
+                                }, 120);
+                            }
+
+                            fetch(currentDocumentHistoryUrl, {
+                                headers: {
+                                    Accept: 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                            }).then((response) => response.json()).then((data) => {
+                                renderHistoryTable(historyContent, data, 'No update history found.');
+                            }).catch(() => {
+                                historyContent.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading history.</td></tr>';
+                            });
+                        });
+                    }
+                };
+
+                const bindFolderHistory = () => {
+                    if (document.body.dataset.folderHistoryBound === '1') {
+                        return;
+                    }
+
+                    document.body.dataset.folderHistoryBound = '1';
+                    document.addEventListener('click', (event) => {
+                        const trigger = event.target.closest('[data-folder-history-trigger]');
+                        if (!trigger) {
+                            return;
+                        }
+
+                        event.preventDefault();
+
+                        const historyUrl = trigger.getAttribute('data-folder-history-url') || '';
+                        const folderName = trigger.getAttribute('data-folder-name') || 'Folder';
+                        if (!historyUrl || !folderHistoryContent) {
+                            return;
+                        }
+
+                        if (folderHistoryName) {
+                            folderHistoryName.textContent = folderName;
+                        }
+
+                        folderHistoryContent.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <div class="spinner-border spinner-border-sm me-2 text-danger" role="status"></div>
+                                    Loading history...
+                                </td>
+                            </tr>
+                        `;
+
+                        if (folderHistoryModal) {
+                            folderHistoryModal.show();
+                        }
+
+                        fetch(historyUrl, {
+                            headers: {
+                                Accept: 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            credentials: 'same-origin',
+                        }).then((response) => response.json()).then((data) => {
+                            renderHistoryTable(folderHistoryContent, data, 'No folder activity history found.');
+                        }).catch(() => {
+                            folderHistoryContent.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading history.</td></tr>';
+                        });
+                    });
+                };
+
+
+                const parseDocumentRowsFromHtml = (htmlText) => {
+                    const parser = new DOMParser();
+                    const nextDoc = parser.parseFromString(htmlText, 'text/html');
+                    const nextRows = Array.from(nextDoc.querySelectorAll('.doc-table tbody tr[data-document-row-id]'));
+                    const nextCountText = nextDoc.querySelector('.doc-table-footer .text-muted.small')?.textContent || '';
+                    const nextLoadMoreLink = nextDoc.querySelector('[data-doc-load-more]');
+
+                    return {
+                        rows: nextRows,
+                        countText: nextCountText,
+                        hasLoadMore: Boolean(nextLoadMoreLink),
+                        nextLoadMoreHref: nextLoadMoreLink?.getAttribute('href') || '',
+                    };
+                };
+
+                const getCurrentPerPageCount = () => {
+                    const rows = document.querySelectorAll('.doc-table tbody tr[data-document-row-id]');
+                    const count = Number(rows.length || 0);
+                    return Math.max(15, count);
+                };
+
+                const buildNextLoadMoreHref = () => {
+                    const url = new URL(window.location.href);
+                    const nextPerPage = getCurrentPerPageCount() + 10;
+                    url.searchParams.set('per_page', String(nextPerPage));
+                    url.searchParams.delete('page');
+                    url.searchParams.delete('document_id');
+                    return `${url.pathname}${url.search}${url.hash}`;
+                };
+
+                const bindLoadMore = () => {
+                    const loadMoreBtn = document.querySelector('[data-doc-load-more]');
+                    if (!loadMoreBtn || loadMoreBtn.dataset.loadMoreBound === '1') {
+                        return;
+                    }
+
+                    loadMoreBtn.dataset.loadMoreBound = '1';
+
+                    loadMoreBtn.addEventListener('click', async (event) => {
+                        event.preventDefault();
+
+                        const href = buildNextLoadMoreHref();
+                        if (!href) {
+                            return;
+                        }
+
+                        const tableBody = document.querySelector('.doc-table tbody');
+                        if (!tableBody) {
+                            window.location.assign(href);
+                            return;
+                        }
+
+                        if (loadMoreBtn.dataset.loading === '1') {
+                            return;
+                        }
+
+                        loadMoreBtn.dataset.loading = '1';
+                        const originalHtml = loadMoreBtn.innerHTML;
+                        loadMoreBtn.classList.add('disabled');
+                        loadMoreBtn.setAttribute('aria-disabled', 'true');
+                        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+                        try {
+                            const response = await fetch(href, {
+                                headers: {
+                                    Accept: 'text/html,application/xhtml+xml',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Load more request failed');
+                            }
+
+                            const html = await response.text();
+                            const parsed = parseDocumentRowsFromHtml(html);
+                            const existingIds = new Set(Array.from(tableBody.querySelectorAll('tr[data-document-row-id]'))
+                                .map((row) => row.getAttribute('data-document-row-id')));
+
+                            const fragment = document.createDocumentFragment();
+                            parsed.rows.forEach((row) => {
+                                const rowId = row.getAttribute('data-document-row-id');
+                                if (!rowId || existingIds.has(rowId)) {
+                                    return;
+                                }
+
+                                existingIds.add(rowId);
+                                fragment.appendChild(row);
+                            });
+
+                            if (fragment.childNodes.length > 0) {
+                                tableBody.appendChild(fragment);
+                                bindPreviewButtons();
+                                bindPreviewDoubleClick();
+                                bindActionDropdownZIndexFix();
+                                bindDocumentDetails();
+                            }
+
+                            const footerCountNode = document.querySelector('.doc-table-footer .text-muted.small');
+                            if (footerCountNode && parsed.countText.trim() !== '') {
+                                footerCountNode.textContent = parsed.countText.trim().replace(/\s+/g, ' ');
+                            }
+
+                            if (parsed.hasLoadMore) {
+                                const updatedHref = buildNextLoadMoreHref();
+                                loadMoreBtn.setAttribute('href', updatedHref);
+                                window.history.replaceState({}, '', updatedHref);
+                                loadMoreBtn.classList.remove('disabled');
+                                loadMoreBtn.removeAttribute('aria-disabled');
+                                loadMoreBtn.innerHTML = originalHtml;
+                            } else {
+                                loadMoreBtn.remove();
+                            }
+                        } catch (error) {
+                            loadMoreBtn.classList.remove('disabled');
+                            loadMoreBtn.removeAttribute('aria-disabled');
+                            loadMoreBtn.innerHTML = originalHtml;
+                            window.location.assign(href);
+                        } finally {
+                            delete loadMoreBtn.dataset.loading;
+                        }
+                    });
+                };
+
                 const bindLiveSearch = () => {
                     const form = document.querySelector('[data-doc-live-search-form]');
                     const input = form?.querySelector('[data-doc-live-search-input]');
@@ -2544,6 +3538,9 @@
                 bindModals();
                 bindActionDropdownZIndexFix();
                 bindLiveSearch();
+                bindLoadMore();
+                bindDocumentDetails();
+                bindFolderHistory();
 
                 // Loading State Handlers
                 document.querySelectorAll('form[data-loading-target], #archiveDocumentForm').forEach(form => {
@@ -2675,6 +3672,9 @@
                         bindPreviewDoubleClick();
                         bindActionDropdownZIndexFix();
                         bindLiveSearch();
+                        bindLoadMore();
+                        bindDocumentDetails();
+                        bindFolderHistory();
 
                         if (liveSearchState.shouldRefocus) {
                             const nextInput = explorer.querySelector('[data-doc-live-search-input]');
@@ -2762,6 +3762,9 @@
                 bindFolderAjaxForms();
                 bindPreviewButtons();
                 bindPreviewDoubleClick();
+                bindLoadMore();
+                bindDocumentDetails();
+                bindFolderHistory();
                 clearOneTimeDocumentFocusParam();
 
                 document.querySelectorAll('[data-preview-close]').forEach((button) => {
@@ -2877,6 +3880,7 @@
 
                 document.addEventListener('keydown', (event) => {
                     if (event.key === 'Escape') {
+                        closeDetailsPanel();
                         closePreview();
                     }
                 });

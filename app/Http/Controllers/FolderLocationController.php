@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DocumentLocation;
 use App\Models\FolderLocation;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 
 class FolderLocationController extends Controller
@@ -43,9 +44,17 @@ class FolderLocationController extends Controller
             $nextRow = 'A';
         }
 
-        FolderLocation::create([
+        $folderLocation = FolderLocation::create([
             'row_name' => $nextRow,
             'max_capacity' => 500, // Default fixed capacity
+        ]);
+
+        AuditService::log('created', 'Created folder location row.', $folderLocation, [
+            'before' => [],
+            'after' => [
+                'row_name' => $folderLocation->row_name,
+                'max_capacity' => $folderLocation->max_capacity,
+            ],
         ]);
 
         return redirect()->route('settings.folder-locations.index')
@@ -62,7 +71,20 @@ class FolderLocationController extends Controller
             'max_capacity' => 'required|integer|min:1',
         ]);
 
+        $before = [
+            'row_name' => $folderLocation->row_name,
+            'max_capacity' => $folderLocation->max_capacity,
+        ];
+
         $folderLocation->update($validated);
+
+        AuditService::log('updated', 'Updated folder location row.', $folderLocation, [
+            'before' => $before,
+            'after' => [
+                'row_name' => $folderLocation->row_name,
+                'max_capacity' => $folderLocation->max_capacity,
+            ],
+        ]);
 
         return redirect()->route('settings.folder-locations.index')
             ->with('success', 'Folder location updated successfully.');
@@ -73,13 +95,26 @@ class FolderLocationController extends Controller
      */
     public function destroy(FolderLocation $folderLocation)
     {
-        if ($folderLocation->employees()->exists()) {
+        $employeesCount = $folderLocation->employees()->count();
+
+        if ($employeesCount > 0) {
             return redirect()->back()
                 ->with('error', "Cannot delete Row {$folderLocation->row_name} because it contains occupied folders.");
         }
 
         $rowName = $folderLocation->row_name;
+        $snapshot = [
+            'row_name' => $rowName,
+            'max_capacity' => $folderLocation->max_capacity,
+            'employees_count_at_delete' => $employeesCount,
+        ];
+
         $folderLocation->delete();
+
+        AuditService::log('deleted', 'Deleted folder location row.', $folderLocation, [
+            'before' => $snapshot,
+            'after' => [],
+        ]);
 
         return redirect()->route('settings.folder-locations.index')
             ->with('success', "Row {$rowName} deleted successfully.");

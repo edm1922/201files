@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,9 +27,21 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $before = $user->only(['first_name', 'middle_name', 'last_name', 'suffix', 'username']);
 
-        $request->user()->save();
+        $user->fill($request->validated());
+
+        $after = $user->only(['first_name', 'middle_name', 'last_name', 'suffix', 'username']);
+
+        $user->save();
+
+        if ($before !== $after) {
+            AuditService::log('updated', 'Updated profile information.', $user, [
+                'before' => $before,
+                'after' => $after,
+            ]);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -43,6 +56,20 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+        $snapshot = [
+            'first_name' => $user->first_name,
+            'middle_name' => $user->middle_name,
+            'last_name' => $user->last_name,
+            'suffix' => $user->suffix,
+            'username' => $user->username,
+            'role' => $user->role,
+            'self_service' => true,
+        ];
+
+        AuditService::log('deleted', 'Deleted own user account.', $user, [
+            'before' => $snapshot,
+            'after' => [],
+        ]);
 
         Auth::logout();
 
