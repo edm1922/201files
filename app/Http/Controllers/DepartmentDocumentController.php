@@ -13,6 +13,7 @@ use App\Services\DepartmentDocumentUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -166,7 +167,7 @@ class DepartmentDocumentController extends Controller
             : $user->authorizedDepartments()->where('is_active', true)->pluck('departments.id');
 
         $search = trim((string) $request->query('q', ''));
-        if ($search === '') {
+        if (mb_strlen($search) < 2) {
             return response()->json([
                 'results' => [],
             ]);
@@ -176,34 +177,12 @@ class DepartmentDocumentController extends Controller
         $selectedDepartmentId = (int) $request->integer('department_id');
         $hasScopedDepartment = $selectedDepartmentId > 0 && $accessibleDepartmentIds->contains($selectedDepartmentId);
 
-        $query = Document::query()
-            ->with([
-                'department:id,name',
-                'documentFolder:id,name,folder_code',
-            ])
-            ->whereIn('department_id', $accessibleDepartmentIds)
-            ->where(function ($q) use ($search) {
-                $q->where('original_filename', 'like', '%'.$search.'%')
-                    ->orWhereHas('documentFolder', function ($folderQuery) use ($search) {
-                        $folderQuery
-                            ->where('name', 'like', '%'.$search.'%')
-                            ->orWhere('folder_code', 'like', '%'.$search.'%');
-                    })
-                    ->orWhereHas('department', function ($departmentQuery) use ($search) {
-                        $departmentQuery
-                            ->where('name', 'like', '%'.$search.'%')
-                            ->orWhere('code', 'like', '%'.$search.'%');
-                    });
-            })
-            ->latest();
-
-        if (! $isGlobalSearch && $hasScopedDepartment) {
-            $query->where('department_id', $selectedDepartmentId);
-        }
-
-        $documents = $query
-            ->limit(8)
-            ->get(['id', 'department_id', 'document_folder_id', 'original_filename', 'updated_at']);
+        $documents = $this->searchDocumentsForSuggestions(
+            $search,
+            $accessibleDepartmentIds,
+            $isGlobalSearch,
+            $hasScopedDepartment ? $selectedDepartmentId : null
+        );
 
         $results = $documents->map(function (Document $document) {
             $redirectParams = [
@@ -233,6 +212,97 @@ class DepartmentDocumentController extends Controller
         return response()->json([
             'results' => $results,
         ]);
+    }
+
+    protected function searchDocumentsForSuggestions(
+        string $search,
+        Collection $accessibleDepartmentIds,
+        bool $isGlobalSearch,
+        ?int $scopedDepartmentId
+    ): Collection {
+        if ($this->shouldUseScoutSearch()) {
+            try {
+                return $this->searchWithScout($search, $accessibleDepartmentIds, $isGlobalSearch, $scopedDepartmentId);
+            } catch (\Throwable $exception) {
+                Log::warning('Scout document search failed. Falling back to SQL.', [
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return $this->searchWithDatabase($search, $accessibleDepartmentIds, $isGlobalSearch, $scopedDepartmentId);
+    }
+
+    protected function shouldUseScoutSearch(): bool
+    {
+        $driver = (string) config('scout.driver', 'collection');
+
+        return ! in_array($driver, ['null', 'collection', 'database'], true);
+    }
+
+    protected function searchWithScout(
+        string $search,
+        Collection $accessibleDepartmentIds,
+        bool $isGlobalSearch,
+        ?int $scopedDepartmentId
+    ): Collection {
+        return Document::search($search)
+            ->whereIn('department_id', $accessibleDepartmentIds->all())
+            ->when(! $isGlobalSearch && $scopedDepartmentId, function ($builder) use ($scopedDepartmentId) {
+                return $builder->where('department_id', '=', $scopedDepartmentId);
+            })
+            ->take(8)
+            ->query(function ($query) {
+                $query
+                    ->with([
+                        'department:id,name',
+                        'documentFolder:id,name,folder_code',
+                    ])
+                    ->select([
+                        'id',
+                        'department_id',
+                        'document_folder_id',
+                        'original_filename',
+                        'updated_at',
+                    ]);
+            })
+            ->get();
+    }
+
+    protected function searchWithDatabase(
+        string $search,
+        Collection $accessibleDepartmentIds,
+        bool $isGlobalSearch,
+        ?int $scopedDepartmentId
+    ): Collection {
+        $query = Document::query()
+            ->with([
+                'department:id,name',
+                'documentFolder:id,name,folder_code',
+            ])
+            ->whereIn('department_id', $accessibleDepartmentIds->all())
+            ->where(function ($q) use ($search) {
+                $q->where('original_filename', 'like', '%'.$search.'%')
+                    ->orWhereHas('documentFolder', function ($folderQuery) use ($search) {
+                        $folderQuery
+                            ->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('folder_code', 'like', '%'.$search.'%');
+                    })
+                    ->orWhereHas('department', function ($departmentQuery) use ($search) {
+                        $departmentQuery
+                            ->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('code', 'like', '%'.$search.'%');
+                    });
+            })
+            ->latest();
+
+        if (! $isGlobalSearch && $scopedDepartmentId) {
+            $query->where('department_id', $scopedDepartmentId);
+        }
+
+        return $query
+            ->limit(8)
+            ->get(['id', 'department_id', 'document_folder_id', 'original_filename', 'updated_at']);
     }
 
     public function store(StoreDepartmentDocumentRequest $request, DepartmentDocumentUploadService $service)

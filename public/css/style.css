@@ -625,9 +625,9 @@
     color: #92400e;
 }
 
-/* ─── Milli-Search dropdown ────────────────────────────────────────── */
+/* ─── Meili-Search dropdown ────────────────────────────────────────── */
 
-.milli-results-container {
+.meili-results-container {
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
@@ -641,25 +641,25 @@
     overflow-y: auto;
 }
 
-.milli-item {
+.meili-item {
     padding: 10px 14px;
     border-bottom: 1px solid #f3f4f6;
     font-size: 0.875rem;
     transition: background 0.12s;
 }
 
-.milli-folder-code {
+.meili-folder-code {
     color: #dd270d;
     font-weight: 700;
     font-size: 0.85rem;
 }
 
-.milli-item:last-child {
+.meili-item:last-child {
     border-bottom: none;
 }
 
-.milli-item:hover,
-.milli-item.active {
+.meili-item:hover,
+.meili-item.active {
     background: #fef2f2;
     color: #dd270d;
     cursor: pointer;
