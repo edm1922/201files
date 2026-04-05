@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="milli-search-url" content="{{ route('employees.milliSearch') }}">
+    <meta name="meili-search-url" content="{{ route('employees.meiliSearch') }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('logo2.png') }}">
 
@@ -61,6 +61,16 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{{ route('notifications.index') }}" title="Notifications">
+                            <i class="fas fa-bell me-1"></i>
+                            @if (Auth::user()->unreadNotifications()->count() > 0)
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ Auth::user()->unreadNotifications()->count() > 99 ? '99+' : Auth::user()->unreadNotifications()->count() }}
+                                </span>
+                            @endif
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('profile.edit') }}">
                             <i class="fas fa-user me-1"></i>{{ Auth::user()->name }}
