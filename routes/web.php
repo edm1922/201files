@@ -145,6 +145,10 @@ Route::middleware('auth')->group(function () {
             ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
             ->name('folders.destroy');
 
+        Route::get('/folders/{folder}/update-history', [DepartmentDocumentController::class, 'folderUpdateHistory'])
+            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->name('folders.update-history');
+
         Route::post('/', [DepartmentDocumentController::class, 'store'])
             ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
             ->name('store');
@@ -173,6 +177,11 @@ Route::middleware('auth')->group(function () {
         Route::patch('/{document}', [DepartmentDocumentController::class, 'update'])
             ->middleware('role:admin,encoder')
             ->name('update');
+
+        Route::get('/{document}/update-history', [DepartmentDocumentController::class, 'updateHistory'])
+            ->middleware('can:download,document')
+            ->name('update-history')
+            ->withTrashed();
     });
 });
 

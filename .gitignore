@@ -15,11 +15,8 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
-docs/superpowers
 .claude
 /auth.json
-/docs/superpowers
-.claude
 /.fleet
 /.idea
 /.nova

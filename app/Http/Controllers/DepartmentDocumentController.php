@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDepartmentDocumentRequest;
+use App\Models\AuditLog;
 use App\Models\Department;
 use App\Models\Document;
 use App\Models\DocumentFolder;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DepartmentDocumentController extends Controller
@@ -140,7 +142,11 @@ class DepartmentDocumentController extends Controller
 
         $query->latest();
 
-        $documents = $query->paginate(20)->appends($request->except('document_id'));
+        $defaultPerPage = 15;
+        $perPage = $request->integer('per_page', $defaultPerPage);
+        $perPage = max($defaultPerPage, min($perPage, 200));
+
+        $documents = $query->paginate($perPage)->appends($request->except('document_id', 'page'));
 
         return view('department-documents.index', compact(
             'departments',
@@ -381,6 +387,16 @@ class DepartmentDocumentController extends Controller
             'folder_code' => $folderCode,
         ]);
 
+        AuditService::log('created', 'Department folder created.', $folder, [
+            'before' => [],
+            'after' => [
+                'department_id' => $departmentId,
+                'parent_id' => $parentId,
+                'name' => $folder->name,
+                'folder_code' => $folder->folder_code,
+            ],
+        ]);
+
         return $this->folderActionSuccess(
             $request,
             'Folder created successfully.',
@@ -434,10 +450,14 @@ class DepartmentDocumentController extends Controller
         ]);
 
         AuditService::log('updated', "Department folder updated: {$oldName}.", $folder, [
-            'old_name' => $oldName,
-            'new_name' => $folderName,
-            'old_code' => $oldCode,
-            'new_code' => $folderCode,
+            'before' => [
+                'name' => $oldName,
+                'folder_code' => $oldCode,
+            ],
+            'after' => [
+                'name' => $folderName,
+                'folder_code' => $folderCode,
+            ],
         ]);
 
         return $this->folderActionSuccess(
@@ -472,12 +492,17 @@ class DepartmentDocumentController extends Controller
         $parentFolderId = $folder->parent_id ? (int) $folder->parent_id : null;
         $folderName = $folder->name;
 
-        $folder->delete();
-
-        AuditService::log('deleted', "Department folder deleted: {$folderName}.", null, [
-            'folder_name' => $folderName,
-            'department_id' => $departmentId,
+        AuditService::log('deleted', "Department folder deleted: {$folderName}.", $folder, [
+            'before' => [
+                'name' => $folderName,
+                'folder_code' => $folder->folder_code,
+                'department_id' => $departmentId,
+                'parent_id' => $folder->parent_id,
+            ],
+            'after' => [],
         ]);
+
+        $folder->delete();
 
         $redirectParams = ['department_id' => $departmentId];
         if ($parentFolderId) {
@@ -490,6 +515,111 @@ class DepartmentDocumentController extends Controller
             $redirectParams,
             null
         );
+    }
+
+    public function folderUpdateHistory(Request $request, DocumentFolder $folder): JsonResponse
+    {
+        $departmentId = (int) $folder->department_id;
+        $this->authorize('createForDepartment', [Document::class, $departmentId]);
+
+        $folderLogs = AuditLog::query()
+            ->where('model_type', DocumentFolder::class)
+            ->where('model_id', (int) $folder->id)
+            ->whereIn('action', ['created', 'updated', 'deleted'])
+            ->with('user')
+            ->latest('created_at')
+            ->get();
+
+        $documentLogs = AuditLog::query()
+            ->where('model_type', Document::class)
+            ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored', 'deleted'])
+            ->with('user')
+            ->latest('created_at')
+            ->limit(1000)
+            ->get();
+
+        $documentIds = $documentLogs
+            ->pluck('model_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        $documentsById = Document::withTrashed()
+            ->whereIn('id', $documentIds)
+            ->get(['id', 'department_id', 'document_folder_id', 'original_filename'])
+            ->keyBy('id');
+
+        $relevantDocumentLogs = $documentLogs
+            ->filter(fn (AuditLog $log) => $this->isDocumentAuditRelevantToFolder($log, $folder, $documentsById))
+            ->values();
+
+        $logs = $folderLogs
+            ->map(function (AuditLog $log) {
+                return [
+                    'logged_at' => $log->created_at,
+                    'user_name' => $log->user?->name ?: 'System',
+                    'user_role' => $log->user?->role ?: 'System',
+                    'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                    'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                    'description' => 'Folder: '.($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                    'changes' => $log->changes,
+                ];
+            })
+            ->concat($relevantDocumentLogs->map(function (AuditLog $log) use ($documentsById) {
+                $document = $documentsById->get((int) $log->model_id);
+                $documentName = $document?->original_filename ?: ($log->target_name ?: 'Document');
+
+                return [
+                    'logged_at' => $log->created_at,
+                    'user_name' => $log->user?->name ?: 'System',
+                    'user_role' => $log->user?->role ?: 'System',
+                    'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                    'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                    'description' => "Document ({$documentName}): ".($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                    'changes' => $log->changes,
+                ];
+            }))
+            ->sortByDesc(fn (array $entry) => $entry['logged_at'])
+            ->values()
+            ->map(function (array $entry) {
+                unset($entry['logged_at']);
+
+                return $entry;
+            });
+
+        return response()->json($logs);
+    }
+
+    private function isDocumentAuditRelevantToFolder(AuditLog $log, DocumentFolder $folder, Collection $documentsById): bool
+    {
+        $folderId = (int) $folder->id;
+        $folderName = mb_strtolower(trim((string) $folder->name));
+        $document = $documentsById->get((int) $log->model_id);
+
+        if ($document && (int) $document->department_id === (int) $folder->department_id && (int) ($document->document_folder_id ?? 0) === $folderId) {
+            return true;
+        }
+
+        $changes = $log->changes;
+        if (! is_array($changes)) {
+            return false;
+        }
+
+        $before = is_array($changes['before'] ?? null) ? $changes['before'] : [];
+        $after = is_array($changes['after'] ?? null) ? $changes['after'] : [];
+
+        $beforeFolderId = isset($before['document_folder_id']) ? (int) $before['document_folder_id'] : null;
+        $afterFolderId = isset($after['document_folder_id']) ? (int) $after['document_folder_id'] : null;
+        if ($beforeFolderId === $folderId || $afterFolderId === $folderId) {
+            return true;
+        }
+
+        $beforeFolderName = mb_strtolower(trim((string) ($before['document_folder'] ?? '')));
+        $afterFolderName = mb_strtolower(trim((string) ($after['document_folder'] ?? '')));
+
+        return ($beforeFolderName !== '' && $beforeFolderName === $folderName)
+            || ($afterFolderName !== '' && $afterFolderName === $folderName);
     }
 
     public function archive(Document $document)
@@ -510,6 +640,16 @@ class DepartmentDocumentController extends Controller
 
         $validated = $request->validate([
             'original_filename' => ['required', 'string', 'max:255'],
+            'document_type_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('document_types', 'id')->where(fn ($query) => $query->where('department_id', (int) $document->department_id)),
+            ],
+            'document_location_id' => ['nullable', 'integer', 'exists:document_locations,id'],
+            'document_folder_id' => ['nullable', 'integer', 'exists:document_folders,id'],
+            'date_received' => ['nullable', 'date'],
+            'expiry_date' => ['nullable', 'date'],
+            'expiry_change_reason' => ['nullable', 'string', 'max:500'],
         ]);
 
         $oldName = $document->original_filename;
@@ -523,22 +663,150 @@ class DepartmentDocumentController extends Controller
             $newName .= '.'.$oldExt;
         }
 
+        $document->loadMissing(['documentType:id,name,has_expiry', 'documentLocation:id,name', 'documentFolder:id,name,folder_code']);
+
+        $nextTypeId = array_key_exists('document_type_id', $validated)
+            ? (int) $validated['document_type_id']
+            : (int) $document->document_type_id;
+
+        $nextLocationId = array_key_exists('document_location_id', $validated)
+            ? (int) $validated['document_location_id']
+            : (int) $document->document_location_id;
+
+        $nextFolderId = $document->document_folder_id;
+        if (array_key_exists('document_folder_id', $validated)) {
+            $folderInput = $validated['document_folder_id'];
+            $nextFolderId = ($folderInput === null || (int) $folderInput <= 0) ? null : (int) $folderInput;
+        }
+
+        $nextDateReceived = array_key_exists('date_received', $validated)
+            ? $validated['date_received']
+            : optional($document->date_received)->toDateString();
+
+        $nextExpiryDate = array_key_exists('expiry_date', $validated)
+            ? ($validated['expiry_date'] ?: null)
+            : optional($document->expiry_date)->toDateString();
+
+        $expiryChangeReason = isset($validated['expiry_change_reason'])
+            ? trim((string) $validated['expiry_change_reason'])
+            : '';
+
+        if ($nextDateReceived && $nextExpiryDate && strtotime((string) $nextDateReceived) > strtotime((string) $nextExpiryDate)) {
+            return back()->withErrors([
+                'date_received' => 'Date received must be on or before the expiry date.',
+            ])->withInput();
+        }
+
+        $nextType = DocumentType::query()->find($nextTypeId);
+        if ($nextType && (bool) $nextType->has_expiry && ! $nextExpiryDate) {
+            return back()->withErrors([
+                'expiry_date' => 'Expiry date is required for the selected document type.',
+            ])->withInput();
+        }
+
+        $currentExpiryDate = optional($document->expiry_date)->toDateString();
+        if ($currentExpiryDate !== $nextExpiryDate && $expiryChangeReason === '') {
+            return back()->withErrors([
+                'expiry_change_reason' => 'Please provide a reason when changing expiry date.',
+            ])->withInput();
+        }
+
+        if ($nextFolderId) {
+            $folderBelongsToDepartment = DocumentFolder::query()
+                ->whereKey($nextFolderId)
+                ->where('department_id', (int) $document->department_id)
+                ->exists();
+
+            if (! $folderBelongsToDepartment) {
+                return back()->withErrors([
+                    'document_folder_id' => 'The selected virtual folder does not belong to this document department.',
+                ])->withInput();
+            }
+        }
+
         $newName = $this->resolveUniqueFilenameForDocument(
             document: $document,
             desiredFilename: $newName,
-            ignoreDocumentId: (int) $document->id
+            ignoreDocumentId: (int) $document->id,
+            folderIdOverride: $nextFolderId
         );
 
-        $document->update([
-            'original_filename' => $newName,
-        ]);
+        $nextLocation = DocumentLocation::query()->find($nextLocationId);
+        $nextFolder = $nextFolderId ? DocumentFolder::query()->find($nextFolderId) : null;
 
-        AuditService::log('updated', "Document renamed from '{$oldName}' to '{$newName}'.", $document, [
-            'old_name' => $oldName,
-            'new_name' => $newName,
-        ]);
+        $before = [];
+        $after = [];
 
-        return back()->with('success', 'Document renamed successfully.');
+        $track = static function (array &$beforeMap, array &$afterMap, string $key, mixed $oldValue, mixed $newValue): void {
+            $old = $oldValue === null ? null : (string) $oldValue;
+            $new = $newValue === null ? null : (string) $newValue;
+
+            if ($old !== $new) {
+                $beforeMap[$key] = $oldValue;
+                $afterMap[$key] = $newValue;
+            }
+        };
+
+        $track($before, $after, 'original_filename', $document->original_filename, $newName);
+        $track($before, $after, 'document_type', $document->documentType?->name, $nextType?->name);
+        $track($before, $after, 'document_location', $document->documentLocation?->name, $nextLocation?->name);
+        $track($before, $after, 'document_folder', $document->documentFolder?->name, $nextFolder?->name);
+        $track(
+            $before,
+            $after,
+            'date_received',
+            optional($document->date_received)->format('Y-m-d'),
+            $nextDateReceived
+        );
+        $track(
+            $before,
+            $after,
+            'expiry_date',
+            optional($document->expiry_date)->format('Y-m-d'),
+            $nextExpiryDate
+        );
+
+        if ($currentExpiryDate !== $nextExpiryDate && $expiryChangeReason !== '') {
+            $after['expiry_change_reason'] = $expiryChangeReason;
+        }
+
+        if (empty($after)) {
+            return back()->with('success', 'No changes were made.');
+        }
+
+        Document::withoutSyncingToSearch(function () use (
+            $document,
+            $newName,
+            $nextTypeId,
+            $nextLocationId,
+            $nextFolderId,
+            $nextDateReceived,
+            $nextExpiryDate
+        ): void {
+            $document->update([
+                'original_filename' => $newName,
+                'document_type_id' => $nextTypeId,
+                'document_location_id' => $nextLocationId,
+                'document_folder_id' => $nextFolderId,
+                'date_received' => $nextDateReceived,
+                'expiry_date' => $nextExpiryDate,
+            ]);
+        });
+
+        $isRenameOnly = count($after) === 1 && array_key_exists('original_filename', $after);
+
+        AuditService::log(
+            'updated',
+            $isRenameOnly ? "Document renamed from '{$oldName}' to '{$newName}'." : 'Document details updated.',
+            $document,
+            [
+                'before' => $before,
+                'after' => $after,
+                'document_folder_id' => $nextFolderId,
+            ]
+        );
+
+        return back()->with('success', $isRenameOnly ? 'Document renamed successfully.' : 'Document details updated successfully.');
     }
 
     public function restore($id)
@@ -559,12 +827,40 @@ class DepartmentDocumentController extends Controller
         return back()->with('success', 'Document restored successfully.');
     }
 
-    private function resolveUniqueFilenameForDocument(Document $document, string $desiredFilename, ?int $ignoreDocumentId = null): string
+    public function updateHistory(Document $document): JsonResponse
     {
+        $this->authorize('download', $document);
+
+        $logs = AuditLog::query()
+            ->where('model_type', Document::class)
+            ->where('model_id', $document->id)
+            ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored'])
+            ->with('user')
+            ->latest('created_at')
+            ->get();
+
+        return response()->json($logs->map(function ($log) {
+            return [
+                'user_name' => $log->user?->name ?: 'System',
+                'user_role' => $log->user?->role ?: 'System',
+                'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                'description' => $log->clean_description ?: ($log->description ?: ucfirst((string) $log->action)),
+                'changes' => $log->changes,
+            ];
+        })->values());
+    }
+
+    private function resolveUniqueFilenameForDocument(
+        Document $document,
+        string $desiredFilename,
+        ?int $ignoreDocumentId = null,
+        ?int $folderIdOverride = null
+    ): string {
         $original = trim((string) $desiredFilename);
         $original = $original !== '' ? $original : 'file';
 
-        if (! $this->activeFilenameExistsForLocation($document, $original, $ignoreDocumentId)) {
+        if (! $this->activeFilenameExistsForLocation($document, $original, $ignoreDocumentId, $folderIdOverride)) {
             return $original;
         }
 
@@ -580,7 +876,7 @@ class DepartmentDocumentController extends Controller
             $truncatedBase = mb_substr($baseName, 0, $maxBaseLength);
             $candidate = "{$truncatedBase}{$suffix}{$extensionWithDot}";
 
-            if (! $this->activeFilenameExistsForLocation($document, $candidate, $ignoreDocumentId)) {
+            if (! $this->activeFilenameExistsForLocation($document, $candidate, $ignoreDocumentId, $folderIdOverride)) {
                 return $candidate;
             }
 
@@ -588,16 +884,22 @@ class DepartmentDocumentController extends Controller
         }
     }
 
-    private function activeFilenameExistsForLocation(Document $document, string $filename, ?int $ignoreDocumentId = null): bool
-    {
+    private function activeFilenameExistsForLocation(
+        Document $document,
+        string $filename,
+        ?int $ignoreDocumentId = null,
+        ?int $folderIdOverride = null
+    ): bool {
+        $targetFolderId = func_num_args() >= 4 ? $folderIdOverride : $document->document_folder_id;
+
         return Document::query()
             ->where('department_id', (int) $document->department_id)
             ->where('status', 'active')
             ->whereNull('deleted_at')
             ->when(
-                $document->document_folder_id === null,
+                $targetFolderId === null,
                 fn ($query) => $query->whereNull('document_folder_id'),
-                fn ($query) => $query->where('document_folder_id', (int) $document->document_folder_id)
+                fn ($query) => $query->where('document_folder_id', (int) $targetFolderId)
             )
             ->when(
                 $ignoreDocumentId !== null,
@@ -623,6 +925,19 @@ class DepartmentDocumentController extends Controller
         if (Storage::disk('local')->exists($document->file_path)) {
             Storage::disk('local')->delete($document->file_path);
         }
+
+        AuditService::log('deleted', "Department document permanently deleted: {$filename}.", $document, [
+            'before' => [
+                'original_filename' => $document->original_filename,
+                'department_id' => $document->department_id,
+                'document_type_id' => $document->document_type_id,
+                'document_folder_id' => $document->document_folder_id,
+                'document_location_id' => $document->document_location_id,
+                'status' => $document->status,
+                'file_path' => $document->file_path,
+            ],
+            'after' => [],
+        ]);
 
         $document->forceDelete();
 

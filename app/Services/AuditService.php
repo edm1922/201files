@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 
@@ -20,12 +21,17 @@ class AuditService
         $targetName = null;
         if ($model) {
             $targetName = match (get_class($model)) {
-                'App\Models\Employee'   => $model->full_name,
-                'App\Models\User'       => $model->username ?? $model->name,
-                'App\Models\Document'   => $model->original_filename,
-                'App\Models\Company', 
+                'App\Models\Employee' => $model->full_name,
+                'App\Models\User' => $model->username ?? $model->name,
+                'App\Models\Document' => $model->original_filename,
+                'App\Models\DocumentFolder' => $model->name,
+                'App\Models\DocumentType' => $model->name,
+                'App\Models\DocumentLocation' => $model->name,
+                'App\Models\FolderLocation' => 'Row '.$model->row_name,
+                'App\Models\BankType' => $model->name,
+                'App\Models\Company',
                 'App\Models\Department' => $model->name,
-                default => 'ID: ' . $model->id
+                default => 'ID: '.$model->id
             };
         }
 
@@ -47,11 +53,12 @@ class AuditService
      */
     public static function logDocument(string $action, int $documentId, ?string $description = null, ?array $changes = null): AuditLog
     {
-        $document = \App\Models\Document::find($documentId);
+        $document = Document::find($documentId);
+
         return self::log($action, $description, $document, $changes);
     }
 
-    public static function logDepartmentDocumentLifecycle(string $action, \App\Models\Document $document, array $changes = []): AuditLog
+    public static function logDepartmentDocumentLifecycle(string $action, Document $document, array $changes = []): AuditLog
     {
         return self::log($action, "Department document {$action}: {$document->system_filename}", $document, $changes);
     }

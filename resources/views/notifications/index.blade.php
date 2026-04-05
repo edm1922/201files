@@ -10,25 +10,25 @@
                 background: linear-gradient(120deg, #f6f9fc 0%, #eaf2ff 50%, #f9f5ff 100%);
                 border: 1px solid #dbe7ff;
                 border-radius: 18px;
-                padding: 1.25rem;
+                padding: 0.9rem 1rem;
             }
 
             .notif-stat {
-                border-radius: 12px;
+                border-radius: 10px;
                 border: 1px solid #d9e4ff;
                 background: #fff;
-                padding: 0.75rem 0.9rem;
+                padding: 0.45rem 0.65rem;
             }
 
             .notif-stat-label {
-                font-size: 0.75rem;
+                font-size: 0.66rem;
                 text-transform: uppercase;
                 letter-spacing: 0.04em;
                 color: #5b6b88;
             }
 
             .notif-stat-value {
-                font-size: 1.2rem;
+                font-size: 0.95rem;
                 font-weight: 700;
                 color: #16243b;
                 line-height: 1;
@@ -44,7 +44,7 @@
             .notif-item {
                 border: 0;
                 border-bottom: 1px solid #edf2fa;
-                padding: 1rem;
+                padding: 0.7rem 0.8rem;
                 transition: background-color 0.2s ease;
             }
 
@@ -61,10 +61,10 @@
             }
 
             .notif-dot {
-                width: 10px;
-                height: 10px;
+                width: 8px;
+                height: 8px;
                 border-radius: 50%;
-                margin-top: 0.45rem;
+                margin-top: 0.4rem;
                 flex-shrink: 0;
                 background: #9bb0cc;
             }
@@ -75,9 +75,9 @@
             }
 
             .notif-chip {
-                font-size: 0.72rem;
+                font-size: 0.64rem;
                 font-weight: 600;
-                padding: 0.25rem 0.55rem;
+                padding: 0.18rem 0.45rem;
                 border-radius: 999px;
                 border: 1px solid #dbe3f1;
                 color: #435470;
@@ -85,13 +85,19 @@
             }
 
             .notif-actions .btn {
-                min-height: 40px;
-                min-width: 40px;
+                min-height: 34px;
+                min-width: 34px;
+                font-size: 0.8rem;
+                padding: 0.3rem 0.55rem;
+            }
+
+            .notif-actions form {
+                margin: 0;
             }
 
             @media (max-width: 767.98px) {
                 .notif-item {
-                    padding: 0.9rem;
+                    padding: 0.7rem;
                 }
 
                 .notif-actions {
@@ -115,10 +121,10 @@
     <section class="notif-hero mb-4" aria-labelledby="notifications-heading">
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
             <div>
-                <h1 id="notifications-heading" class="h4 mb-1 fw-bold text-dark">Notifications</h1>
-                <p class="mb-0 text-muted">Stay updated with document expiry reminders and alerts.</p>
+                <h1 id="notifications-heading" class="h5 mb-1 fw-bold text-dark">Notifications</h1>
+                <p class="mb-0 text-muted small">Stay updated with document expiry reminders and alerts.</p>
             </div>
-            <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap gap-1">
                 <div class="notif-stat">
                     <div class="notif-stat-label">Unread (All)</div>
                     <div class="notif-stat-value">{{ number_format($totalUnreadCount) }}</div>
@@ -130,7 +136,7 @@
                 @if ($notifications->count() > 0)
                     <form method="POST" action="{{ route('notifications.mark-all-read') }}" class="d-flex align-items-center">
                         @csrf
-                        <button type="submit" class="btn btn-outline-secondary">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-check-double me-1" aria-hidden="true"></i>Mark all as read
                         </button>
                     </form>
@@ -167,8 +173,8 @@
                             @endif
                         </div>
 
-                        <h2 class="h6 mb-1 fw-semibold text-dark">{{ $data['message'] ?? 'Notification' }}</h2>
-                        <div class="small text-muted">
+                        <h2 class="mb-1 fw-semibold text-dark" style="font-size: 0.95rem;">{{ $data['message'] ?? 'Notification' }}</h2>
+                        <div class="text-muted" style="font-size: 0.78rem;">
                             <i class="far fa-clock me-1" aria-hidden="true"></i>{{ $notification->created_at?->diffForHumans() }}
                             @if (!empty($data['expiry_date']))
                                 <span class="ms-2"><i class="far fa-calendar-alt me-1" aria-hidden="true"></i>Expiry: {{ \Carbon\Carbon::parse($data['expiry_date'])->format('M d, Y') }}</span>

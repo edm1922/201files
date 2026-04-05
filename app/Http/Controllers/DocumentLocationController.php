@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DocumentLocation;
+use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -21,8 +22,15 @@ class DocumentLocationController extends Controller
 
         $name = trim((string) $validated['name']);
 
-        DocumentLocation::create([
+        $documentLocation = DocumentLocation::create([
             'name' => $name,
+        ]);
+
+        AuditService::log('created', 'Created document location.', $documentLocation, [
+            'before' => [],
+            'after' => [
+                'name' => $documentLocation->name,
+            ],
         ]);
 
         return redirect()->route('settings.folder-locations.index', ['tab' => 'document-locations'])
@@ -36,8 +44,19 @@ class DocumentLocationController extends Controller
         ]);
 
         $name = trim((string) $validated['name']);
+        $before = [
+            'name' => $documentLocation->name,
+        ];
+
         $documentLocation->update([
             'name' => $name,
+        ]);
+
+        AuditService::log('updated', 'Updated document location.', $documentLocation, [
+            'before' => $before,
+            'after' => [
+                'name' => $name,
+            ],
         ]);
 
         return redirect()->route('settings.folder-locations.index', ['tab' => 'document-locations'])
@@ -46,13 +65,25 @@ class DocumentLocationController extends Controller
 
     public function destroy(DocumentLocation $documentLocation): RedirectResponse
     {
-        if ($documentLocation->documents()->exists()) {
+        $documentsCount = $documentLocation->documents()->count();
+
+        if ($documentsCount > 0) {
             return redirect()->route('settings.folder-locations.index', ['tab' => 'document-locations'])
                 ->with('error', "Cannot delete '{$documentLocation->name}' because it is assigned to existing documents.");
         }
 
         $name = $documentLocation->name;
+        $snapshot = [
+            'name' => $name,
+            'documents_count_at_delete' => $documentsCount,
+        ];
+
         $documentLocation->delete();
+
+        AuditService::log('deleted', 'Deleted document location.', $documentLocation, [
+            'before' => $snapshot,
+            'after' => [],
+        ]);
 
         return redirect()->route('settings.folder-locations.index', ['tab' => 'document-locations'])
             ->with('success', "Document location '{$name}' deleted successfully.");

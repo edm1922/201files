@@ -44,47 +44,55 @@
 </head>
 <body>
 
+    @php
+        $unreadNotificationsCount = Auth::user()->unreadNotifications()->count();
+    @endphp
+
     <!-- ── Top Navbar ── -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container-fluid">
+    <nav class="navbar navbar-dark fixed-top topbar" role="navigation" aria-label="Primary">
+        <div class="container-fluid topbar__inner">
             <!-- Drawer toggle -->
-            <button class="btn btn-dark me-2 px-2" id="sidebar-toggle" title="Toggle menu">
+            <button class="btn topbar__icon-btn me-2" id="sidebar-toggle" title="Toggle menu" aria-label="Toggle sidebar">
                 <i class="fas fa-bars"></i>
             </button>
-            <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
+            <a class="navbar-brand d-flex align-items-center topbar__brand" href="{{ route('dashboard') }}">
                 <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" height="35" class="me-2">
                 CSC-DMS
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="{{ route('notifications.index') }}" title="Notifications">
-                            <i class="fas fa-bell me-1"></i>
-                            @if (Auth::user()->unreadNotifications()->count() > 0)
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {{ Auth::user()->unreadNotifications()->count() > 99 ? '99+' : Auth::user()->unreadNotifications()->count() }}
-                                </span>
-                            @endif
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('profile.edit') }}">
-                            <i class="fas fa-user me-1"></i>{{ Auth::user()->name }}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="nav-link btn btn-link" style="color: rgba(255,255,255,.55);">
-                                <i class="fas fa-sign-out-alt me-1"></i>Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
+            <div class="topbar__actions ms-auto">
+                <a class="btn topbar__icon-btn topbar__notification" href="{{ route('notifications.index') }}" title="Notifications" aria-label="Notifications{{ $unreadNotificationsCount > 0 ? ' (' . $unreadNotificationsCount . ' unread)' : '' }}">
+                    <i class="fas fa-bell"></i>
+                    @if ($unreadNotificationsCount > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+                        </span>
+                    @endif
+                </a>
+
+                <div class="dropdown topbar__user-dropdown">
+                    <button class="btn topbar__user-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open user menu">
+                        <span class="topbar__user-icon" aria-hidden="true">
+                            <i class="fas fa-user"></i>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end topbar__user-menu">
+                        <li class="topbar__menu-header">
+                            <div class="topbar__menu-name">{{ Auth::user()->name }}</div>
+                            <div class="topbar__menu-role">{{ ucfirst(Auth::user()->role ?? 'User') }}</div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('profile.edit') }}">Profile</a>
+                        </li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item topbar__menu-logout">Log Out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
