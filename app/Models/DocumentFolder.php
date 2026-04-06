@@ -13,6 +13,7 @@ class DocumentFolder extends Model
         'parent_id',
         'name',
         'folder_code',
+        'document_location_id',
     ];
 
     public function department(): BelongsTo
@@ -33,5 +34,10 @@ class DocumentFolder extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
+    }
+
+    public function documentLocation(): BelongsTo
+    {
+        return $this->belongsTo(DocumentLocation::class);
     }
 }

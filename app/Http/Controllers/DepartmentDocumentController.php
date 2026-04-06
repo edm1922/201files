@@ -48,7 +48,7 @@ class DepartmentDocumentController extends Controller
             : collect();
 
         $allFolders = $selectedDepartmentId > 0
-            ? DocumentFolder::query()->where('department_id', $selectedDepartmentId)->orderBy('name')->get()
+            ? DocumentFolder::query()->with('documentLocation')->where('department_id', $selectedDepartmentId)->orderBy('name')->get()
             : collect();
 
         $currentFolderId = (int) $request->integer('document_folder_id');
@@ -173,7 +173,7 @@ class DepartmentDocumentController extends Controller
             : $user->authorizedDepartments()->where('is_active', true)->pluck('departments.id');
 
         $search = trim((string) $request->query('q', ''));
-        if (mb_strlen($search) < 2) {
+        if (mb_strlen($search) < 1) {
             return response()->json([
                 'results' => [],
             ]);
@@ -190,7 +190,14 @@ class DepartmentDocumentController extends Controller
             $hasScopedDepartment ? $selectedDepartmentId : null
         );
 
-        $results = $documents->map(function (Document $document) {
+        $folders = $this->searchFoldersForSuggestions(
+            $search,
+            $accessibleDepartmentIds,
+            $isGlobalSearch,
+            $hasScopedDepartment ? $selectedDepartmentId : null
+        );
+
+        $documentResults = $documents->map(function (Document $document) {
             $redirectParams = [
                 'department_id' => (int) $document->department_id,
                 'document_id' => (int) $document->id,
@@ -210,14 +217,72 @@ class DepartmentDocumentController extends Controller
                 'title' => $document->original_filename,
                 'department_name' => $document->department?->name,
                 'folder_label' => $folderLabel,
+                'updated_at_raw' => $document->updated_at,
                 'updated_at' => $document->updated_at?->format('M j, Y g:i A'),
                 'url' => route('department-documents.index', $redirectParams),
+                'type' => 'document',
             ];
-        })->values();
+        });
+
+        $folderResults = $folders->map(function (DocumentFolder $folder) {
+            return [
+                'id' => (int) $folder->id,
+                'title' => $folder->name . ($folder->folder_code ? ' ('.$folder->folder_code.')' : ''),
+                'department_name' => $folder->department?->name,
+                'folder_label' => 'Folder',
+                'updated_at_raw' => $folder->updated_at,
+                'updated_at' => $folder->updated_at?->format('M j, Y g:i A'),
+                'url' => route('department-documents.index', [
+                    'department_id' => (int) $folder->department_id,
+                    'document_folder_id' => (int) $folder->id,
+                ]),
+                'type' => 'folder',
+            ];
+        });
+
+        $results = $documentResults->concat($folderResults)
+            ->sortByDesc('updated_at_raw')
+            ->take(10)
+            ->map(function ($item) {
+                unset($item['updated_at_raw']);
+
+                return $item;
+            })
+            ->values();
 
         return response()->json([
             'results' => $results,
         ]);
+    }
+
+    protected function searchFoldersForSuggestions(
+        string $search,
+        Collection $accessibleDepartmentIds,
+        bool $isGlobalSearch,
+        ?int $scopedDepartmentId
+    ): Collection {
+        $tokens = array_filter(preg_split('/[\s,]+/', $search));
+
+        if (empty($tokens)) {
+            return collect();
+        }
+
+        $query = DocumentFolder::query()
+            ->with(['department:id,name'])
+            ->whereIn('department_id', $accessibleDepartmentIds->all());
+
+        foreach ($tokens as $token) {
+            $query->where(function ($q) use ($token) {
+                $q->where('name', 'like', '%'.$token.'%')
+                    ->orWhere('folder_code', 'like', '%'.$token.'%');
+            });
+        }
+
+        if (! $isGlobalSearch && $scopedDepartmentId) {
+            $query->where('department_id', $scopedDepartmentId);
+        }
+
+        return $query->latest()->limit(10)->get();
     }
 
     protected function searchDocumentsForSuggestions(
@@ -281,33 +346,42 @@ class DepartmentDocumentController extends Controller
         bool $isGlobalSearch,
         ?int $scopedDepartmentId
     ): Collection {
+        $tokens = array_filter(preg_split('/[\s,]+/', $search));
+
+        if (empty($tokens)) {
+            return collect();
+        }
+
         $query = Document::query()
             ->with([
                 'department:id,name',
                 'documentFolder:id,name,folder_code',
             ])
-            ->whereIn('department_id', $accessibleDepartmentIds->all())
-            ->where(function ($q) use ($search) {
-                $q->where('original_filename', 'like', '%'.$search.'%')
-                    ->orWhereHas('documentFolder', function ($folderQuery) use ($search) {
+            ->whereIn('department_id', $accessibleDepartmentIds->all());
+
+        foreach ($tokens as $token) {
+            $query->where(function ($q) use ($token) {
+                $q->where('original_filename', 'like', '%'.$token.'%')
+                    ->orWhereHas('documentFolder', function ($folderQuery) use ($token) {
                         $folderQuery
-                            ->where('name', 'like', '%'.$search.'%')
-                            ->orWhere('folder_code', 'like', '%'.$search.'%');
+                            ->where('name', 'like', '%'.$token.'%')
+                            ->orWhere('folder_code', 'like', '%'.$token.'%');
                     })
-                    ->orWhereHas('department', function ($departmentQuery) use ($search) {
+                    ->orWhereHas('department', function ($departmentQuery) use ($token) {
                         $departmentQuery
-                            ->where('name', 'like', '%'.$search.'%')
-                            ->orWhere('code', 'like', '%'.$search.'%');
+                            ->where('name', 'like', '%'.$token.'%')
+                            ->orWhere('code', 'like', '%'.$token.'%');
                     });
-            })
-            ->latest();
+            });
+        }
 
         if (! $isGlobalSearch && $scopedDepartmentId) {
             $query->where('department_id', $scopedDepartmentId);
         }
 
         return $query
-            ->limit(8)
+            ->latest()
+            ->limit(10)
             ->get(['id', 'department_id', 'document_folder_id', 'original_filename', 'updated_at']);
     }
 
@@ -345,6 +419,7 @@ class DepartmentDocumentController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:document_folders,id'],
             'name' => ['required', 'string', 'max:120'],
             'folder_code' => ['nullable', 'string', 'max:20'],
+            'document_location_id' => ['nullable', 'integer', 'exists:document_locations,id'],
         ]);
 
         $departmentId = (int) $validated['department_id'];
@@ -380,11 +455,14 @@ class DepartmentDocumentController extends Controller
             return $this->folderValidationError($request, 'A folder with this name already exists in this location.');
         }
 
+        $documentLocationId = isset($validated['document_location_id']) ? (int) $validated['document_location_id'] : null;
+
         $folder = DocumentFolder::create([
             'department_id' => $departmentId,
             'parent_id' => $parentId,
             'name' => $folderName,
             'folder_code' => $folderCode,
+            'document_location_id' => $documentLocationId,
         ]);
 
         AuditService::log('created', 'Department folder created.', $folder, [
@@ -394,6 +472,7 @@ class DepartmentDocumentController extends Controller
                 'parent_id' => $parentId,
                 'name' => $folder->name,
                 'folder_code' => $folder->folder_code,
+                'document_location_id' => $folder->document_location_id,
             ],
         ]);
 
@@ -417,6 +496,7 @@ class DepartmentDocumentController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'folder_code' => ['nullable', 'string', 'max:40'],
+            'document_location_id' => ['nullable', 'integer', 'exists:document_locations,id'],
         ]);
 
         $folderName = trim((string) $validated['name']);
@@ -428,6 +508,8 @@ class DepartmentDocumentController extends Controller
         if ($folderCode === '') {
             $folderCode = null;
         }
+
+        $documentLocationId = isset($validated['document_location_id']) ? (int) $validated['document_location_id'] : null;
 
         // Check for duplicate name in the same parent (excluding itself)
         $duplicate = DocumentFolder::query()
@@ -443,20 +525,24 @@ class DepartmentDocumentController extends Controller
 
         $oldName = $folder->name;
         $oldCode = $folder->folder_code;
+        $oldLocation = $folder->document_location_id;
 
         $folder->update([
             'name' => $folderName,
             'folder_code' => $folderCode,
+            'document_location_id' => $documentLocationId,
         ]);
 
         AuditService::log('updated', "Department folder updated: {$oldName}.", $folder, [
             'before' => [
                 'name' => $oldName,
                 'folder_code' => $oldCode,
+                'document_location_id' => $oldLocation,
             ],
             'after' => [
                 'name' => $folderName,
                 'folder_code' => $folderCode,
+                'document_location_id' => $documentLocationId,
             ],
         ]);
 
@@ -669,14 +755,22 @@ class DepartmentDocumentController extends Controller
             ? (int) $validated['document_type_id']
             : (int) $document->document_type_id;
 
-        $nextLocationId = array_key_exists('document_location_id', $validated)
-            ? (int) $validated['document_location_id']
-            : (int) $document->document_location_id;
-
         $nextFolderId = $document->document_folder_id;
         if (array_key_exists('document_folder_id', $validated)) {
             $folderInput = $validated['document_folder_id'];
             $nextFolderId = ($folderInput === null || (int) $folderInput <= 0) ? null : (int) $folderInput;
+        }
+
+        $nextLocationId = array_key_exists('document_location_id', $validated)
+            ? (int) $validated['document_location_id']
+            : (int) $document->document_location_id;
+
+        // Force location inheritance if folder has an assigned location
+        if ($nextFolderId) {
+            $targetFolder = \App\Models\DocumentFolder::query()->find($nextFolderId);
+            if ($targetFolder && $targetFolder->document_location_id) {
+                $nextLocationId = (int) $targetFolder->document_location_id;
+            }
         }
 
         $nextDateReceived = array_key_exists('date_received', $validated)

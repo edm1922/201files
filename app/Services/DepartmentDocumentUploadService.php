@@ -21,7 +21,7 @@ class DepartmentDocumentUploadService
     {
         $departmentId = (int) $validatedData['department_id'];
         $docTypeId = (int) $validatedData['document_type_id'];
-        $documentLocationId = (int) $validatedData['document_location_id'];
+        $documentLocationId = isset($validatedData['document_location_id']) ? (int) $validatedData['document_location_id'] : null;
         $uploadMode = $validatedData['upload_mode'] ?? 'standard';
         $dateReceived = Carbon::parse($validatedData['date_received']);
         $expiryDate = isset($validatedData['expiry_date']) ? Carbon::parse($validatedData['expiry_date']) : null;
@@ -64,7 +64,7 @@ class DepartmentDocumentUploadService
         array $files,
         int $departmentId,
         DocumentType $documentType,
-        int $documentLocationId,
+        ?int $documentLocationId,
         ?int $documentFolderId,
         User $user,
         Carbon $dateReceived,
@@ -162,7 +162,7 @@ class DepartmentDocumentUploadService
         UploadedFile $file,
         int $departmentId,
         DocumentType $documentType,
-        int $documentLocationId,
+        ?int $documentLocationId,
         ?int $documentFolderId,
         User $user,
         Carbon $dateReceived,
