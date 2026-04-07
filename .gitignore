@@ -23,3 +23,9 @@ yarn-error.log
 /.vscode
 /.zed
 *.bat
+*.vbs
+# Meilisearch files inside the tools directory
+tools/Meilisearch/meilisearch.exe
+tools/Meilisearch/data.ms/
+tools/Meilisearch/*.vbs
+tools/Meilisearch/*.bat

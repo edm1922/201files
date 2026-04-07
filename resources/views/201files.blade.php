@@ -1,6 +1,6 @@
 <x-app-layout>
     @push('styles')
-        <link rel="stylesheet" href="{{ asset('css/201files.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     @endpush
 
     {{-- ── Flash Messages ── --}}
