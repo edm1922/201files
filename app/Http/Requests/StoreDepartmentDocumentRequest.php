@@ -17,6 +17,15 @@ class StoreDepartmentDocumentRequest extends FormRequest
                 'date_received' => now()->toDateString(),
             ]);
         }
+
+        if ($this->filled('document_folder_id') && ! $this->filled('document_location_id')) {
+            $folder = DocumentFolder::find($this->input('document_folder_id'));
+            if ($folder && $folder->document_location_id) {
+                $this->merge([
+                    'document_location_id' => $folder->document_location_id,
+                ]);
+            }
+        }
     }
 
     public function authorize(): bool
@@ -34,7 +43,7 @@ class StoreDepartmentDocumentRequest extends FormRequest
                 Rule::exists('document_types', 'id')->where(fn ($query) => $query->where('department_id', (int) $this->input('department_id'))
                 ),
             ],
-            'document_location_id' => ['required', 'integer', 'exists:document_locations,id'],
+            'document_location_id' => ['nullable', 'integer', 'exists:document_locations,id'],
             'document_folder_id' => ['required', 'integer', 'exists:document_folders,id'],
             'upload_mode' => ['required', Rule::in(['standard', 'scan_packet'])],
             'date_received' => ['required', 'date'],

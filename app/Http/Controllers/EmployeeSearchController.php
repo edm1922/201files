@@ -15,7 +15,7 @@ class EmployeeSearchController extends Controller
      */
     public function meiliSearch(Request $request)
     {
-        $query = trim((string) $request->get('query', ''));
+        $query = $this->normalizeSearchQuery((string) $request->get('query', ''));
         if (mb_strlen($query) < 2) {
             return response()->json([]);
         }
@@ -80,20 +80,38 @@ class EmployeeSearchController extends Controller
 
     protected function searchWithDatabase(string $query): Collection
     {
-        return Employee::query()
+        $tokens = array_values(array_filter(preg_split('/[\s,.]+/u', $query)));
+
+        if (empty($tokens)) {
+            return collect();
+        }
+
+        $queryBuilder = Employee::query()
             ->with(['folderLocation', 'folder'])
-            ->where(function ($q) use ($query) {
-                $q->where('first_name', 'LIKE', $query.'%')
-                    ->orWhere('middle_name', 'LIKE', $query.'%')
-                    ->orWhere('last_name', 'LIKE', $query.'%')
-                    ->orWhere('barcode_id', 'LIKE', $query.'%')
-                    ->orWhere('system_id', 'LIKE', $query.'%')
-                    ->orWhereHas('folder', function ($sq) use ($query) {
-                        $sq->where('folder_code', 'LIKE', $query.'%');
+            ->where('status', '!=', 'resigned');
+
+        foreach ($tokens as $token) {
+            $queryBuilder->where(function ($q) use ($token) {
+                $q->where('first_name', 'LIKE', $token . '%')
+                    ->orWhere('middle_name', 'LIKE', $token . '%')
+                    ->orWhere('last_name', 'LIKE', $token . '%')
+                    ->orWhere('barcode_id', 'LIKE', $token . '%')
+                    ->orWhereHas('folder', function ($sq) use ($token) {
+                        $sq->where('folder_code', 'LIKE', $token . '%');
                     });
-            })
-            ->where('status', '!=', 'resigned')
+            });
+        }
+
+        return $queryBuilder
             ->limit(10)
-            ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'system_id', 'status', 'folder_location_id', 'folder_id']);
+            ->get(['id', 'first_name', 'middle_name', 'last_name', 'barcode_id', 'status', 'folder_location_id', 'folder_id']);
+    }
+
+    protected function normalizeSearchQuery(string $query): string
+    {
+        // Normalize commas, dots, and multiple spaces into single spaces for tokenization
+        $normalized = preg_replace('/[\s,.]+/u', ' ', trim($query));
+
+        return trim((string) $normalized);
     }
 }

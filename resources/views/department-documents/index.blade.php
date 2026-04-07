@@ -18,7 +18,7 @@
             : null;
     @endphp
 
-    <div class="animate-fade-in stagger-1">
+    <div class="animate-fade-in stagger-1 mt-4">
         @if (session('success'))
             <div class="alert-flash alert-flash--success mb-4" data-flash-success>
                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -44,32 +44,40 @@
                     <div class="explorer-sidebar__inner">
                         <div class="doc-sidebar-department">{{ $selectedDepartment?->name ?? 'No Department' }}</div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Folders</h6>
-                            <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.85rem; letter-spacing: 0.02em;">FOLDERS</h6>
+                            <div class="d-flex align-items-center gap-1">
+                                {{-- Root Navigation --}}
                                 @if ($selectedDepartmentId)
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
-                                        class="text-decoration-none small">Root</a>
+                                        class="btn-sidebar-nav" 
+                                        title="Back to Root">
+                                        <i class="fas fa-house"></i>
+                                    </a>
                                 @endif
+
+                                {{-- Folder Update History --}}
                                 @if ($currentFolder && $currentFolderHistoryUrl)
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small"
+                                    <button type="button" class="btn-sidebar-nav btn-sidebar-nav--history"
                                         data-folder-history-trigger
                                         data-folder-name="{{ $currentFolder->name }}"
                                         data-folder-history-url="{{ $currentFolderHistoryUrl }}"
-                                        title="View folder update history">
-                                        History
+                                        title="View Folder History">
+                                        <i class="fas fa-clock-rotate-left"></i>
                                     </button>
                                 @endif
-                                  @if ($canCreateFolders)
-                                      <button type="button" class="btn-action-round btn-action-round--xs"
-                                         data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
-                                         data-folder-department-id="{{ $selectedDepartmentId }}"
-                                         data-folder-parent-id=""
-                                         data-folder-create-scope="New folder at root level"
-                                         title="Create folder at root">
-                                         <i class="fas fa-plus"></i>
-                                     </button>
-                                 @endif
+
+                                {{-- Create Folder --}}
+                                @if ($canCreateFolders)
+                                    <button type="button" class="btn-sidebar-nav"
+                                        data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
+                                        data-folder-department-id="{{ $selectedDepartmentId }}"
+                                        data-folder-parent-id=""
+                                        data-folder-create-scope="New folder at root level"
+                                        title="Create folder at root">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                @endif
                             </div>
                         </div>
                         <ul class="ui-tree m-0 p-0 text-dark">
@@ -137,8 +145,6 @@
                                 data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload
                             </button>
-                        @elseif($canUploadAndEdit && $selectedDepartmentId)
-                            <span class="text-muted small">Select a folder to upload.</span>
                         @endif
                     </div>
 
@@ -157,8 +163,93 @@
                             </div>
 
                         </div>
+                        
+                        @php
+                            $subfolders = $currentFolderId ? $foldersByParent->get((int) $currentFolderId, collect()) : $foldersByParent->get(0, collect());
+                        @endphp
 
-                        <div class="doc-table-wrapper border-0 {{ $documents->count() === 0 ? 'is-empty' : '' }}">
+                        <div class="doc-table-wrapper border-0 {{ ($documents->count() === 0 && $subfolders->count() === 0) ? 'is-empty' : '' }}">
+                        @if ($subfolders->isNotEmpty())
+                            <div class="mb-4 pb-2 border-bottom">
+                                <h6 class="text-muted fw-bold small text-uppercase px-3 pt-3 pb-2 mb-0 d-flex align-items-center gap-2">
+                                    <i class="fas fa-sitemap text-secondary"></i> Subfolders
+                                </h6>
+                                <table class="doc-table">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>Folder Name</th>
+                                            <th>Folder Code</th>
+                                            <th>Physical Location</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($subfolders as $sub)
+                                            <tr class="animate-fade-in" style="background-color: #fafbfc;">
+                                                <td>
+                                                    <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId, 'document_folder_id' => $sub->id]) }}" 
+                                                       class="d-flex align-items-center gap-3 text-decoration-none">
+                                                        <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; flex-shrink: 0;">
+                                                            <i class="fas fa-folder text-danger fs-6"></i>
+                                                        </div>
+                                                        <div class="d-flex flex-column overflow-hidden">
+                                                            <span class="fw-bold text-dark text-truncate d-block" style="font-size: 0.95rem;">{{ $sub->name }}</span>
+                                                        </div>
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="text-secondary fw-semibold" style="font-size: 0.85rem;">{{ $sub->folder_code ?? '—' }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="text-secondary" style="font-size: 0.85rem;">{{ $sub->documentLocation?->name ?? '—' }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    @if (($canManageFolders ?? false) || ($canEditDeleteFolders ?? false))
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
+                                                                type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Folder actions">
+                                                                <i class="fas fa-ellipsis-v px-2 py-1"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                                @if ($canEditDeleteFolders ?? false)
+                                                                    <li>
+                                                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                            data-bs-toggle="modal" data-bs-target="#renameFolderModal"
+                                                                            data-folder-name="{{ $sub->name }}" data-folder-code="{{ $sub->folder_code }}"
+                                                                            data-folder-location-id="{{ $sub->document_location_id }}"
+                                                                            data-folder-action="{{ route('department-documents.folders.update', $sub) }}">
+                                                                            <i class="fas fa-pen text-secondary" style="width: 16px;"></i><span class="fw-medium">Edit Folder</span>
+                                                                        </button>
+                                                                    </li>
+                                                                    <li>
+                                                                        <hr class="dropdown-divider opacity-50 my-1">
+                                                                    </li>
+                                                                    <li>
+                                                                        <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
+                                                                            data-bs-toggle="modal" data-bs-target="#deleteFolderModal"
+                                                                            data-folder-name="{{ $sub->name }}"
+                                                                            data-folder-action="{{ route('department-documents.folders.destroy', $sub) }}">
+                                                                            <i class="fas fa-trash" style="width: 16px;"></i><span class="fw-medium">Delete Folder</span>
+                                                                        </button>
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-muted">—</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                        @if ($documents->count() > 0)
+                            <h6 class="text-muted fw-bold small text-uppercase px-3 pt-3 pb-2 mb-0 d-flex align-items-center gap-2">
+                                <i class="fas fa-file-alt text-secondary"></i> Documents
+                            </h6>
                             <table class="doc-table">
                                 <thead>
                                     <tr>
@@ -171,7 +262,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($documents as $index => $doc)
+                                    @foreach($documents as $index => $doc)
                                         @php
                                             $ext = strtolower(pathinfo($doc->system_filename, PATHINFO_EXTENSION));
                                             $iconClass = 'file-icon--generic';
@@ -436,12 +527,12 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                    @empty
-                                    @endforelse
+                                    @endforeach
                                 </tbody>
                             </table>
+                        @endif
 
-                            @if ($documents->count() === 0)
+                            @if ($documents->count() === 0 && $subfolders->count() === 0)
                                 <div class="doc-table-empty-overlay" aria-live="polite">
                                     <div class="text-muted doc-table-empty-state">
                                         <i class="fas fa-folder-open fa-3x mb-3 opacity-20"></i>
@@ -584,7 +675,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius:6px; background-color: red; font-size:0.85rem; font-weight: 500;">Close</button>
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -665,6 +756,18 @@
                                 class="form-control field-input bg-light" placeholder="e.g. CSC-FIN-0001"
                                 data-folder-create-code>
                         </div>
+                        <div class="mb-2">
+                            <label for="create_folder_location" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">
+                                Physical Location <span class="text-muted fw-normal">(Optional)</span>
+                            </label>
+                            <select id="create_folder_location" name="document_location_id" class="form-select field-input bg-light" data-folder-create-location>
+                                <option value="">No specific location</option>
+                                @foreach ($documentLocations as $location)
+                                    <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text small text-muted" style="font-size: 0.75rem;">Documents uploaded here will inherit this location.</div>
+                        </div>
                     </div>
 
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
@@ -681,7 +784,7 @@
         </div>
     </div>
 
-    <!-- Rename Folder Modal -->
+    <!-- Edit Folder Modal -->
     <div class="modal fade" id="renameFolderModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
@@ -689,7 +792,7 @@
                     @csrf
                     @method('PATCH')
                     <div class="modal-header border-bottom-0 pt-4 px-4 pb-0">
-                        <h5 class="modal-title fw-bold text-dark fs-5">Rename Folder</h5>
+                        <h5 class="modal-title fw-bold text-dark fs-5">Edit Folder</h5>
                         <button type="button" class="btn-close opacity-50" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
@@ -707,12 +810,23 @@
                             <input type="text" name="folder_code" id="rename_folder_code"
                                 class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001">
                         </div>
+                        <div class="mb-2">
+                            <label for="rename_folder_location" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">
+                                Physical Location <span class="text-muted fw-normal">(Optional)</span>
+                            </label>
+                            <select id="rename_folder_location" name="document_location_id" class="form-select field-input bg-light">
+                                <option value="">No specific location</option>
+                                @foreach ($documentLocations as $location)
+                                    <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
                         <button type="button" class="btn btn-light fw-semibold text-secondary"
                             data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary fw-semibold shadow-sm btn-submit-loading">
-                            <i class="fas fa-pen me-1"></i> Rename
+                            <i class="fas fa-save me-1"></i> Save Changes
                         </button>
                     </div>
                 </form>
@@ -812,18 +926,29 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="edit_doc_location" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Physical Location <span class="text-danger">*</span></label>
-                                <select id="edit_doc_location" name="document_location_id" class="form-select field-input" required>
-                                    @foreach ($documentLocations as $location)
-                                        <option value="{{ $location->id }}">{{ $location->name }}</option>
-                                    @endforeach
-                                </select>
+                                <div id="edit_doc_location_manual_wrap">
+                                    <select id="edit_doc_location" name="document_location_id" class="form-select field-input" required>
+                                        <option value="">Select location</option>
+                                        @foreach ($documentLocations as $location)
+                                            <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div id="edit_doc_location_inherited_wrap" class="d-none">
+                                    <input type="text" id="edit_doc_location_inherited_display" class="form-control field-input bg-light" readonly>
+                                    <div class="form-text small text-muted"><i class="fas fa-lock me-1"></i>Inherited from folder.</div>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label for="edit_doc_folder" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Folder</label>
                                 <select id="edit_doc_folder" name="document_folder_id" class="form-select field-input">
                                     <option value="">Root</option>
                                     @foreach ($allFolders as $folderOption)
-                                        <option value="{{ $folderOption->id }}">{{ $folderPathMaps[$folderOption->id]['display_path'] ?? $folderOption->name }}</option>
+                                        <option value="{{ $folderOption->id }}" 
+                                            data-location-id="{{ $folderOption->document_location_id ?? '' }}"
+                                            data-location-name="{{ $folderOption->documentLocation?->name ?? '' }}">
+                                            {{ $folderPathMaps[$folderOption->id]['display_path'] ?? $folderOption->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -904,14 +1029,20 @@
                                         <label for="upload_location"
                                             class="form-label small fw-bold text-uppercase text-muted">Physical
                                             Location <span class="text-danger">*</span></label>
-                                        <select id="upload_location" name="document_location_id"
-                                            class="form-select field-input" required>
-                                            <option value="">Select location</option>
-                                            @foreach ($documentLocations as $location)
-                                                <option value="{{ $location->id }}">{{ $location->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        @if($currentFolder && $currentFolder->document_location_id)
+                                            <input type="text" class="form-control field-input bg-light" 
+                                                value="{{ $currentFolder->documentLocation?->name ?? 'Unknown' }}" readonly>
+                                            <input type="hidden" name="document_location_id" value="{{ $currentFolder->document_location_id }}">
+                                            <div class="form-text small text-muted"><i class="fas fa-lock me-1"></i>Inherited from folder.</div>
+                                        @else
+                                            <select id="upload_location" name="document_location_id"
+                                                class="form-select field-input" required>
+                                                <option value="">Select location</option>
+                                                @foreach ($documentLocations as $location)
+                                                    <option value="{{ $location->id }}">{{ $location->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
 
                                     <div class="col-md-6">
@@ -1170,6 +1301,23 @@
                 border-color: var(--company-primary) !important;
             }
 
+            .folder-grid-card {
+                transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out;
+                background-color: #fff;
+                border-radius: 12px;
+            }
+
+            .folder-grid-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08) !important;
+                border-color: var(--company-primary-border) !important;
+            }
+            
+            .folder-grid-card:active {
+                transform: translateY(0);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05) !important;
+            }
+
             .upload-zone--accent-red.dragging {
                 background-color: var(--company-primary-light) !important;
                 border-color: var(--company-primary) !important;
@@ -1218,6 +1366,7 @@
 
             .doc-command-search__shell {
                 position: relative;
+                margin: 0 4px;
             }
 
             .doc-command-search-row {
@@ -1250,7 +1399,7 @@
             }
 
             #department-document-explorer {
-                height: calc(100dvh - 56px - 3rem);
+                height: calc(100dvh - 56px - 4.5rem);
                 min-height: 520px;
                 overflow: hidden;
                 margin-bottom: 0 !important;
@@ -1366,25 +1515,30 @@
                 display: flex;
                 align-items: center;
                 gap: 0.4rem;
-                background: #eef2f6;
-                border: 1px solid #d9e1ea;
-                border-radius: 999px;
+                background: #e9eef6;
+                border: 1px solid transparent;
+                border-radius: 1.5rem;
                 padding: 0.25rem 0.65rem;
                 min-height: 3rem;
+                position: relative;
+                z-index: 1091;
                 transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
             }
 
             .doc-command-search__shell.is-open .doc-command-search__bar {
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                border-bottom-color: #e5e7eb;
+                border-radius: 1.5rem 1.5rem 0 0;
                 background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.1), 0 1px 3px 0 rgba(60,64,67,0.15);
+            }
+
+            .doc-command-search__bar:hover {
+                background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.05), 0 1px 3px 1px rgba(60,64,67,0.08);
             }
 
             .doc-command-search__bar:focus-within {
                 background: #fff;
-                border-color: #cbd5e1;
-                box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.1), 0 1px 3px 0 rgba(60,64,67,0.15);
             }
 
             .doc-command-search__icon {
@@ -1449,55 +1603,66 @@
 
             .doc-command-search__results {
                 position: absolute;
-                z-index: 1090;
-                top: calc(100% - 1px);
+                z-index: 1092;
+                top: 100%;
                 left: 0;
                 right: 0;
                 background: #fff;
-                border: 1px solid #e5e7eb;
-                border-top: 0;
-                border-radius: 0 0 1rem 1rem;
-                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+                border: none;
+                border-top: 1px solid #e2e8f0;
+                border-radius: 0 0 1.5rem 1.5rem;
+                box-shadow: 0 4px 6px 0 rgba(60,64,67,0.08), 0 2px 4px -1px rgba(60,64,67,0.05);
                 overflow: hidden;
             }
 
+
             .doc-command-search__results-inner {
-                max-height: 360px;
+                max-height: 340px;
                 overflow-y: auto;
-                padding: 0.35rem;
+                padding: 0.25rem 0;
             }
 
             .doc-command-search__result-item {
                 width: 100%;
                 border: none;
-                background: #fff;
-                padding: 0.65rem 0.85rem;
+                background: transparent;
+                padding: 0.52rem 0.95rem;
                 text-align: left;
-                border-bottom: 1px solid #f1f5f9;
-                border-radius: 0.6rem;
+                display: flex;
+                align-items: flex-start;
+                gap: 0.7rem;
             }
 
             .doc-command-search__result-item:hover,
             .doc-command-search__result-item:focus {
-                background: #fef2f2;
+                background: #eef2f7;
                 outline: none;
             }
 
             .doc-command-search__result-item.is-active {
-                background: #fee2e2;
+                background: #e5eaf1;
                 outline: none;
             }
 
+            .doc-command-search__result-icon {
+                color: #6b7280;
+                font-size: 0.78rem;
+                width: 1rem;
+                margin-top: 0.22rem;
+                flex: 0 0 auto;
+            }
+
             .doc-command-search__result-title {
-                font-weight: 700;
+                font-weight: 500;
                 color: #111827;
                 line-height: 1.25;
+                font-size: 1.02rem;
             }
 
             .doc-command-search__result-meta {
-                font-size: 0.76rem;
-                color: #6b7280;
-                margin-top: 0.18rem;
+                font-size: 0.75rem;
+                color: #697586;
+                margin-top: 0.12rem;
                 line-height: 1.2;
             }
 
@@ -2000,7 +2165,53 @@
                         }
                     };
 
+                    const syncEditLocationVisibility = () => {
+                        if (!folderInput || !locationInput) {
+                            return;
+                        }
+
+                        const selectedFolder = folderInput.options[folderInput.selectedIndex];
+                        const inheritedLocationId = selectedFolder?.getAttribute('data-location-id');
+                        const inheritedLocationName = selectedFolder?.getAttribute('data-location-name');
+
+                        const manualWrap = document.getElementById('edit_doc_location_manual_wrap');
+                        const inheritedWrap = document.getElementById('edit_doc_location_inherited_wrap');
+                        const inheritedDisplay = document.getElementById('edit_doc_location_inherited_display');
+
+                        if (inheritedLocationId && inheritedLocationId !== '') {
+                            manualWrap?.classList.add('d-none');
+                            inheritedWrap?.classList.remove('d-none');
+                            if (inheritedDisplay) {
+                                inheritedDisplay.value = inheritedLocationName || 'Unknown';
+                            }
+                            
+                            locationInput.value = inheritedLocationId;
+                            locationInput.disabled = true;
+
+                            let hiddenInput = document.getElementById('edit_doc_location_hidden');
+                            if (!hiddenInput) {
+                                hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.id = 'edit_doc_location_hidden';
+                                hiddenInput.name = 'document_location_id';
+                                inheritedWrap?.appendChild(hiddenInput);
+                            }
+                            hiddenInput.value = inheritedLocationId;
+                            hiddenInput.disabled = false;
+                        } else {
+                            manualWrap?.classList.remove('d-none');
+                            inheritedWrap?.classList.add('d-none');
+                            locationInput.disabled = false;
+                            
+                            const hiddenInput = document.getElementById('edit_doc_location_hidden');
+                            if (hiddenInput) {
+                                hiddenInput.disabled = true;
+                            }
+                        }
+                    };
+
                     typeInput?.addEventListener('change', syncExpiryVisibility);
+                    folderInput?.addEventListener('change', syncEditLocationVisibility);
                     receivedInput?.addEventListener('change', () => {
                         if (expiryInput) {
                             expiryInput.min = receivedInput.value || '';
@@ -2023,14 +2234,15 @@
                         detailsForm.action = button.getAttribute('data-doc-action') || '';
                         nameInput.value = button.getAttribute('data-doc-name') || '';
                         typeInput.value = button.getAttribute('data-doc-type-id') || '';
-                        locationInput.value = button.getAttribute('data-doc-location-id') || '';
                         folderInput.value = button.getAttribute('data-doc-folder-id') || '';
+                        locationInput.value = button.getAttribute('data-doc-location-id') || '';
                         receivedInput.value = button.getAttribute('data-doc-date-received') || '';
                         expiryInput.value = button.getAttribute('data-doc-expiry-date') || '';
                         initialExpiryValue = expiryInput.value || '';
                         expiryReasonInput.value = '';
 
                         syncExpiryVisibility();
+                        syncEditLocationVisibility();
                         syncExpiryReasonVisibility();
                         setTimeout(() => nameInput.select(), 250);
                     });
@@ -3222,15 +3434,15 @@
                             const folder = escapeHtml(item?.folder_label || 'Root');
                             const updatedAt = escapeHtml(item?.updated_at || '');
                             const targetUrl = escapeHtml(item?.url || '#');
+                            const isFolder = item?.type === 'folder';
+                            const iconClass = isFolder ? 'fas fa-folder text-danger' : 'fas fa-file-alt text-secondary';
 
                             return `
                                 <button type="button" class="doc-command-search__result-item" data-doc-search-url="${targetUrl}">
-                                    <div class="d-flex justify-content-between gap-2">
-                                        <div class="min-w-0">
-                                            <div class="doc-command-search__result-title text-truncate">${title}</div>
-                                            <div class="doc-command-search__result-meta">${department} • ${folder}</div>
-                                        </div>
-                                        <div class="doc-command-search__result-meta text-nowrap">${updatedAt}</div>
+                                    <i class="${iconClass} doc-command-search__result-icon" aria-hidden="true"></i>
+                                    <div class="min-w-0">
+                                        <div class="doc-command-search__result-title text-truncate">${title}</div>
+                                        <div class="doc-command-search__result-meta text-truncate">${department} &bull; ${folder}${updatedAt ? ` &bull; ${updatedAt}` : ''}</div>
                                     </div>
                                 </button>
                             `;
@@ -3243,7 +3455,7 @@
 
                     const fetchSuggestions = async () => {
                         const query = input.value.trim();
-                        if (query.length < 2 || !suggestionUrl) {
+                        if (query.length < 1 || !suggestionUrl) {
                             hideSuggestions();
                             isFetchingSuggestions = false;
                             return;
@@ -3501,6 +3713,12 @@
                                     'data-folder-code');
                             } else {
                                 document.getElementById('rename_folder_code').value = '';
+                            }
+                            if (button && button.hasAttribute('data-folder-location-id')) {
+                                document.getElementById('rename_folder_location').value = button.getAttribute(
+                                    'data-folder-location-id') || '';
+                            } else {
+                                document.getElementById('rename_folder_location').value = '';
                             }
                             if (button && button.hasAttribute('data-folder-action')) {
                                 document.getElementById('global-rename-folder-form').action = button

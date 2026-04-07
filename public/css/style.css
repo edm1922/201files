@@ -1414,6 +1414,32 @@
     font-size: 0.72rem;
 }
 
+/* ─── Sidebar Nav Buttons (Root, History) ─────────────────────────── */
+.btn-sidebar-nav {
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.8rem;
+    text-decoration: none !important;
+}
+
+.btn-sidebar-nav:hover {
+    background: #f1f5f9;
+    color: var(--company-primary);
+    transform: translateY(-1px);
+}
+
+.btn-sidebar-nav--history:hover {
+    color: #0ea5e9; /* Sky Blue for history */
+}
+
 .folder-node__link {
     display: flex;
     align-items: center;

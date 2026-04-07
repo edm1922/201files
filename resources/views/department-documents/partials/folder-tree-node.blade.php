@@ -10,8 +10,8 @@
 
         {{-- Chevron --}}
         @if($children->isNotEmpty())
-            <a data-bs-toggle="collapse" href="#folder-collapse-{{ $folder->id }}" role="button" aria-expanded="true"
-                class="text-decoration-none d-flex align-items-center justify-content-center" style="width: 16px;">
+            <a data-bs-toggle="collapse" href="#folder-collapse-{{ $folder->id }}" role="button" aria-expanded="{{ $isOpen ? 'true' : 'false' }}"
+                class="text-decoration-none d-flex align-items-center justify-content-center {{ $isOpen ? '' : 'collapsed' }}" style="width: 16px;">
                 <i class="fas fa-chevron-down text-muted opacity-50 flex-shrink-0 collapse-icon"
                     style="font-size: 0.65rem;"></i>
             </a>
@@ -41,9 +41,15 @@
                         {{ $folder->name }}
                     </span>
                     @if ($folder->folder_code)
-                        <span class="text-muted text-truncate x-small"
+                        <span class="text-muted text-truncate x-small d-block"
                             style="font-size: 0.7rem; margin-top: -1px; opacity: 0.8;" title="{{ $folder->folder_code }}">
                             {{ $folder->folder_code }}
+                        </span>
+                    @endif
+                    @if ($folder->documentLocation)
+                        <span class="text-muted text-truncate x-small d-block"
+                            style="font-size: 0.7rem; margin-top: -1px; opacity: 0.8;" title="Location: {{ $folder->documentLocation->name }}">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ $folder->documentLocation->name }}
                         </span>
                     @endif
                 </div>
@@ -84,9 +90,10 @@
                                     <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
                                         data-bs-toggle="modal" data-bs-target="#renameFolderModal"
                                         data-folder-name="{{ $folder->name }}" data-folder-code="{{ $folder->folder_code }}"
+                                        data-folder-location-id="{{ $folder->document_location_id }}"
                                         data-folder-action="{{ route('department-documents.folders.update', $folder) }}">
                                         <i class="fas fa-pen text-secondary" style="width: 16px;"></i><span
-                                            class="fw-medium">Rename</span>
+                                            class="fw-medium">Edit Folder</span>
                                     </button>
                                 </li>
                                 <li>
@@ -108,7 +115,7 @@
     </div>
 
     @if ($children->isNotEmpty())
-        <ul class="ui-tree-children collapse show" id="folder-collapse-{{ $folder->id }}">
+        <ul class="ui-tree-children collapse {{ $isOpen ? 'show' : '' }}" id="folder-collapse-{{ $folder->id }}">
             @foreach ($children as $child)
                 @include('department-documents.partials.folder-tree-node', [
                     'folder' => $child,

@@ -37,6 +37,23 @@ $(document).ready(function () {
     let latestQuery = '';
     let selectedIndex = -1; // Track currently highlighted index
 
+    function highlightText(text, query) {
+        if (!query) return text;
+        const tokens = String(query).trim().split(/[\s,.]+/).filter(t => t.length > 0);
+        if (tokens.length === 0) return text;
+
+        let highlighted = text;
+        // Sort tokens by length descending to avoid partial replacements of longer matches
+        tokens.sort((a, b) => b.length - a.length).forEach(token => {
+            const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(^|\\s|\\W)(${escapedToken})`, 'gi');
+            // Use placeholders to prevent double-wrapping, and preserve preceding char
+            highlighted = highlighted.replace(regex, '$1<<$2>>');
+        });
+        
+        return highlighted.replace(/<<([^>]+)>>/g, '<b>$1</b>');
+    }
+
     function performSearch(query, autoSelectFirst = false) {
         const normalizedQuery = String(query || '').trim();
         selectedIndex = -1; // reset on new search
@@ -79,14 +96,23 @@ $(document).ready(function () {
                     }
 
                     data.forEach(emp => {
-                        // Check if middle_name exists; if not, use an empty string
-                        const middleName = emp.middle_name && emp.middle_name !== 'NULL' ? emp.middle_name : '';
+                        const mid = emp.middle_name && emp.middle_name !== 'NULL' ? emp.middle_name : '';
+                        const fullName = `${emp.last_name}, ${emp.first_name} ${mid}`.trim();
+                        const folderCode = emp.folder?.folder_code || emp.folder_code || '';
+                        const barcode = emp.barcode_id || 'NO-BARCODE';
+
+                        const highlightedName = highlightText(fullName, normalizedQuery);
+                        const highlightedFolder = highlightText(folderCode, normalizedQuery);
+                        const highlightedBarcode = highlightText(barcode, normalizedQuery);
+
                         const item = $(`
-        
                             <div class="meili-item">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="text-uppercase">${emp.last_name}, ${emp.first_name} ${middleName}</span>
-                                    <span class="meili-folder-code"> ${emp.folder?.folder_code || emp.folder_code || ''}</span>
+                                <div class="d-flex align-items-center gap-1 flex-wrap">
+                                    <span class="text-uppercase fw-medium">${highlightedName}</span>
+                                    <span class="text-muted opacity-50 px-1">•</span>
+                                    <span class="meili-folder-code">${highlightedFolder}</span>
+                                    <span class="text-muted opacity-50 px-1">•</span>
+                                    <span class="meili-barcode">${highlightedBarcode}</span>
                                 </div>
                             </div>
                         `);
@@ -247,9 +273,10 @@ $(document).ready(function () {
  */
 
 document.addEventListener('alpine:init', () => {
-    Alpine.data('statusManager', (initialStatus = '') => ({
+    Alpine.data('statusManager', (initialStatus = '', initialTab = 'employee') => ({
         currentStatus: initialStatus,
         previousStatus: initialStatus,
+        activeTab: initialTab,
         modal: null,
 
         init() {
