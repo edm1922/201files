@@ -57,9 +57,18 @@ class Document extends Model
      */
     public function isExpiringSoon(int $days = 30): bool
     {
-        return $this->expiry_date
-            && $this->expiry_date->isFuture()
-            && $this->expiry_date->diffInDays(now()) <= $days;
+        if (!$this->expiry_date) {
+            return false;
+        }
+
+        $now = now()->startOfDay();
+        $target = $this->expiry_date->copy()->startOfDay();
+
+        if ($target->lessThanOrEqualTo($now)) {
+            return false;
+        }
+
+        return $now->diffInDays($target, false) <= $days;
     }
 
     public function department(): BelongsTo

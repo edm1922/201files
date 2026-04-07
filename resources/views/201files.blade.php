@@ -41,13 +41,15 @@
 
     @php
         $isNew      = $employee === null;
-        $formAction = $isNew
-            ? route('employees.store')
-            : route('employees.update', $employee);
+        $isEncoderOrAdmin = Auth::user()->hasRole('admin', 'encoder');
+        $initialTab = ($isNew && $isEncoderOrAdmin) ? 'personal' : 'employee';
+        
+        $formAction = $isNew ? route('employees.store') : route('employees.update', $employee);
         $formMethod = $isNew ? 'POST' : 'PUT';
     @endphp
 
-    <form id="employeeForm" action="{{ $formAction }}" method="POST" x-data="statusManager('{{ old('status', $employee?->status ?? '') }}')">
+    <form id="employeeForm" action="{{ $formAction }}" method="POST" 
+          x-data="statusManager('{{ old('status', $employee?->status ?? '') }}', '{{ $initialTab }}')">
         @csrf
         @if(!$isNew)
             @method('PUT')
@@ -61,23 +63,25 @@
 
                     {{-- Employee (summary) tab — shown when a record is loaded --}}
                     <li class="nav-item" role="presentation">
-                        <button class="file-tab {{ ($isNew && Auth::user()->hasRole('admin', 'encoder')) ? '' : 'active' }}" id="tab-employee"
+                        <button class="file-tab {{ $initialTab === 'employee' ? 'active' : '' }}" id="tab-employee"
                                 data-bs-toggle="tab" data-bs-target="#panel-employee"
                                 type="button" role="tab"
+                                @click="activeTab = 'employee'"
                                 aria-controls="panel-employee"
-                                aria-selected="{{ ($isNew && Auth::user()->hasRole('admin', 'encoder')) ? 'false' : 'true' }}">
+                                aria-selected="{{ $initialTab === 'employee' ? 'true' : 'false' }}">
                             <i class="fas fa-id-card me-1"></i>Employee
                         </button>
                     </li>
 
                     {{-- Personal tab (Admin/Encoder only) --}}
-                    @if(Auth::user()->hasRole('admin', 'encoder'))
+                    @if($isEncoderOrAdmin)
                         <li class="nav-item" role="presentation">
-                            <button class="file-tab {{ $isNew ? 'active' : '' }}" id="tab-personal"
+                            <button class="file-tab {{ $initialTab === 'personal' ? 'active' : '' }}" id="tab-personal"
                                     data-bs-toggle="tab" data-bs-target="#panel-personal"
                                     type="button" role="tab"
+                                    @click="activeTab = 'personal'"
                                     aria-controls="panel-personal"
-                                    aria-selected="{{ $isNew ? 'true' : 'false' }}">
+                                    aria-selected="{{ $initialTab === 'personal' ? 'true' : 'false' }}">
                                 <i class="fas fa-user me-1"></i>Personal
                             </button>
                         </li>
@@ -85,7 +89,7 @@
                 </ul>
 
                 <div class="file-panel__actions">
-                    <button type="submit" class="btn-file-save">
+                    <button type="submit" class="btn-file-save" x-show="activeTab !== 'employee'">
                         <i class="fas fa-save me-1"></i>Save
                     </button>
                     <a href="{{ route('201files') }}" class="btn btn-secondary ms-2" style="border-radius:4px; font-weight:500;">

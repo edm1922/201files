@@ -608,104 +608,107 @@ class DepartmentDocumentController extends Controller
         $departmentId = (int) $folder->department_id;
         $this->authorize('createForDepartment', [Document::class, $departmentId]);
 
+        // 1. Get all hierarchical folder IDs (current + all children recursively)
+        $descendantIds = $folder->getAllDescendantIds();
+        $allFolderIds = array_merge([(int) $folder->id], $descendantIds);
+
+        // 2. Fetch AuditLogs for all target folders
         $folderLogs = AuditLog::query()
             ->where('model_type', DocumentFolder::class)
-            ->where('model_id', (int) $folder->id)
+            ->whereIn('model_id', $allFolderIds)
             ->whereIn('action', ['created', 'updated', 'deleted'])
-            ->with('user')
+            ->with(['user'])
             ->latest('created_at')
             ->get();
 
+        // 3. Find all Documents currently residing in any of these folders
+        $currentDocumentIds = Document::withTrashed()
+            ->whereIn('document_folder_id', $allFolderIds)
+            ->pluck('id')
+            ->toArray();
+
+        // 4. Fetch AuditLogs for these documents (and any moved-out docs)
+        // Optimization: Fetch logs where the document is *currently* there, 
+        // OR where the log's 'changes' metadata mentions any of our target folder IDs.
         $documentLogs = AuditLog::query()
             ->where('model_type', Document::class)
             ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored', 'deleted'])
-            ->with('user')
+            ->where(function ($query) use ($currentDocumentIds, $allFolderIds) {
+                $query->whereIn('model_id', $currentDocumentIds);
+                // Also catch documents that were previously in these folders if the metadata exists
+                foreach ($allFolderIds as $fid) {
+                    $query->orWhere('changes', 'LIKE', '%"document_folder_id":' . $fid . '%');
+                    $query->orWhere('changes', 'LIKE', '%"document_folder_id": ' . $fid . '%');
+                }
+            })
+            ->with(['user'])
             ->latest('created_at')
-            ->limit(1000)
+            ->limit(2000)
             ->get();
 
-        $documentIds = $documentLogs
-            ->pluck('model_id')
-            ->filter()
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values();
-
+        // 5. Get document names for those in the log to ensure we show the correct names
+        $allDocumentIdsInLogs = $documentLogs->pluck('model_id')->filter()->unique()->toArray();
         $documentsById = Document::withTrashed()
-            ->whereIn('id', $documentIds)
-            ->get(['id', 'department_id', 'document_folder_id', 'original_filename'])
+            ->whereIn('id', $allDocumentIdsInLogs)
+            ->get(['id', 'original_filename', 'document_folder_id'])
             ->keyBy('id');
 
-        $relevantDocumentLogs = $documentLogs
-            ->filter(fn (AuditLog $log) => $this->isDocumentAuditRelevantToFolder($log, $folder, $documentsById))
-            ->values();
+        // also need folder names for subfolders to show context
+        $foldersById = DocumentFolder::whereIn('id', $allFolderIds)
+            ->get(['id', 'name'])
+            ->keyBy('id');
 
-        $logs = $folderLogs
-            ->map(function (AuditLog $log) {
-                return [
-                    'logged_at' => $log->created_at,
-                    'user_name' => $log->user?->name ?: 'System',
-                    'user_role' => $log->user?->role ?: 'System',
-                    'date' => optional($log->created_at)->format('M d, Y') ?: '-',
-                    'time' => optional($log->created_at)->format('h:i A') ?: '-',
-                    'description' => 'Folder: '.($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
-                    'changes' => $log->changes,
-                ];
-            })
-            ->concat($relevantDocumentLogs->map(function (AuditLog $log) use ($documentsById) {
-                $document = $documentsById->get((int) $log->model_id);
-                $documentName = $document?->original_filename ?: ($log->target_name ?: 'Document');
+        // 6. Map folder logs with contextual names
+        $mappedFolderLogs = $folderLogs->map(function (AuditLog $log) use ($folder, $foldersById) {
+            $isRoot = (int) $log->model_id === (int) $folder->id;
+            $targetName = $foldersById->get((int) $log->model_id)?->name ?: 'Folder';
+            $context = $isRoot ? 'Current Folder' : "Subfolder '{$targetName}'";
 
-                return [
-                    'logged_at' => $log->created_at,
-                    'user_name' => $log->user?->name ?: 'System',
-                    'user_role' => $log->user?->role ?: 'System',
-                    'date' => optional($log->created_at)->format('M d, Y') ?: '-',
-                    'time' => optional($log->created_at)->format('h:i A') ?: '-',
-                    'description' => "Document ({$documentName}): ".($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
-                    'changes' => $log->changes,
-                ];
-            }))
+            return [
+                'logged_at' => $log->created_at,
+                'user_name' => $log->user?->name ?: 'System',
+                'user_role' => $log->user?->role ?: 'System',
+                'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                'description' => "{$context}: " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'changes' => $log->changes,
+            ];
+        });
+
+        // 7. Map document logs with contextual names
+        $mappedDocumentLogs = $documentLogs->map(function (AuditLog $log) use ($documentsById, $allFolderIds) {
+            $document = $documentsById->get((int) $log->model_id);
+            $documentName = $document?->original_filename ?: ($log->target_name ?: 'Document');
+            
+            // Check if it's currently in a subfolder for better context
+            $currDocFolderId = $document ? (int) $document->document_folder_id : null;
+            $subContext = "";
+            if ($currDocFolderId && in_array($currDocFolderId, $allFolderIds)) {
+                // If it's a descendant, maybe we don't need to specify which one to keep it simple, 
+                // but let's just say "File"
+            }
+
+            return [
+                'logged_at' => $log->created_at,
+                'user_name' => $log->user?->name ?: 'System',
+                'user_role' => $log->user?->role ?: 'System',
+                'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                'description' => "File ({$documentName}): " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'changes' => $log->changes,
+            ];
+        });
+
+        // 8. Combine, Sort, and Return
+        $finalLogs = $mappedFolderLogs->concat($mappedDocumentLogs)
             ->sortByDesc(fn (array $entry) => $entry['logged_at'])
             ->values()
             ->map(function (array $entry) {
                 unset($entry['logged_at']);
-
                 return $entry;
             });
 
-        return response()->json($logs);
-    }
-
-    private function isDocumentAuditRelevantToFolder(AuditLog $log, DocumentFolder $folder, Collection $documentsById): bool
-    {
-        $folderId = (int) $folder->id;
-        $folderName = mb_strtolower(trim((string) $folder->name));
-        $document = $documentsById->get((int) $log->model_id);
-
-        if ($document && (int) $document->department_id === (int) $folder->department_id && (int) ($document->document_folder_id ?? 0) === $folderId) {
-            return true;
-        }
-
-        $changes = $log->changes;
-        if (! is_array($changes)) {
-            return false;
-        }
-
-        $before = is_array($changes['before'] ?? null) ? $changes['before'] : [];
-        $after = is_array($changes['after'] ?? null) ? $changes['after'] : [];
-
-        $beforeFolderId = isset($before['document_folder_id']) ? (int) $before['document_folder_id'] : null;
-        $afterFolderId = isset($after['document_folder_id']) ? (int) $after['document_folder_id'] : null;
-        if ($beforeFolderId === $folderId || $afterFolderId === $folderId) {
-            return true;
-        }
-
-        $beforeFolderName = mb_strtolower(trim((string) ($before['document_folder'] ?? '')));
-        $afterFolderName = mb_strtolower(trim((string) ($after['document_folder'] ?? '')));
-
-        return ($beforeFolderName !== '' && $beforeFolderName === $folderName)
-            || ($afterFolderName !== '' && $afterFolderName === $folderName);
+        return response()->json($finalLogs);
     }
 
     public function archive(Document $document)
@@ -845,6 +848,7 @@ class DepartmentDocumentController extends Controller
         $track($before, $after, 'document_type', $document->documentType?->name, $nextType?->name);
         $track($before, $after, 'document_location', $document->documentLocation?->name, $nextLocation?->name);
         $track($before, $after, 'document_folder', $document->documentFolder?->name, $nextFolder?->name);
+        $track($before, $after, 'document_folder_id', $document->document_folder_id, $nextFolderId);
         $track(
             $before,
             $after,

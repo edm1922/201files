@@ -18,7 +18,7 @@
             : null;
     @endphp
 
-    <div class="animate-fade-in stagger-1">
+    <div class="animate-fade-in stagger-1 mt-4">
         @if (session('success'))
             <div class="alert-flash alert-flash--success mb-4" data-flash-success>
                 <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -44,32 +44,40 @@
                     <div class="explorer-sidebar__inner">
                         <div class="doc-sidebar-department">{{ $selectedDepartment?->name ?? 'No Department' }}</div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Folders</h6>
-                            <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.85rem; letter-spacing: 0.02em;">FOLDERS</h6>
+                            <div class="d-flex align-items-center gap-1">
+                                {{-- Root Navigation --}}
                                 @if ($selectedDepartmentId)
                                     <a href="{{ route('department-documents.index', ['department_id' => $selectedDepartmentId]) }}"
-                                        class="text-decoration-none small">Root</a>
+                                        class="btn-sidebar-nav" 
+                                        title="Back to Root">
+                                        <i class="fas fa-house"></i>
+                                    </a>
                                 @endif
+
+                                {{-- Folder Update History --}}
                                 @if ($currentFolder && $currentFolderHistoryUrl)
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small"
+                                    <button type="button" class="btn-sidebar-nav btn-sidebar-nav--history"
                                         data-folder-history-trigger
                                         data-folder-name="{{ $currentFolder->name }}"
                                         data-folder-history-url="{{ $currentFolderHistoryUrl }}"
-                                        title="View folder update history">
-                                        History
+                                        title="View Folder History">
+                                        <i class="fas fa-clock-rotate-left"></i>
                                     </button>
                                 @endif
-                                  @if ($canCreateFolders)
-                                      <button type="button" class="btn-action-round btn-action-round--xs"
-                                         data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
-                                         data-folder-department-id="{{ $selectedDepartmentId }}"
-                                         data-folder-parent-id=""
-                                         data-folder-create-scope="New folder at root level"
-                                         title="Create folder at root">
-                                         <i class="fas fa-plus"></i>
-                                     </button>
-                                 @endif
+
+                                {{-- Create Folder --}}
+                                @if ($canCreateFolders)
+                                    <button type="button" class="btn-sidebar-nav"
+                                        data-bs-toggle="modal" data-bs-target="#createDepartmentFolderModal"
+                                        data-folder-department-id="{{ $selectedDepartmentId }}"
+                                        data-folder-parent-id=""
+                                        data-folder-create-scope="New folder at root level"
+                                        title="Create folder at root">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                @endif
                             </div>
                         </div>
                         <ul class="ui-tree m-0 p-0 text-dark">
@@ -121,11 +129,6 @@
                                 </div>
 
                                 <div class="doc-command-search__results d-none" data-doc-search-suggestions>
-                                    <div class="doc-command-search__results-filters" aria-hidden="true">
-                                        <span class="doc-command-search__filter-pill">Has attachment</span>
-                                        <span class="doc-command-search__filter-pill">Last 7 days</span>
-                                        <span class="doc-command-search__filter-pill">From me</span>
-                                    </div>
                                     <div class="doc-command-search__results-inner" data-doc-search-results></div>
                                 </div>
                             </div>
@@ -142,8 +145,6 @@
                                 data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload
                             </button>
-                        @elseif($canUploadAndEdit && $selectedDepartmentId)
-                            <span class="text-muted small">Select a folder to upload.</span>
                         @endif
                     </div>
 
@@ -249,7 +250,6 @@
                             <h6 class="text-muted fw-bold small text-uppercase px-3 pt-3 pb-2 mb-0 d-flex align-items-center gap-2">
                                 <i class="fas fa-file-alt text-secondary"></i> Documents
                             </h6>
-                        @endif
                             <table class="doc-table">
                                 <thead>
                                     <tr>
@@ -262,7 +262,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($documents as $index => $doc)
+                                    @foreach($documents as $index => $doc)
                                         @php
                                             $ext = strtolower(pathinfo($doc->system_filename, PATHINFO_EXTENSION));
                                             $iconClass = 'file-icon--generic';
@@ -527,10 +527,10 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                    @empty
-                                    @endforelse
+                                    @endforeach
                                 </tbody>
                             </table>
+                        @endif
 
                             @if ($documents->count() === 0 && $subfolders->count() === 0)
                                 <div class="doc-table-empty-overlay" aria-live="polite">
@@ -675,7 +675,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius:6px; background-color: red; font-size:0.85rem; font-weight: 500;">Close</button>
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -1366,6 +1366,7 @@
 
             .doc-command-search__shell {
                 position: relative;
+                margin: 0 4px;
             }
 
             .doc-command-search-row {
@@ -1398,7 +1399,7 @@
             }
 
             #department-document-explorer {
-                height: calc(100dvh - 56px - 3rem);
+                height: calc(100dvh - 56px - 4.5rem);
                 min-height: 520px;
                 overflow: hidden;
                 margin-bottom: 0 !important;
@@ -1514,25 +1515,30 @@
                 display: flex;
                 align-items: center;
                 gap: 0.4rem;
-                background: #eef2f6;
-                border: 1px solid #d9e1ea;
-                border-radius: 999px;
+                background: #e9eef6;
+                border: 1px solid transparent;
+                border-radius: 1.5rem;
                 padding: 0.25rem 0.65rem;
                 min-height: 3rem;
+                position: relative;
+                z-index: 1091;
                 transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
             }
 
             .doc-command-search__shell.is-open .doc-command-search__bar {
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-                border-bottom-color: #e5e7eb;
+                border-radius: 1.5rem 1.5rem 0 0;
                 background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.1), 0 1px 3px 0 rgba(60,64,67,0.15);
+            }
+
+            .doc-command-search__bar:hover {
+                background: #fff;
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.05), 0 1px 3px 1px rgba(60,64,67,0.08);
             }
 
             .doc-command-search__bar:focus-within {
                 background: #fff;
-                border-color: #cbd5e1;
-                box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+                box-shadow: 0 1px 2px 0 rgba(60,64,67,0.1), 0 1px 3px 0 rgba(60,64,67,0.15);
             }
 
             .doc-command-search__icon {
@@ -1597,40 +1603,18 @@
 
             .doc-command-search__results {
                 position: absolute;
-                z-index: 1090;
-                top: calc(100% + 0.45rem);
+                z-index: 1092;
+                top: 100%;
                 left: 0;
                 right: 0;
-                background: #f8fafc;
-                border: 1px solid #d6dbe3;
-                border-radius: 0 0 1.25rem 1.25rem;
-                box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
+                background: #fff;
+                border: none;
+                border-top: 1px solid #e2e8f0;
+                border-radius: 0 0 1.5rem 1.5rem;
+                box-shadow: 0 4px 6px 0 rgba(60,64,67,0.08), 0 2px 4px -1px rgba(60,64,67,0.05);
                 overflow: hidden;
             }
 
-            .doc-command-search__results-filters {
-                display: flex;
-                align-items: center;
-                gap: 0.45rem;
-                flex-wrap: wrap;
-                padding: 0.5rem 0.7rem;
-                border-top: 1px solid #dce2ea;
-                border-bottom: 1px solid #dce2ea;
-                background: #f8fafc;
-            }
-
-            .doc-command-search__filter-pill {
-                display: inline-flex;
-                align-items: center;
-                min-height: 1.95rem;
-                padding: 0.2rem 0.8rem;
-                border: 1px solid #8a94a6;
-                border-radius: 999px;
-                font-size: 0.79rem;
-                color: #354053;
-                background: #fff;
-                font-weight: 500;
-            }
 
             .doc-command-search__results-inner {
                 max-height: 340px;

@@ -369,8 +369,8 @@
 /* ── Main content ── */
 .main-content {
     padding: 1.5rem;
-    margin-top: 56px;
-    min-height: calc(100vh - 56px);
+    margin-top: 45px;
+    min-height: calc(100vh - 45px);
     background: #f5f6fa;
 }
 

@@ -40,4 +40,17 @@ class DocumentFolder extends Model
     {
         return $this->belongsTo(DocumentLocation::class);
     }
+
+    /**
+     * Get all descendant folder IDs (recursive).
+     */
+    public function getAllDescendantIds(): array
+    {
+        $ids = [];
+        foreach ($this->children as $child) {
+            $ids[] = (int) $child->id;
+            $ids = array_merge($ids, $child->getAllDescendantIds());
+        }
+        return $ids;
+    }
 }
