@@ -23,6 +23,8 @@
     border-bottom: 2px solid var(--brand-red);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     min-height: 56px;
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
 }
 
 .navbar-brand {
@@ -368,10 +370,12 @@
 
 /* ── Main content ── */
 .main-content {
+    margin: 0;
     padding: 1.5rem;
-    margin-top: 45px;
-    min-height: calc(100vh - 45px);
+    padding-top: calc(56px + 1rem); /* Account for navbar + 1rem gap */
+    min-height: 100vh;
     background: #f5f6fa;
+    box-sizing: border-box;
 }
 
 /* ── Cards ── */
