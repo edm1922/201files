@@ -50,7 +50,7 @@ $(document).ready(function () {
             // Use placeholders to prevent double-wrapping, and preserve preceding char
             highlighted = highlighted.replace(regex, '$1<<$2>>');
         });
-        
+
         return highlighted.replace(/<<([^>]+)>>/g, '<b>$1</b>');
     }
 
@@ -242,7 +242,7 @@ $(document).ready(function () {
     // Flash Messages Handling (Auto-hide and Manual Close)
     $('.alert, .alert-flash').each(function () {
         const $alert = $(this);
-        
+
         // Ensure the content is wrapped in a span for flex-grow if not already
         if ($alert.find('span').length === 0 && $alert.text().trim() !== '') {
             const text = $alert.html();
@@ -254,7 +254,7 @@ $(document).ready(function () {
         if ($alert.find('.btn-close-flash').length === 0) {
             const closeBtn = $('<button type="button" class="btn-close-flash" title="Close"><i class="fas fa-times"></i></button>');
             $alert.append(closeBtn);
-            
+
             // Manual close event
             closeBtn.on('click', function () {
                 $alert.fadeOut('fast');
@@ -358,7 +358,11 @@ document.addEventListener('DOMContentLoaded', function () {
 /**
  * Format audit log changes for the update history modal.
  */
-function formatChanges(changes) {
+function formatChanges(changes, action = null) {
+    if (action === 'created') {
+        return '';
+    }
+
     if (!changes || typeof changes !== 'object' || !changes.before || !changes.after) {
         return '<div class="text-muted small" style="font-style: italic;">No specific field changes recorded.</div>';
     }
@@ -437,7 +441,7 @@ function showUpdateHistory(employeeId) {
                         <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${log.description}</div>
                     </td>
                     <td style="width: 35%; vertical-align: top;">
-                        ${formatChanges(log.changes)}
+                        ${formatChanges(log.changes, log.action)}
                     </td>
                     <td class="pe-3 text-end" style="width: 20%; vertical-align: top;">
                         <div class="text-dark fw-semibold" style="font-size: 0.8rem;">${log.date}</div>
