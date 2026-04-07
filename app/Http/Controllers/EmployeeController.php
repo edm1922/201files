@@ -138,7 +138,7 @@ class EmployeeController extends Controller
 
         $latestUpdate = \App\Models\AuditLog::where('model_type', Employee::class)
             ->where('model_id', $employee->id)
-            ->whereIn('action', ['updated', 'restored'])
+            ->whereIn('action', ['created', 'updated', 'restored'])
             ->with('user')
             ->latest()
             ->first();
@@ -401,7 +401,7 @@ class EmployeeController extends Controller
     {
         $logs = \App\Models\AuditLog::where('model_type', Employee::class)
             ->where('model_id', $id)
-            ->whereIn('action', ['updated', 'restored'])
+            ->whereIn('action', ['created', 'updated', 'restored'])
             ->with('user')
             ->latest('created_at')
             ->get();
@@ -413,7 +413,8 @@ class EmployeeController extends Controller
                 'date'      => $log->created_at->format('M d, Y'),
                 'time'      => $log->created_at->format('h:i A'),
                 'description' => $log->description,
-                'changes'   => $log->changes
+                'changes'   => $log->changes,
+                'action'    => $log->action
             ];
         }));
     }
