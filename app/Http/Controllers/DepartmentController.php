@@ -97,14 +97,14 @@ class DepartmentController extends Controller
         if ($department->documentTypes()->count() > 0) {
             return redirect()
                 ->route('settings.departments.index')
-                ->with('error', 'Cannot delete a department that has active document types attached. Deactivate it instead.');
+                ->with('error', 'This department cannot be deleted because it has active document types attached. Please deactivate the department instead.');
         }
 
         // Second check if it has any associated documents (morphMany relationship)
         if ($department->documents()->count() > 0) {
             return redirect()
                 ->route('settings.departments.index')
-                ->with('error', 'Cannot delete a department that has documents attached. Deactivate it instead.');
+                ->with('error', 'This department cannot be deleted because it has documents attached. Please deactivate the department instead.');
         }
 
         $name = $department->name;

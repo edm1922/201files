@@ -262,10 +262,10 @@ $(document).ready(function () {
         }
     });
 
-    // Auto-hide after 5 seconds
+    // Auto-hide after 6 seconds
     setTimeout(function () {
         $('.alert, .alert-flash').fadeOut('slow');
-    }, 5000);
+    }, 6000);
 });
 
 /**

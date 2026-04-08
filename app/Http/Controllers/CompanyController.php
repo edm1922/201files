@@ -115,7 +115,7 @@ class CompanyController extends Controller
         if ($company->employees()->count() > 0) {
             return redirect()
                 ->route('settings.companies.index')
-                ->with('error', 'Cannot delete a company that has employees assigned to it. Deactivate it instead.');
+                ->with('error', 'This company cannot be deleted because it currently has one or more employees assigned to it. Please deactivate the company instead.');
         }
 
         $name = $company->name;

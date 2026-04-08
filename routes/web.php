@@ -138,12 +138,16 @@ Route::middleware('auth')->group(function () {
             ->name('folders.store');
 
         Route::patch('/folders/{folder}', [DepartmentDocumentController::class, 'updateFolder'])
-            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->middleware(['role:admin', 'can:create,App\Models\Document'])
             ->name('folders.update');
 
         Route::delete('/folders/{folder}', [DepartmentDocumentController::class, 'destroyFolder'])
-            ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
+            ->middleware(['role:admin', 'can:create,App\Models\Document'])
             ->name('folders.destroy');
+
+        Route::get('/root-update-history', [DepartmentDocumentController::class, 'rootUpdateHistory'])
+            ->middleware(['role:admin'])
+            ->name('root-update-history');
 
         Route::get('/folders/{folder}/update-history', [DepartmentDocumentController::class, 'folderUpdateHistory'])
             ->middleware(['role:admin,encoder', 'can:create,App\Models\Document'])
@@ -162,6 +166,7 @@ Route::middleware('auth')->group(function () {
             ->name('restore');
 
         Route::delete('/{id}/force-delete', [DepartmentDocumentController::class, 'forceDelete'])
+            ->middleware('role:admin')
             ->name('forceDelete');
 
         Route::get('/{document}/preview', [DepartmentDocumentController::class, 'preview'])

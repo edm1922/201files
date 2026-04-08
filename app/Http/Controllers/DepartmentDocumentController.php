@@ -491,7 +491,7 @@ class DepartmentDocumentController extends Controller
     public function updateFolder(Request $request, DocumentFolder $folder)
     {
         $departmentId = (int) $folder->department_id;
-        $this->authorize('createForDepartment', [Document::class, $departmentId]);
+        $this->authorize('updateFolder', [Document::class, $departmentId]);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -560,17 +560,24 @@ class DepartmentDocumentController extends Controller
     public function destroyFolder(Request $request, DocumentFolder $folder)
     {
         $departmentId = (int) $folder->department_id;
-        $this->authorize('createForDepartment', [Document::class, $departmentId]);
+        $this->authorize('deleteFolder', [Document::class, $departmentId]);
 
         $hasChildren = DocumentFolder::query()->where('parent_id', $folder->id)->exists();
-        $hasDocuments = Document::withTrashed()->where('document_folder_id', $folder->id)->exists();
+        $hasActiveDocuments = Document::query()->where('document_folder_id', $folder->id)->exists();
+        $hasArchivedDocuments = Document::onlyTrashed()->where('document_folder_id', $folder->id)->exists();
+        $hasDocuments = $hasActiveDocuments || $hasArchivedDocuments;
 
         if ($hasChildren || $hasDocuments) {
-            $message = $hasChildren && $hasDocuments
-                ? 'Folder cannot be deleted because it has subfolders and documents.'
-                : ($hasChildren
-                    ? 'Folder cannot be deleted because it has subfolders.'
-                    : 'Folder cannot be deleted because it contains documents.');
+            if ($hasChildren && $hasDocuments) {
+                $message = 'This folder cannot be deleted because it contains both subfolders and documents. Please move or delete its contents first.';
+            } elseif ($hasChildren) {
+                $message = 'This folder cannot be deleted because it contains subfolders. Please move or delete the subfolders first.';
+            } elseif ($hasActiveDocuments) {
+                $message = 'This folder cannot be deleted because it contains documents. Please move or archive the documents first.';
+            } else {
+                // Only archived documents remain
+                $message = 'This folder cannot be deleted because it contains documents that are currently in the archive. Please go to the Archive section to permanently delete or restore these documents first.';
+            }
 
             return $this->folderValidationError($request, $message);
         }
@@ -621,29 +628,30 @@ class DepartmentDocumentController extends Controller
             ->latest('created_at')
             ->get();
 
-        // 3. Find all Documents currently residing in any of these folders
-        $currentDocumentIds = Document::withTrashed()
-            ->whereIn('document_folder_id', $allFolderIds)
-            ->pluck('id')
-            ->toArray();
-
-        // 4. Fetch AuditLogs for these documents (and any moved-out docs)
-        // Optimization: Fetch logs where the document is *currently* there, 
-        // OR where the log's 'changes' metadata mentions any of our target folder IDs.
-        $documentLogs = AuditLog::query()
+        // 3. Optimistic DB subquery mapping for finding Document Audit Logs
+        // (Removing the previously memory-heavy array pluck resolution)
+        $documentLogsQuery = AuditLog::query()
             ->where('model_type', Document::class)
-            ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored', 'deleted'])
-            ->where(function ($query) use ($currentDocumentIds, $allFolderIds) {
-                $query->whereIn('model_id', $currentDocumentIds);
-                // Also catch documents that were previously in these folders if the metadata exists
-                foreach ($allFolderIds as $fid) {
-                    $query->orWhere('changes', 'LIKE', '%"document_folder_id":' . $fid . '%');
-                    $query->orWhere('changes', 'LIKE', '%"document_folder_id": ' . $fid . '%');
-                }
-            })
+            ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored', 'deleted']);
+
+        $documentLogsQuery->where(function ($query) use ($allFolderIds) {
+            // Find logs for documents completely located at this folder tree natively
+            $query->whereIn('model_id', function ($subQuery) use ($allFolderIds) {
+                $subQuery->select('id')->from('documents')->whereIn('document_folder_id', $allFolderIds);
+            });
+
+            // Catch documents that were previously in these folders if the metadata exists (Fallback)
+            if (!empty($allFolderIds)) {
+                // Leverage REGEXP to prevent thousands of 'OR LIKE' query clauses overloading the DB
+                $pattern = '"document_folder_id":\s*(' . implode('|', $allFolderIds) . ')[,}\s]';
+                $query->orWhere('changes', 'REGEXP', $pattern);
+            }
+        });
+
+        $documentLogs = $documentLogsQuery
             ->with(['user'])
             ->latest('created_at')
-            ->limit(2000)
+            ->limit(1000)
             ->get();
 
         // 5. Get document names for those in the log to ensure we show the correct names
@@ -702,6 +710,100 @@ class DepartmentDocumentController extends Controller
         // 8. Combine, Sort, and Return
         $finalLogs = $mappedFolderLogs->concat($mappedDocumentLogs)
             ->sortByDesc(fn (array $entry) => $entry['logged_at'])
+            ->values()
+            ->map(function (array $entry) {
+                unset($entry['logged_at']);
+                return $entry;
+            });
+
+        return response()->json($finalLogs);
+    }
+
+    public function rootUpdateHistory(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Document::class);
+
+        if (!$request->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $departmentId = $request->integer('department_id', 0);
+
+        if ($departmentId <= 0) {
+            return response()->json([]);
+        }
+
+        // Verify user can access this department
+        if (!$request->user()->canAccessDepartment($departmentId)) {
+            abort(403, 'Unauthorized access to department activity.');
+        }
+
+        $folderLogsQuery = AuditLog::query()
+            ->where('model_type', DocumentFolder::class)
+            ->whereIn('action', ['created', 'updated', 'deleted']);
+
+        $documentLogsQuery = AuditLog::query()
+            ->where('model_type', Document::class)
+            ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored', 'deleted']);
+
+        $folderLogsQuery->where(function($q) use ($departmentId) {
+            $q->whereIn('model_id', function ($sub) use ($departmentId) {
+                $sub->select('id')->from('document_folders')->where('department_id', '=', $departmentId);
+            });
+            $q->orWhere('changes', 'LIKE', '%"department_id":' . $departmentId . '%');
+            $q->orWhere('changes', 'LIKE', '%"department_id": ' . $departmentId . '%');
+        });
+
+        $documentLogsQuery->where(function($q) use ($departmentId) {
+            $q->whereIn('model_id', function ($sub) use ($departmentId) {
+                $sub->select('id')->from('documents')->where('department_id', '=', $departmentId);
+            });
+            $q->orWhere('changes', 'LIKE', '%"department_id":' . $departmentId . '%');
+            $q->orWhere('changes', 'LIKE', '%"department_id": ' . $departmentId . '%');
+        });
+
+        $folderLogs = $folderLogsQuery->with(['user'])->latest('created_at')->limit(500)->get();
+        $documentLogs = $documentLogsQuery->with(['user'])->latest('created_at')->limit(500)->get();
+
+        $allFolderIds = $folderLogs->pluck('model_id')->filter()->unique()->toArray();
+        $foldersById = DocumentFolder::whereIn('id', $allFolderIds)->get(['id', 'name'])->keyBy('id');
+
+        $allDocumentIdsInLogs = $documentLogs->pluck('model_id')->filter()->unique()->toArray();
+        $documentsById = Document::withTrashed()
+            ->whereIn('id', $allDocumentIdsInLogs)
+            ->get(['id', 'original_filename'])
+            ->keyBy('id');
+
+        $mappedFolderLogs = $folderLogs->map(function (AuditLog $log) use ($foldersById) {
+            $targetName = $foldersById->get((int) $log->model_id)?->name ?: ($log->target_name ?: 'Folder');
+            return [
+                'logged_at' => $log->created_at,
+                'user_name' => $log->user?->name ?: 'System',
+                'user_role' => $log->user?->role ?: 'System',
+                'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                'description' => "Folder '{$targetName}': " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'changes' => $log->changes,
+            ];
+        });
+
+        $mappedDocumentLogs = $documentLogs->map(function (AuditLog $log) use ($documentsById) {
+            $document = $documentsById->get((int) $log->model_id);
+            $documentName = $document?->original_filename ?: ($log->target_name ?: 'Document');
+            return [
+                'logged_at' => $log->created_at,
+                'user_name' => $log->user?->name ?: 'System',
+                'user_role' => $log->user?->role ?: 'System',
+                'date' => optional($log->created_at)->format('M d, Y') ?: '-',
+                'time' => optional($log->created_at)->format('h:i A') ?: '-',
+                'description' => "File '{$documentName}': " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'changes' => $log->changes,
+            ];
+        });
+
+        $finalLogs = $mappedFolderLogs->concat($mappedDocumentLogs)
+            ->sortByDesc(fn (array $entry) => $entry['logged_at'])
+            ->take(500)
             ->values()
             ->map(function (array $entry) {
                 unset($entry['logged_at']);

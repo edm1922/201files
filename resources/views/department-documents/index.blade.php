@@ -56,13 +56,23 @@
                                     </a>
                                 @endif
 
-                                {{-- Folder Update History --}}
+                                {{-- Folder/Root Update History --}}
                                 @if ($currentFolder && $currentFolderHistoryUrl)
                                     <button type="button" class="btn-sidebar-nav btn-sidebar-nav--history"
                                         data-folder-history-trigger
                                         data-folder-name="{{ $currentFolder->name }}"
                                         data-folder-history-url="{{ $currentFolderHistoryUrl }}"
-                                        title="View Folder History">
+                                        title="View Folder Activity">
+                                        <i class="fas fa-clock-rotate-left"></i>
+                                    </button>
+                                @endif
+
+                                @if (!$currentFolder && auth()->user()->hasRole('admin') && $selectedDepartmentId > 0)
+                                    <button type="button" class="btn-sidebar-nav btn-sidebar-nav--history"
+                                        data-folder-history-trigger
+                                        data-folder-name="{{ $selectedDepartmentName }} Activity"
+                                        data-folder-history-url="{{ route('department-documents.root-update-history', ['department_id' => $selectedDepartmentId]) }}"
+                                        title="View Department Activity">
                                         <i class="fas fa-clock-rotate-left"></i>
                                     </button>
                                 @endif
@@ -99,7 +109,7 @@
                     </div>
                 </aside>
 
-                <div class="explorer-main d-flex flex-column gap-4">
+                <div class="explorer-main d-flex flex-column gap-3">
                     <div class="doc-command-search-row">
                         <form action="{{ route('department-documents.index') }}" method="GET"
                             class="doc-command-search mb-0" data-doc-live-search-form
@@ -193,25 +203,38 @@
                                                             <i class="fas fa-folder text-danger fs-6"></i>
                                                         </div>
                                                         <div class="d-flex flex-column overflow-hidden">
-                                                            <span class="fw-bold text-dark text-truncate d-block" style="font-size: 0.95rem;">{{ $sub->name }}</span>
+                                                            <span class="fw-bold text-dark text-truncate d-block">{{ $sub->name }}</span>
                                                         </div>
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    <span class="text-secondary fw-semibold" style="font-size: 0.85rem;">{{ $sub->folder_code ?? '—' }}</span>
+                                                    <span class="text-secondary fw-semibold">{{ $sub->folder_code ?? '—' }}</span>
                                                 </td>
                                                 <td>
-                                                    <span class="text-secondary" style="font-size: 0.85rem;">{{ $sub->documentLocation?->name ?? '—' }}</span>
+                                                    <span class="text-secondary">{{ $sub->documentLocation?->name ?? '—' }}</span>
                                                 </td>
                                                 <td class="text-center">
                                                     @if (($canManageFolders ?? false) || ($canEditDeleteFolders ?? false))
                                                         <div class="dropdown">
                                                             <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
-                                                                type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Folder actions">
+                                                                type="button" data-bs-toggle="dropdown" 
+                                                                data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}'
+                                                                aria-expanded="false" title="Folder actions">
                                                                 <i class="fas fa-ellipsis-v px-2 py-1"></i>
                                                             </button>
                                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                                                                <li>
+                                                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                        data-folder-history-trigger
+                                                                        data-folder-name="{{ $sub->name }}"
+                                                                        data-folder-history-url="{{ route('department-documents.folders.update-history', $sub) }}">
+                                                                        <i class="fas fa-history text-secondary" style="width: 16px;"></i><span class="fw-medium">Update History</span>
+                                                                    </button>
+                                                                </li>
                                                                 @if ($canEditDeleteFolders ?? false)
+                                                                    <li>
+                                                                        <hr class="dropdown-divider opacity-50 my-1">
+                                                                    </li>
                                                                     <li>
                                                                         <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
                                                                             data-bs-toggle="modal" data-bs-target="#renameFolderModal"
@@ -388,25 +411,25 @@
                                                             data-doc-history-url="{{ route('department-documents.update-history', $doc) }}">
                                                             {{ $doc->original_filename }}
                                                         </button>
-                                                        <div class="text-muted small">{{ strtoupper($ext) }} &bull;
+                                                        <div class="text-muted">{{ strtoupper($ext) }} &bull;
                                                             {{ $fileSizeDisplay }}
                                                             KB</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="text-dark fw-medium small">{{ $doc->department->name }}
+                                                <div class="text-dark fw-medium">{{ $doc->department->name }}
                                                 </div>
-                                                <div class="text-muted x-small text-uppercase mt-1">
+                                                <div class="text-muted text-uppercase mt-1">
                                                     {{ $doc->documentType->name }}</div>
                                             </td>
                                             <td>
-                                                <div class="small fw-semibold font-monospace">
+                                                <div class="fw-semibold font-monospace">
                                                     {{ $docFolderCode ?? '—' }}</div>
-                                                <div class="text-muted x-small mt-1">{{ $docFolderPath }}</div>
+                                                <div class="text-muted mt-1">{{ $docFolderPath }}</div>
                                             </td>
                                             <td>
-                                                <div class="text-muted x-small mt-1">
+                                                <div class="text-muted mt-1">
                                                     {{ $doc->documentLocation?->name ?? '—' }}</div>
                                             </td>
                                             <td>
@@ -426,7 +449,9 @@
                                             <td class="text-center">
                                                 <div class="dropdown">
                                                     <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
-                                                        type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="Document actions">
+                                                        type="button" data-bs-toggle="dropdown" 
+                                                        data-bs-boundary="viewport" data-bs-popper-config='{"strategy":"fixed"}'
+                                                        aria-expanded="false" title="Document actions">
                                                         <i class="fas fa-ellipsis-v px-2 py-1"></i>
                                                     </button>
                                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
@@ -675,7 +700,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-brand px-4" data-bs-dismiss="modal" style="border-radius:6px; font-size:0.85rem; font-weight: 500;">Close</button>
                 </div>
             </div>
         </div>
@@ -710,7 +735,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius:6px; background-color: red; font-size:0.85rem; font-weight: 500;">Close</button>
+                    <button type="button" class="btn btn-brand px-4" data-bs-dismiss="modal" style="border-radius:6px; font-size:0.85rem; font-weight: 500;">Close</button>
                 </div>
             </div>
         </div>
@@ -825,7 +850,7 @@
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
                         <button type="button" class="btn btn-light fw-semibold text-secondary"
                             data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary fw-semibold shadow-sm btn-submit-loading">
+                        <button type="submit" class="btn btn-accent-red fw-semibold shadow-sm btn-submit-loading">
                             <i class="fas fa-save me-1"></i> Save Changes
                         </button>
                     </div>
@@ -969,7 +994,7 @@
                     <div class="modal-footer border-top-0 px-4 pb-4 pt-2 bg-white">
                         <button type="button" class="btn btn-light fw-semibold text-secondary"
                             data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary fw-semibold shadow-sm btn-submit-loading">
+                        <button type="submit" class="btn btn-accent-red fw-semibold shadow-sm btn-submit-loading">
                             <i class="fas fa-save me-1"></i> Save Details
                         </button>
                     </div>
@@ -1415,17 +1440,17 @@
             }
 
             .explorer-main .doc-list-card {
-                display: grid;
-                grid-template-rows: auto minmax(0, 1fr) auto;
-                flex: 1 1 auto;
+                display: flex;
+                flex-direction: column;
+                flex: 0 1 auto;
                 min-height: 0;
+                max-height: 100%;
                 overflow: hidden !important;
             }
 
             .explorer-main .doc-table-wrapper {
-                grid-row: 2;
+                flex: 1 1 auto;
                 min-height: 0;
-                height: 100%;
                 overflow-x: auto !important;
                 overflow-y: scroll !important;
                 scrollbar-gutter: stable;
@@ -1460,6 +1485,13 @@
 
             .doc-table {
                 margin-bottom: 0;
+                font-size: 1rem;
+            }
+
+            .doc-table th, 
+            .doc-table td {
+                padding: 0.5rem 0.75rem !important;
+                vertical-align: middle;
             }
 
             .doc-table-footer {
@@ -1476,7 +1508,7 @@
             }
 
             .doc-table-context {
-                padding: 1rem 1rem 1rem !important;
+                padding: 1.25rem 1rem !important;
             }
 
             .doc-table-empty-overlay {
@@ -2289,21 +2321,29 @@
                     const wrapper = document.createElement('div');
                     wrapper.setAttribute(type === 'success' ? 'data-flash-success' : 'data-flash-error', '1');
                     wrapper.className = `alert-flash alert-flash--${type} mb-4 animate-fade-in`;
-                    wrapper.innerHTML =
-                        `${type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>'}${message}`;
+                    wrapper.innerHTML = `
+                        ${type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : '<i class="fas fa-exclamation-circle me-2"></i>'}
+                        <span>${message}</span>
+                        <button type="button" class="btn-close-flash" onclick="this.parentElement.remove()" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>`;
                     explorer.parentElement.insertBefore(wrapper, explorer);
 
-                    // Auto-fade after 2 seconds
+                    // Auto-fade after 4 seconds
                     setTimeout(() => {
+                        if (!wrapper.parentElement) return;
                         wrapper.classList.remove('animate-fade-in');
                         wrapper.classList.add('animate-fade-out');
                         setTimeout(() => wrapper.remove(), 400);
-                    }, 2000);
+                    }, 4000);
                 };
 
                 const disableSubmit = (form, disabled) => {
                     form.querySelectorAll('button[type="submit"]').forEach((button) => {
                         button.disabled = disabled;
+                        if (!disabled && button.dataset.originalHTML) {
+                            button.innerHTML = button.dataset.originalHTML;
+                        }
                     });
                 };
 
@@ -2921,24 +2961,36 @@
                 };
 
                 const bindActionDropdownZIndexFix = () => {
-                    document.querySelectorAll('.doc-table [data-bs-toggle="dropdown"]').forEach((toggle) => {
+                    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach((toggle) => {
                         if (toggle.dataset.rowDropdownBound === '1') {
                             return;
                         }
 
                         toggle.dataset.rowDropdownBound = '1';
+                        
+                        // Handle Table rows (z-index fix)
                         const row = toggle.closest('tr');
-                        if (!row) {
-                            return;
+                        if (row) {
+                            toggle.addEventListener('show.bs.dropdown', () => {
+                                row.classList.add('row-dropdown-open');
+                            });
+
+                            toggle.addEventListener('hide.bs.dropdown', () => {
+                                row.classList.remove('row-dropdown-open');
+                            });
                         }
 
-                        toggle.addEventListener('show.bs.dropdown', () => {
-                            row.classList.add('row-dropdown-open');
-                        });
+                        // Handle Tree actions (visibility fix)
+                        const treeActions = toggle.closest('.ui-tree-actions');
+                        if (treeActions) {
+                            toggle.addEventListener('show.bs.dropdown', () => {
+                                treeActions.classList.add('show');
+                            });
 
-                        toggle.addEventListener('hide.bs.dropdown', () => {
-                            row.classList.remove('row-dropdown-open');
-                        });
+                            toggle.addEventListener('hide.bs.dropdown', () => {
+                                treeActions.classList.remove('show');
+                            });
+                        }
                     });
                 };
 
@@ -3768,10 +3820,7 @@
                             if (!btn.dataset.originalHTML) btn.dataset.originalHTML = btn.innerHTML;
                             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Processing...';
                             btn.disabled = true;
-                            setTimeout(() => {
-                                btn.innerHTML = btn.dataset.originalHTML;
-                                btn.disabled = false;
-                            }, 5000);
+                            // Note: Reversion is now handled by the AJAX 'finally' block or standard page reload
                         }
                     });
                 });
@@ -3943,6 +3992,7 @@
 
                 const submitFolderFormAjax = async (form) => {
                     const formData = new FormData(form);
+                    const isDelete = form.id === 'global-delete-folder-form';
 
                     disableSubmit(form, true);
                     clearFlash();
@@ -3963,6 +4013,9 @@
 
                         if (!response.ok || payload.ok === false) {
                             showFlash(payload.message || 'Folder action failed.', 'error');
+                            if (isDelete) {
+                                closeAllFolderModals();
+                            }
                             return;
                         }
 
@@ -3971,6 +4024,9 @@
                         await reloadExplorerFromUrl(payload.redirect_url || window.location.href);
                     } catch (error) {
                         showFlash('Folder action failed. Please try again.', 'error');
+                        if (isDelete) {
+                            closeAllFolderModals();
+                        }
                     } finally {
                         disableSubmit(form, false);
                     }

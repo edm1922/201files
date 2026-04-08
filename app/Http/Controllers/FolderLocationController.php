@@ -99,7 +99,7 @@ class FolderLocationController extends Controller
 
         if ($employeesCount > 0) {
             return redirect()->back()
-                ->with('error', "Cannot delete Row {$folderLocation->row_name} because it contains occupied folders.");
+                ->with('error', "This row cannot be deleted because it is currently assigned to one or more employee folders. Please ensure the row is empty before deleting.");
         }
 
         $rowName = $folderLocation->row_name;
