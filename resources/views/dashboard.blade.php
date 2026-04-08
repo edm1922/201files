@@ -62,7 +62,7 @@
                             <div class="stat-header">
                                 <div>
                                     <span class="stat-title d-block mb-1">Total Employees</span>
-                                    <span class="stat-value-large">{{ number_format($totalEmployees) }}</span>
+                                    <span class="stat-value-large" id="mainTotalEmployees">{{ number_format($totalEmployees) }}</span>
                                 </div>
                                 <div class="stat-icon-circle">
                                     <i class="fas fa-users"></i>
@@ -116,12 +116,35 @@
         <!-- Company Distribution Pie Chart -->
         <div class="col-lg-4">
             <div class="graph-container h-100">
-                <h3 class="dashboard-section-title">
-                    <i class="fas fa-chart-pie" style="color: #dd270d;"></i> Company Distribution
-                </h3>
-                <div style="height: 250px; position: relative;" class="mt-3">
-                    <canvas id="companyChart"></canvas>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="dashboard-section-title mb-0">
+                        <i class="fas fa-chart-pie" style="color: #dd270d;"></i> Company Distribution
+                    </h3>
+                    <!-- Company Filter Dropdown -->
+                    <div class="custom-dropdown" x-data="{ open: false, selected: 'All Companies', selectedColor: '#dd270d' }" @click.away="open = false">
+                        <button type="button" class="dropdown-trigger" @click="open = !open">
+                            <div class="d-flex align-items-center gap-2">
+                                <span x-show="selected !== 'All Companies'" class="legend-dot" :style="'background-color: ' + selectedColor"></span>
+                                <span x-text="selected">All Companies</span>
+                            </div>
+                            <i class="fas fa-chevron-down ms-2" :class="open ? 'rotate-180' : ''"></i>
+                        </button>
+                        <div class="dropdown-menu-custom" x-show="open" x-transition x-cloak id="companyFilterOptions">
+                            <div class="dropdown-item-custom active" @click="selected = 'All Companies'; open = false; filterCompanyChart('All')">
+                                All Companies
+                            </div>
+                            <!-- Iterated items will be injected here or handled by JS -->
+                        </div>
+                    </div>
                 </div>
+                <div style="height: 250px; position: relative;" class="mt-3 chart-with-center">
+                    <canvas id="companyChart"></canvas>
+                    <div class="chart-center-text">
+                        <span class="center-value" id="totalEmployeeCount">{{ number_format($totalEmployees) }}</span>
+                        <span class="center-label">Total Enrolled</span>
+                    </div>
+                </div>
+                <div id="companyLegend" class="custom-chart-legend mt-4"></div>
             </div>
         </div>
     </div>

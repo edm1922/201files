@@ -97,16 +97,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const companyCtx = companyCtxElem.getContext('2d');
         const companyData = data.companyDistribution;
 
-        new Chart(companyCtx, {
+        // Store the original data for filtering
+        const originalLabels = companyData.map(item => item.name);
+        const originalCounts = companyData.map(item => item.count);
+        const totalCount = originalCounts.reduce((a, b) => a + b, 0);
+
+        const colors = [
+            '#dd270d', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6',
+            '#ec4899', '#06b6d4', '#4b5563', '#10b981', '#f97316'
+        ];
+
+        const companyChart = new Chart(companyCtx, {
             type: 'doughnut',
             data: {
-                labels: companyData.map(item => item.name),
+                labels: originalLabels,
                 datasets: [{
-                    data: companyData.map(item => item.count),
-                    backgroundColor: [
-                        '#dd270d', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6',
-                        '#ec4899', '#06b6d4', '#4b5563', '#10b981', '#f97316'
-                    ],
+                    data: originalCounts,
+                    backgroundColor: colors,
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]
@@ -114,15 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '65%',
+                cutout: '80%', // Higher cutout for more "thin" ring look
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true,
-                            font: { size: 11, weight: '600' }
-                        }
+                        display: false
                     },
                     tooltip: {
                         backgroundColor: '#1f2937',
@@ -132,6 +134,102 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         });
+
+        const updateLegend = (dataLabels, dataCounts) => {
+            const legendContainer = document.getElementById('companyLegend');
+            if (legendContainer) {
+                let legendHtml = '<div class="legend-list">';
+                dataLabels.forEach((label, index) => {
+                    const count = dataCounts[index];
+                    const colorIndex = originalLabels.indexOf(label);
+                    const color = colors[colorIndex % colors.length];
+                    const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
+                    
+                    legendHtml += `
+                        <div class="legend-item-row">
+                            <div class="legend-item-left">
+                                <span class="legend-ring" style="border-color: ${color}"></span>
+                                <span class="legend-label-name" title="${label}">${label}</span>
+                            </div>
+                            <div class="legend-item-right">
+                                <span class="legend-count">${count}</span>
+                            </div>
+                        </div>`;
+                });
+                legendHtml += '</div>';
+                legendContainer.innerHTML = legendHtml;
+            }
+        };
+
+        const updateCenterText = (value) => {
+            const formattedValue = value.toLocaleString();
+            
+            // Update chart center
+            const centerValueElem = document.getElementById('totalEmployeeCount');
+            if (centerValueElem) {
+                centerValueElem.innerText = formattedValue;
+            }
+
+            // Update main stat card at the top
+            const mainTotalElem = document.getElementById('mainTotalEmployees');
+            if (mainTotalElem) {
+                mainTotalElem.innerText = formattedValue;
+            }
+        };
+
+        // Populate the filter dropdown with items
+        const dropdownMenu = document.getElementById('companyFilterOptions');
+        if (dropdownMenu) {
+            originalLabels.forEach((label, index) => {
+                const color = colors[index % colors.length];
+                const item = document.createElement('div');
+                item.className = 'dropdown-item-custom';
+                item.innerHTML = `
+                    <span class="legend-dot" style="background-color: ${color}"></span>
+                    <span>${label}</span>
+                `;
+                item.onclick = () => {
+                    // Update Alpine data manually since this is injected (v3 compatible)
+                    const dropdownEl = dropdownMenu.closest('[x-data]');
+                    if (dropdownEl && window.Alpine) {
+                        try {
+                            const xData = Alpine.$data(dropdownEl);
+                            xData.selected = label;
+                            xData.selectedColor = color;
+                            xData.open = false;
+                        } catch (e) {
+                            console.error('Failed to update Alpine state:', e);
+                        }
+                    }
+                    filterCompanyChart(label);
+                };
+                dropdownMenu.appendChild(item);
+            });
+        }
+
+        // Global filter function
+        window.filterCompanyChart = function(companyName) {
+            if (companyName === 'All') {
+                companyChart.data.labels = originalLabels;
+                companyChart.data.datasets[0].data = originalCounts;
+                companyChart.data.datasets[0].backgroundColor = colors;
+                updateCenterText(totalCount);
+                updateLegend(originalLabels, originalCounts);
+            } else {
+                const index = originalLabels.indexOf(companyName);
+                if (index !== -1) {
+                    companyChart.data.labels = [companyName];
+                    companyChart.data.datasets[0].data = [originalCounts[index]];
+                    companyChart.data.datasets[0].backgroundColor = [colors[index % colors.length]];
+                    updateCenterText(originalCounts[index]);
+                    updateLegend([companyName], [originalCounts[index]]);
+                }
+            }
+            companyChart.update();
+        };
+
+        // Initial legend render
+        updateLegend(originalLabels, originalCounts);
     }
 
     // --- Bank Distribution Column Chart ---
