@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const colorIndex = originalLabels.indexOf(label);
                     const color = colors[colorIndex % colors.length];
                     const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(0) : 0;
-                    
+
                     legendHtml += `
                         <div class="legend-item-row">
                             <div class="legend-item-left">
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const updateCenterText = (value) => {
             const formattedValue = value.toLocaleString();
-            
+
             // Update chart center
             const centerValueElem = document.getElementById('totalEmployeeCount');
             if (centerValueElem) {
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Global filter function
-        window.filterCompanyChart = function(companyName) {
+        window.filterCompanyChart = function (companyName) {
             if (companyName === 'All') {
                 companyChart.data.labels = originalLabels;
                 companyChart.data.datasets[0].data = originalCounts;

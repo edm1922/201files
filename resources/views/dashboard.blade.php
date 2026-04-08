@@ -51,149 +51,148 @@
         };
     </script>
 
-    <!-- Top Section (Stat Cards and Pie Chart) -->
-    <div class="row justify-content-center g-4 mb-4">
-        <!-- 2x2 Stat Cards -->
-        <div class="col-lg-8">
-            <div class="stat-cards-frame h-100">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="stat-card h-100">
-                            <div class="stat-header">
-                                <div>
-                                    <span class="stat-title d-block mb-1">Total Employees</span>
-                                    <span class="stat-value-large" id="mainTotalEmployees">{{ number_format($totalEmployees) }}</span>
-                                </div>
-                                <div class="stat-icon-circle">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card h-100">
-                            <div class="stat-header">
-                                <div>
-                                    <span class="stat-title d-block mb-1">Total Companies</span>
-                                    <span class="stat-value-large">{{ $totalCompanies }}</span>
-                                </div>
-                                <div class="stat-icon-circle">
-                                    <i class="fas fa-building"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card h-100">
-                            <div class="stat-header">
-                                <div>
-                                    <span class="stat-title d-block mb-1">Total Documents</span>
-                                    <span class="stat-value-large">{{ number_format($totalDocuments) }}</span>
-                                </div>
-                                <div class="stat-icon-circle">
-                                    <i class="fas fa-file-alt"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card h-100">
-                            <div class="stat-header">
-                                <div>
-                                    <span class="stat-title d-block mb-1">Total Users</span>
-                                    <span class="stat-value-large">{{ number_format($totalUsers) }}</span>
-                                </div>
-                                <div class="stat-icon-circle">
-                                    <i class="fas fa-user-shield"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Company Distribution Pie Chart -->
-        <div class="col-lg-4">
-            <div class="graph-container h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="dashboard-section-title mb-0">
-                        <i class="fas fa-chart-pie" style="color: #dd270d;"></i> Company Distribution
-                    </h3>
-                    <!-- Company Filter Dropdown -->
-                    <div class="custom-dropdown" x-data="{ open: false, selected: 'All Companies', selectedColor: '#dd270d' }" @click.away="open = false">
-                        <button type="button" class="dropdown-trigger" @click="open = !open">
-                            <div class="d-flex align-items-center gap-2">
-                                <span x-show="selected !== 'All Companies'" class="legend-dot" :style="'background-color: ' + selectedColor"></span>
-                                <span x-text="selected">All Companies</span>
-                            </div>
-                            <i class="fas fa-chevron-down ms-2" :class="open ? 'rotate-180' : ''"></i>
-                        </button>
-                        <div class="dropdown-menu-custom" x-show="open" x-transition x-cloak id="companyFilterOptions">
-                            <div class="dropdown-item-custom active" @click="selected = 'All Companies'; open = false; filterCompanyChart('All')">
-                                All Companies
-                            </div>
-                            <!-- Iterated items will be injected here or handled by JS -->
-                        </div>
-                    </div>
-                </div>
-                <div style="height: 250px; position: relative;" class="mt-3 chart-with-center">
-                    <canvas id="companyChart"></canvas>
-                    <div class="chart-center-text">
-                        <span class="center-value" id="totalEmployeeCount">{{ number_format($totalEmployees) }}</span>
-                        <span class="center-label">Total Enrolled</span>
-                    </div>
-                </div>
-                <div id="companyLegend" class="custom-chart-legend mt-4"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Section (Hiring Trends and Bank Column Chart) -->
+    <!-- Consolidated Dashboard Layout (Column-based) -->
     <div class="row justify-content-center g-4">
-        <!-- Hiring Trends Graph -->
+        <!-- Main Left Column -->
         <div class="col-lg-8">
-            <div class="graph-container h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="dashboard-section-title mb-0">
-                        <i class="fas fa-chart-line" style="color: #dd270d;"></i> Hiring Trends
-                    </h3>
-                    <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0" id="yearFilterForm" x-data="{ open: false }">
-                        <input type="hidden" name="year" id="selectedYear" value="{{ $year }}">
-                        <div class="custom-dropdown" @click.away="open = false">
+            <div class="d-flex flex-column gap-4">
+                <!-- 2x2 Stat Cards -->
+                <div class="stat-cards-frame">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-header">
+                                    <div>
+                                        <span class="stat-title d-block mb-1">Total Employees</span>
+                                        <span class="stat-value-large" id="mainTotalEmployees">{{ number_format($totalEmployees) }}</span>
+                                    </div>
+                                    <div class="stat-icon-circle">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-header">
+                                    <div>
+                                        <span class="stat-title d-block mb-1">Total Companies</span>
+                                        <span class="stat-value-large">{{ $totalCompanies }}</span>
+                                    </div>
+                                    <div class="stat-icon-circle">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-header">
+                                    <div>
+                                        <span class="stat-title d-block mb-1">Total Documents</span>
+                                        <span class="stat-value-large">{{ number_format($totalDocuments) }}</span>
+                                    </div>
+                                    <div class="stat-icon-circle">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card h-100">
+                                <div class="stat-header">
+                                    <div>
+                                        <span class="stat-title d-block mb-1">Total Users</span>
+                                        <span class="stat-value-large">{{ number_format($totalUsers) }}</span>
+                                    </div>
+                                    <div class="stat-icon-circle">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hiring Trends Graph -->
+                <div class="graph-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="dashboard-section-title mb-0">
+                            <i class="fas fa-chart-line" style="color: #dd270d;"></i> Hiring Trends
+                        </h3>
+                        <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0" id="yearFilterForm" x-data="{ open: false }">
+                            <input type="hidden" name="year" id="selectedYear" value="{{ $year }}">
+                            <div class="custom-dropdown" @click.away="open = false">
+                                <button type="button" class="dropdown-trigger" @click="open = !open">
+                                    <span>{{ $year }}</span>
+                                    <i class="fas fa-chevron-down ms-2" :class="open ? 'rotate-180' : ''"></i>
+                                </button>
+                                <div class="dropdown-menu-custom" x-show="open" x-transition x-cloak>
+                                    @php
+                                        $yearsRange = $availableYears ?? [date('Y')];
+                                    @endphp
+                                    @foreach($yearsRange as $y)
+                                        <div class="dropdown-item-custom {{ (int)$year == (int)$y ? 'active' : '' }}" 
+                                             @click="document.getElementById('selectedYear').value = '{{ $y }}'; document.getElementById('yearFilterForm').submit()">
+                                            {{ $y }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <input type="hidden" name="month" value="{{ $month }}">
+                        </form>
+                    </div>
+                    <div style="height: 300px;">
+                        <canvas id="hiringChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Right Column -->
+        <div class="col-lg-4">
+            <div class="d-flex flex-column gap-4">
+                <!-- Company Distribution Pie Chart -->
+                <div class="graph-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="dashboard-section-title mb-0">
+                            <i class="fas fa-chart-pie" style="color: #dd270d;"></i> Company Distribution
+                        </h3>
+                        <!-- Company Filter Dropdown -->
+                        <div class="custom-dropdown" x-data="{ open: false, selected: 'All Companies', selectedColor: '#dd270d' }" @click.away="open = false">
                             <button type="button" class="dropdown-trigger" @click="open = !open">
-                                <span>{{ $year }}</span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span x-show="selected !== 'All Companies'" class="legend-dot" :style="'background-color: ' + selectedColor"></span>
+                                    <span x-text="selected">All Companies</span>
+                                </div>
                                 <i class="fas fa-chevron-down ms-2" :class="open ? 'rotate-180' : ''"></i>
                             </button>
-                            <div class="dropdown-menu-custom" x-show="open" x-transition x-cloak>
-                                @php
-                                    $yearsRange = $availableYears ?? [date('Y')];
-                                @endphp
-                                @foreach($yearsRange as $y)
-                                    <div class="dropdown-item-custom {{ (int)$year == (int)$y ? 'active' : '' }}" 
-                                         @click="document.getElementById('selectedYear').value = '{{ $y }}'; document.getElementById('yearFilterForm').submit()">
-                                        {{ $y }}
-                                    </div>
-                                @endforeach
+                            <div class="dropdown-menu-custom" x-show="open" x-transition x-cloak id="companyFilterOptions">
+                                <div class="dropdown-item-custom active" @click="selected = 'All Companies'; open = false; filterCompanyChart('All')">
+                                    All Companies
+                                </div>
+                                <!-- Iterated items will be injected here or handled by JS -->
                             </div>
                         </div>
-                        <input type="hidden" name="month" value="{{ $month }}">
-                    </form>
+                    </div>
+                    <div style="height: 250px; position: relative;" class="mt-3 chart-with-center">
+                        <canvas id="companyChart"></canvas>
+                        <div class="chart-center-text">
+                            <span class="center-value" id="totalEmployeeCount">{{ number_format($totalEmployees) }}</span>
+                            <span class="center-label">Total Enrolled</span>
+                        </div>
+                    </div>
+                    <div id="companyLegend" class="custom-chart-legend mt-4"></div>
                 </div>
-                <div style="height: 300px;">
-                    <canvas id="hiringChart"></canvas>
-                </div>
-            </div>
-        </div>
 
-        <!-- Bank Employee Column Chart -->
-        <div class="col-lg-4">
-            <div class="graph-container h-100">
-                <h3 class="dashboard-section-title mb-2">
-                    <i class="fas fa-university" style="color: #dd270d;"></i> Bank Distribution
-                </h3>
-                <div style="height: 300px; position: relative;">
-                    <canvas id="bankChart"></canvas>
+                <!-- Bank Employee Column Chart -->
+                <div class="graph-container">
+                    <h3 class="dashboard-section-title mb-2">
+                        <i class="fas fa-university" style="color: #dd270d;"></i> Bank Distribution
+                    </h3>
+                    <div style="height: 300px; position: relative;">
+                        <canvas id="bankChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>

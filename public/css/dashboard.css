@@ -126,6 +126,11 @@
     background: #fafafa;
 }
 
+.graph-container {
+    height: auto !important;
+    min-height: 350px;
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    CALENDAR STYLES
    ────────────────────────────────────────────────────────────────────────── */
@@ -283,7 +288,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    max-height: 140px; /* Fits approx 3 items */
+    max-height: 140px;
+    /* Fits approx 3 items */
     overflow-y: auto;
     padding-right: 8px;
 }
@@ -305,7 +311,8 @@
 .legend-ring {
     width: 12px;
     height: 12px;
-    border: 2.5px solid #dd270d; /* Border color set dynamically in JS */
+    border: 2.5px solid #dd270d;
+    /* Border color set dynamically in JS */
     border-radius: 50%;
     flex-shrink: 0;
 }
