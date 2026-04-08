@@ -106,7 +106,7 @@ class BankTypeController extends Controller
         if (\App\Models\Employee::where('bank_type_id', $bankType->id)->exists()) {
             return redirect()
                 ->route('settings.bank-types.index')
-                ->with('error', 'Cannot delete a bank type that is assigned to employees. Deactivate it instead.');
+                ->with('error', 'This bank type cannot be deleted because it is currently assigned to one or more employees. Please deactivate it instead.');
         }
 
         $name = $bankType->name;

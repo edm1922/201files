@@ -32,7 +32,7 @@
                 </div>
             </div>
 <div class="modal-footer border-top-0 pt-0">
-    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal" style="border-radius:6px; font-weight: 500;">Close</button>
+    <button type="button" class="btn btn-brand px-4" data-bs-dismiss="modal" style="border-radius:6px; font-size:0.85rem; font-weight: 500;">Close</button>
 </div>
         </div>
     </div>

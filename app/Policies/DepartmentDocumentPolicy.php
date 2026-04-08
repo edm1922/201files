@@ -41,6 +41,18 @@ class DepartmentDocumentPolicy
             && $user->canAccessDepartment((int) $document->department_id);
     }
 
+    public function updateFolder(User $user, int $departmentId): bool
+    {
+        return $user->hasRole('admin')
+            && $user->canAccessDepartment($departmentId);
+    }
+
+    public function deleteFolder(User $user, int $departmentId): bool
+    {
+        return $user->hasRole('admin')
+            && $user->canAccessDepartment($departmentId);
+    }
+
     public function download(User $user, Document $document): bool
     {
         return $this->view($user, $document);

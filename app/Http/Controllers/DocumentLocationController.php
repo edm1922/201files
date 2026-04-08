@@ -69,7 +69,7 @@ class DocumentLocationController extends Controller
 
         if ($documentsCount > 0) {
             return redirect()->route('settings.folder-locations.index', ['tab' => 'document-locations'])
-                ->with('error', "Cannot delete '{$documentLocation->name}' because it is assigned to existing documents.");
+                ->with('error', "This location cannot be deleted because it is currently assigned to one or more documents. Please move the documents to another location first.");
         }
 
         $name = $documentLocation->name;

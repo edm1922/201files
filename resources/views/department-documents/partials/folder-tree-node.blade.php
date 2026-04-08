@@ -68,10 +68,10 @@
                         </button>
                     @endif
 
-                    @if ($canEditDeleteFolders ?? false)
+                    @if (($canManageFolders ?? false) || ($canEditDeleteFolders ?? false))
                         <div class="dropdown">
                             <button class="btn btn-sm btn-link text-secondary p-0 text-decoration-none shadow-none"
-                                type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Folder actions">
+                                type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false" title="Folder actions">
                                 <i class="fas fa-ellipsis-v px-1"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
@@ -83,30 +83,32 @@
                                         <i class="fas fa-history text-secondary" style="width: 16px;"></i><span class="fw-medium">Update History</span>
                                     </button>
                                 </li>
-                                <li>
-                                    <hr class="dropdown-divider opacity-50 my-1">
-                                </li>
-                                <li>
-                                    <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
-                                        data-bs-toggle="modal" data-bs-target="#renameFolderModal"
-                                        data-folder-name="{{ $folder->name }}" data-folder-code="{{ $folder->folder_code }}"
-                                        data-folder-location-id="{{ $folder->document_location_id }}"
-                                        data-folder-action="{{ route('department-documents.folders.update', $folder) }}">
-                                        <i class="fas fa-pen text-secondary" style="width: 16px;"></i><span
-                                            class="fw-medium">Edit Folder</span>
-                                    </button>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider opacity-50 my-1">
-                                </li>
-                                <li>
-                                    <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
-                                        data-bs-toggle="modal" data-bs-target="#deleteFolderModal"
-                                        data-folder-name="{{ $folder->name }}"
-                                        data-folder-action="{{ route('department-documents.folders.destroy', $folder) }}">
-                                        <i class="fas fa-trash" style="width: 16px;"></i><span class="fw-medium">Delete</span>
-                                    </button>
-                                </li>
+                                @if ($canEditDeleteFolders ?? false)
+                                    <li>
+                                        <hr class="dropdown-divider opacity-50 my-1">
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2"
+                                            data-bs-toggle="modal" data-bs-target="#renameFolderModal"
+                                            data-folder-name="{{ $folder->name }}" data-folder-code="{{ $folder->folder_code }}"
+                                            data-folder-location-id="{{ $folder->document_location_id }}"
+                                            data-folder-action="{{ route('department-documents.folders.update', $folder) }}">
+                                            <i class="fas fa-pen text-secondary" style="width: 16px;"></i><span
+                                                class="fw-medium">Edit Folder</span>
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider opacity-50 my-1">
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2 py-2"
+                                            data-bs-toggle="modal" data-bs-target="#deleteFolderModal"
+                                            data-folder-name="{{ $folder->name }}"
+                                            data-folder-action="{{ route('department-documents.folders.destroy', $folder) }}">
+                                            <i class="fas fa-trash" style="width: 16px;"></i><span class="fw-medium">Delete</span>
+                                        </button>
+                                    </li>
+                                @endif
                             </ul>
                         </div>
                     @endif

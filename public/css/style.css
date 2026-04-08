@@ -145,6 +145,13 @@
     background: #219a52;
 }
 
+.btn-file-save:focus,
+.btn-file-save:active {
+    background-color: var(--company-primary-hover) !important;
+    box-shadow: 0 0 0 3px var(--company-primary-light) !important;
+    outline: none !important;
+}
+
 .btn-file-close {
     padding: 7px 20px;
     background: #6b7280;
@@ -176,6 +183,13 @@
     background: var(--company-primary-hover);
     color: #fff;
     transform: translateY(-1px);
+}
+
+.btn-brand:focus,
+.btn-brand:active {
+    background-color: var(--company-primary-hover) !important;
+    box-shadow: 0 0 0 3px var(--company-primary-light) !important;
+    outline: none !important;
 }
 
 /* Panel body */
@@ -259,6 +273,13 @@
     transform: translateY(-1px);
 }
 
+.btn-doc-upload:focus,
+.btn-doc-upload:active {
+    background-color: var(--company-primary-hover) !important;
+    box-shadow: 0 0 0 3px var(--company-primary-light) !important;
+    outline: none !important;
+}
+
 /* Document search */
 .doc-search-wrapper {
     position: relative;
@@ -286,8 +307,8 @@
 }
 
 .doc-search-input:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    border-color: var(--company-primary);
+    box-shadow: 0 0 0 3px var(--company-primary-light);
 }
 
 /* Table wrapper */
@@ -379,17 +400,34 @@
     align-items: center;
     justify-content: center;
     background: #fff;
-    border: 1.5px solid #4f46e5;
+    border: 1.5px solid var(--company-primary);
     border-radius: 6px;
-    color: #4f46e5;
+    color: var(--company-primary);
     font-size: 0.8rem;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
 }
 
 .btn-doc-action:hover {
-    background: #4f46e5;
+    background: var(--company-primary);
     color: #fff;
+}
+
+.btn-doc-action:focus,
+.btn-doc-action:active {
+    background-color: var(--company-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 3px var(--company-primary-light) !important;
+    outline: none !important;
+}
+
+/* Global Bootstrap overrides for red buttons to fix blue click color */
+.btn-danger:focus,
+.btn-danger:active,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+    box-shadow: 0 0 0 3px var(--company-primary-light) !important;
+    border-color: var(--company-primary) !important;
 }
 
 /* ─── Flash Alert Messages ────────────────────────────────────────── */
@@ -1900,6 +1938,19 @@ body.preview-overlay-open {
 /* Document table dropdown fix */
 .explorer-main .doc-table td .dropdown-menu {
     z-index: 5000 !important;
+}
+
+/* Fix dropdown item active (click) color */
+.dropdown-item:active,
+.dropdown-item.active {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+/* Specifically for danger dropdown items (like Delete) — keeps brand red */
+.dropdown-item.text-danger:active {
+    background-color: var(--company-primary) !important;
+    color: #fff !important;
 }
 
 @media (max-width: 992px) {

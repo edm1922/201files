@@ -183,13 +183,13 @@
                     </div>
 
                     <div class="notif-actions d-flex flex-column flex-md-row align-items-stretch gap-2">
-                        <a href="{{ $url }}" class="btn btn-outline-primary">
+                        <a href="{{ $url }}" class="btn btn-outline-danger">
                             <i class="fas fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>Open
                         </a>
                         @if ($isUnread)
                             <form method="POST" action="{{ route('notifications.mark-as-read', $notification->id) }}">
                                 @csrf
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-danger">
                                     <i class="fas fa-check me-1" aria-hidden="true"></i>Mark as read
                                 </button>
                             </form>

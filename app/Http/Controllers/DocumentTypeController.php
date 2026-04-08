@@ -85,7 +85,7 @@ class DocumentTypeController extends Controller
         $documentsCount = $documentType->documents()->count();
 
         if ($documentsCount > 0) {
-            return back()->with('error', 'Cannot delete document type because it has uploaded documents attached to it.');
+            return back()->with('error', 'This document type cannot be deleted because it is currently used by one or more uploaded documents.');
         }
 
         $snapshot = [
