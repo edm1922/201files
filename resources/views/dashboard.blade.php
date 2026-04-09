@@ -142,7 +142,52 @@
                             <input type="hidden" name="month" value="{{ $month }}">
                         </form>
                     </div>
-                    <div style="height: 300px;">
+                    
+                    <!-- Reactive Hiring Summary Bar -->
+                    <div class="hiring-summary-bar mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 border-end-md">
+                                <div class="d-flex align-items-center p-3">
+                                    <div class="stat-indicator-circle-wrapper">
+                                        <div class="stat-indicator-circle monthly" style="--percent: {{ min(100, max(10, $monthlyHiresCount * 5)) }}%"></div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="summary-label d-block text-muted">{{ $calendarMonthName }} Stats</span>
+                                        <div class="d-flex align-items-baseline gap-2">
+                                            <h2 class="summary-value mb-0">{{ number_format($monthlyHiresCount) }}</h2>
+                                        </div>
+                                        <div class="summary-trend-box mt-1">
+                                            <span class="summary-trend {{ $monthlyGrowth >= 0 ? 'trend-up' : 'trend-down' }}">
+                                                {{ $monthlyGrowth >= 0 ? '+' : '' }}{{ number_format($monthlyGrowth, 1) }}%
+                                            </span>
+                                            <span class="summary-subtext ms-1">vs prev month</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center p-3 border-top-mobile">
+                                    <div class="stat-indicator-circle-wrapper">
+                                        <div class="stat-indicator-circle yearly" style="--percent: {{ min(100, max(10, ($yearlyHiresCount / max(1, $totalEmployees)) * 100)) }}%"></div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="summary-label d-block text-muted">{{ $year }} Yearly</span>
+                                        <div class="d-flex align-items-baseline gap-2">
+                                            <h2 class="summary-value mb-0">{{ number_format($yearlyHiresCount) }}</h2>
+                                        </div>
+                                        <div class="summary-trend-box mt-1">
+                                            <span class="summary-trend {{ $yearlyGrowth >= 0 ? 'trend-up' : 'trend-down' }}">
+                                                {{ $yearlyGrowth >= 0 ? '+' : '' }}{{ number_format($yearlyGrowth, 1) }}%
+                                            </span>
+                                            <span class="summary-subtext ms-1">vs prev year</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="height: 300px;" class="mt-2">
                         <canvas id="hiringChart"></canvas>
                     </div>
                 </div>
