@@ -112,6 +112,41 @@ class DashboardController extends Controller
             ];
         }
 
+        // ── Reactive Hiring Stats for Summary Bar ──
+        $statYear = (int)$year;
+        $statMonth = (int)date('m', strtotime($calendarDate));
+        
+        $monthlyHiresCount = DB::table('hiring_events')
+            ->whereYear('event_date', $statYear)
+            ->whereMonth('event_date', $statMonth)
+            ->count();
+            
+        // Previous month relative to viewed period
+        $targetDate = date('Y-m-d', strtotime("$statYear-$statMonth-01"));
+        $prevMonthTimestamp = strtotime('-1 month', strtotime($targetDate));
+        $prevMonthlyHires = DB::table('hiring_events')
+            ->whereYear('event_date', date('Y', $prevMonthTimestamp))
+            ->whereMonth('event_date', date('m', $prevMonthTimestamp))
+            ->count();
+            
+        $yearlyHiresCount = DB::table('hiring_events')
+            ->whereYear('event_date', $statYear)
+            ->count();
+            
+        $prevYearlyHires = DB::table('hiring_events')
+            ->whereYear('event_date', $statYear - 1)
+            ->count();
+            
+        // monthly growth rate calculation
+        $monthlyGrowth = $prevMonthlyHires > 0 
+            ? (($monthlyHiresCount - $prevMonthlyHires) / $prevMonthlyHires) * 100 
+            : ($monthlyHiresCount > 0 ? 100 : 0);
+            
+        // yearly growth rate calculation
+        $yearlyGrowth = $prevYearlyHires > 0 
+            ? (($yearlyHiresCount - $prevYearlyHires) / $prevYearlyHires) * 100 
+            : ($yearlyHiresCount > 0 ? 100 : 0);
+
         return view('dashboard', compact(
             'totalEmployees',
             'totalCompanies',
@@ -127,7 +162,11 @@ class DashboardController extends Controller
             'calendarMonthName',
             'calendarYear',
             'availableYears',
-            'daysInMonth'
+            'daysInMonth',
+            'monthlyHiresCount',
+            'yearlyHiresCount',
+            'monthlyGrowth',
+            'yearlyGrowth'
         ));
     }
 }
