@@ -147,6 +147,7 @@
     .border-end-md {
         border-right: none;
     }
+
     .border-top-mobile {
         border-top: 1px solid #f0f0f0;
     }
@@ -196,23 +197,23 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: conic-gradient(
-        var(--circle-color, #dd270d) var(--percent, 0%),
-        #eef0f3 0%
-    );
+    background: conic-gradient(var(--circle-color, #dd270d) var(--percent, 0%),
+            #eef0f3 0%);
     display: flex;
     align-items: center;
     justify-content: center;
-    mask: radial-gradient(circle, transparent 65%, black 66%);
-    -webkit-mask: radial-gradient(circle, transparent 65%, black 66%);
+    mask: radial-gradient(circle, transparent 50%, black 51%);
+    -webkit-mask: radial-gradient(circle, transparent 50%, black 51%);
 }
 
 .stat-indicator-circle.monthly {
-    --circle-color: #3b82f6; /* Blue for monthly */
+    --circle-color: #3b82f6;
+    /* Blue for monthly */
 }
 
 .stat-indicator-circle.yearly {
-    --circle-color: #f59e0b; /* Amber/Yellow for yearly */
+    --circle-color: #f59e0b;
+    /* Amber/Yellow for yearly */
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
