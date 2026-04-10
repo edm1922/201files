@@ -9,10 +9,59 @@
                 </div>
                 <form id="filterForm" action="{{ route('reports.audit-log') }}" method="GET" class="d-flex align-items-center">
                     <input type="hidden" name="action" id="actionInput" value="{{ request('action', 'all') }}">
+                    <input type="hidden" name="user_id" id="userInput" value="{{ request('user_id', 'all') }}">
+                    
+                    {{-- Date Range Filter --}}
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="rangeDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="background-color: #dd270dff; width: 160px; border-radius: 6px; font-weight: 500;">
+                            <i class="fas fa-calendar-alt me-2 opacity-75"></i>
+                            {{ request('date_from') || request('date_to') ? 'Date Screened' : 'Date Range' }}
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow border-0 p-3" aria-labelledby="rangeDropdown" style="border-radius: 8px; min-width: 250px;">
+                            <div class="mb-2">
+                                <label class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;">From Date</label>
+                                <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control form-control-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
+                            </div>
+                            <div class="mb-3">
+                                <label class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;">To Date</label>
+                                <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control form-control-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
+                            </div>
+                            @if(request('date_from') || request('date_to'))
+                                <a href="{{ route('reports.audit-log', request()->except(['date_from', 'date_to'])) }}" class="btn btn-sm btn-light w-100 border-0" style="font-size: 0.75rem; color: #dd270dff;">
+                                    <i class="fas fa-times-circle me-1"></i> Clear Range
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    {{-- User Filter --}}
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #dd270dff; min-width: 160px; border-radius: 6px; font-weight: 500;">
+                            <i class="fas fa-user-circle me-2 opacity-75"></i>
+                            @php
+                                $selectedUser = $users->firstWhere('id', request('user_id'));
+                            @endphp
+                            {{ $selectedUser ? $selectedUser->name : 'All Users' }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userDropdown" style="border-radius: 8px; padding: 5px; min-width: 200px; max-height: 300px; overflow-y: auto;">
+                            <li><a class="dropdown-item rounded {{ request('user_id', 'all') == 'all' ? 'active-filter' : '' }}" href="#" onclick="applyUserFilter('all')">All Users</a></li>
+                            <li><hr class="dropdown-divider opacity-50"></li>
+                            @foreach($users as $user)
+                                <li>
+                                    <a class="dropdown-item rounded {{ request('user_id') == $user->id ? 'active-filter' : '' }}" href="#" onclick="applyUserFilter('{{ $user->id }}')">
+                                        {{ $user->name }}
+                                        <span class="d-block small text-muted text-uppercase" style="font-size: 0.65rem;">{{ $user->role }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    {{-- Action Filter --}}
                     <div class="dropdown">
-                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: rgb(221, 39, 13); width: 160px; border-radius: 6px; font-weight: 500;">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #dd270dff; width: 160px; border-radius: 6px; font-weight: 500;">
                             <i class="fas fa-filter me-2 opacity-75"></i>
-                            {{ request('action') ? ucfirst(request('action')) : 'All Actions' }}
+                            {{ request('action') && request('action') !== 'all' ? ucfirst(request('action')) : 'All Actions' }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownMenuButton" style="border-radius: 8px; padding: 5px; min-width: 160px;">
                             <li><a class="dropdown-item rounded {{ request('action', 'all') == 'all' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('all')">All Actions</a></li>
@@ -31,6 +80,11 @@
                 <script>
                     function applyFilter(action) {
                         document.getElementById('actionInput').value = action;
+                        document.getElementById('filterForm').submit();
+                    }
+
+                    function applyUserFilter(userId) {
+                        document.getElementById('userInput').value = userId;
                         document.getElementById('filterForm').submit();
                     }
                 </script>
@@ -192,7 +246,7 @@
         }
 
         .dropdown-item:hover, .active-filter {
-            background-color: rgb(221, 39, 13) !important;
+            background-color: rgba(234, 88, 66, 1) !important;
             color: white !important;
         }
     </style>
