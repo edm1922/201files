@@ -117,12 +117,14 @@
                                 </div>
                             </div>
 
-                            <button type="submit"
-                                class="btn btn-brand w-100 py-2 d-flex align-items-center justify-content-center"
-                                data-export-submit>
-                                <i class="fas fa-file-csv me-2"></i>
-                                <span class="fw-bold" data-export-label>Download Master List</span>
-                            </button>
+                            <div class="mt-auto">
+                                <button type="submit"
+                                    class="btn btn-brand w-100 py-2 d-flex align-items-center justify-content-center"
+                                    data-export-submit>
+                                    <i class="fas fa-file-csv me-2"></i>
+                                    <span class="fw-bold" data-export-label>Download Master List</span>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -142,9 +144,11 @@
                             </div>
                         </div>
                         <div class="mt-auto">
-                            <p class="text-muted small mb-4">Produces a summary of active vs resigned employees per company registered in the system.</p>
-                            <a href="{{ route('reports.export-company-summary') }}" class="btn btn-brand w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm">
-                                <i class="fas fa-download me-2"></i> 
+                            <p class="text-muted small mb-4">Produces a summary of active vs resigned employees per
+                                company registered in the system.</p>
+                            <a href="{{ route('reports.export-company-summary') }}"
+                                class="btn btn-brand w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm">
+                                <i class="fas fa-download me-2"></i>
                                 <span>Export Summary</span>
                             </a>
                         </div>
@@ -172,8 +176,9 @@
                                 <p class="report-desc">Occupancy report showing slots availability.</p>
                             </div>
                         </div>
-                        
-                        <form action="{{ route('reports.export-storage-utilization') }}" method="GET" class="d-flex flex-column h-100" data-report-export-form>
+
+                        <form action="{{ route('reports.export-storage-utilization') }}" method="GET"
+                            class="d-flex flex-column h-100" data-report-export-form>
                             <div class="mb-4">
                                 <label class="report-label">Filter by Storage Type</label>
                                 <select name="type" class="form-select report-input">
@@ -181,10 +186,13 @@
                                     <option value="docs">Department Documents Storage</option>
                                 </select>
                             </div>
-                            <p class="text-muted small mb-4">This report shows the total capacity, occupied slots, and space remaining. Occupant names are omitted for a clean audit view.</p>
+                            <p class="text-muted small mb-4">This report shows the total capacity, occupied slots, and
+                                space remaining. Occupant names are omitted for a clean audit view.</p>
                             <div class="mt-auto">
-                                <button type="submit" class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm" data-export-submit>
-                                    <i class="fas fa-file-csv me-2"></i> 
+                                <button type="submit"
+                                    class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm"
+                                    data-export-submit>
+                                    <i class="fas fa-file-csv me-2"></i>
                                     <span data-export-label>Download Storage Audit</span>
                                 </button>
                             </div>
@@ -205,10 +213,11 @@
                                 <p class="report-desc">Find available space for new folders.</p>
                             </div>
                         </div>
-                        <p class="text-muted small mb-4">A simple list of all physical coordinates that haven't been assigned to an employee yet.</p>
+                        <p class="text-muted small mb-4">List of Folders that haven't been occupied.</p>
                         <div class="mt-auto">
-                            <a href="{{ route('reports.export-available-folders') }}" class="btn btn-brand w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm">
-                                <i class="fas fa-file-csv me-2"></i> 
+                            <a href="{{ route('reports.export-available-folders') }}"
+                                class="btn btn-brand w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm">
+                                <i class="fas fa-file-csv me-2"></i>
                                 <span>Export Available Slots</span>
                             </a>
                         </div>
@@ -229,14 +238,15 @@
             {{-- ── Expiry Report ── --}}
             <div class="col-lg-6 animate-fade-in stagger-7">
                 <div class="card report-card h-100 shadow-sm border-0">
-                    <div class="card-body p-4">
+                    <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex align-items-center mb-1">
                             <h5 class="report-title fs-5 mb-0">Document Expiry</h5>
                             <span class="badge bg-secondary ms-auto fw-medium">Monitoring</span>
                         </div>
                         <p class="report-desc mb-4">Manage document statuses by their expiry timelines.</p>
 
-                        <form action="{{ route('reports.export-expiry-report') }}" method="GET" data-report-export-form>
+                        <form action="{{ route('reports.export-expiry-report') }}" method="GET"
+                            class="d-flex flex-column h-100" data-report-export-form>
                             <div class="mb-3">
                                 <label class="report-label">Filter by Status</label>
                                 <select name="expiry_status" class="form-select report-input">
@@ -275,12 +285,14 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <button type="submit"
-                                class="btn btn-secondary w-100 py-2 d-flex align-items-center justify-content-center text-white"
-                                data-export-submit>
-                                <i class="fas fa-hourglass-half me-2"></i>
-                                <span class="fw-bold" data-export-label>Download Expiry List</span>
-                            </button>
+                            <div class="mt-auto">
+                                <button type="submit"
+                                    class="btn btn-secondary w-100 py-2 d-flex align-items-center justify-content-center text-white"
+                                    data-export-submit>
+                                    <i class="fas fa-hourglass-half me-2"></i>
+                                    <span class="fw-bold" data-export-label>Download Expiry List</span>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -289,14 +301,15 @@
             {{-- ── Audit Log Export ── --}}
             <div class="col-lg-6 animate-fade-in stagger-8">
                 <div class="card report-card h-100 shadow-sm border-0">
-                    <div class="card-body p-4">
+                    <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex align-items-center mb-1">
                             <h5 class="report-title fs-5 mb-0">Full Activity Logs</h5>
                             <span class="badge bg-dark ms-auto fw-medium">Auditing</span>
                         </div>
                         <p class="report-desc mb-4">Filtered systemic trace logs for security tracking.</p>
 
-                        <form action="{{ route('reports.export-audit-logs') }}" method="GET" data-report-export-form>
+                        <form action="{{ route('reports.export-audit-logs') }}" method="GET"
+                            class="d-flex flex-column h-100" data-report-export-form>
                             <div class="mb-3">
                                 <label class="report-label">Target User</label>
                                 <select name="user_id" class="form-select report-input">
@@ -326,12 +339,14 @@
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit"
-                                class="btn btn-dark w-100 py-2 d-flex align-items-center justify-content-center"
-                                data-export-submit>
-                                <i class="fas fa-file-invoice me-2"></i>
-                                <span class="fw-bold" data-export-label>Export History</span>
-                            </button>
+                            <div class="mt-auto">
+                                <button type="submit"
+                                    class="btn btn-dark w-100 py-2 d-flex align-items-center justify-content-center"
+                                    data-export-submit>
+                                    <i class="fas fa-file-invoice me-2"></i>
+                                    <span class="fw-bold" data-export-label>Export History</span>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
