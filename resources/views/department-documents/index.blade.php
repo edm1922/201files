@@ -1535,8 +1535,40 @@
             }
 
             .explorer-sidebar {
-                min-height: 420px;
+                min-height: 0;
                 background: transparent;
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+                overflow-x: hidden;
+                scrollbar-gutter: stable;
+            }
+
+            .explorer-sidebar::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .explorer-sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .explorer-sidebar::-webkit-scrollbar-thumb {
+                background: #e2e8f0;
+                border-radius: 999px;
+            }
+
+            .explorer-sidebar::-webkit-scrollbar-thumb:hover {
+                background: #cbd5e1;
+            }
+
+            @media (max-width: 992px) {
+                .explorer-sidebar {
+                    max-height: 350px;
+                    border-bottom: 1px solid #eef2f7;
+                    padding-bottom: 1rem;
+                    margin-bottom: 0.5rem;
+                    min-height: 0;
+                }
             }
 
             .explorer-sidebar__inner {
@@ -3487,7 +3519,24 @@
                             const updatedAt = escapeHtml(item?.updated_at || '');
                             const targetUrl = escapeHtml(item?.url || '#');
                             const isFolder = item?.type === 'folder';
-                            const iconClass = isFolder ? 'fas fa-folder text-danger' : 'fas fa-file-alt text-secondary';
+                            const ext = (item?.extension || '').toLowerCase();
+                            let iconClass = 'fas fa-file-alt text-secondary';
+
+                            if (isFolder) {
+                                iconClass = 'fas fa-folder text-danger';
+                            } else if (ext === 'pdf') {
+                                iconClass = 'fas fa-file-pdf text-danger';
+                            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                                iconClass = 'fas fa-file-image text-primary';
+                            } else if (['doc', 'docx'].includes(ext)) {
+                                iconClass = 'fas fa-file-word text-primary';
+                            } else if (['xls', 'xlsx'].includes(ext)) {
+                                iconClass = 'fas fa-file-excel text-success';
+                            } else if (ext === 'csv') {
+                                iconClass = 'fas fa-file-csv text-success';
+                            } else if (['zip', 'rar'].includes(ext)) {
+                                iconClass = 'fas fa-file-archive text-warning';
+                            }
 
                             return `
                                 <button type="button" class="doc-command-search__result-item" data-doc-search-url="${targetUrl}">

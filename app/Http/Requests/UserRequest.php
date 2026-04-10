@@ -31,6 +31,7 @@ class UserRequest extends FormRequest
             'suffix' => ['nullable', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($userId)],
             'role' => ['required', 'string', Rule::in(['admin', 'encoder', 'viewer'])],
+            'is_active' => ['nullable', 'boolean'],
             'department_ids' => ['nullable', 'array'],
             'department_ids.*' => ['integer', 'exists:departments,id'],
         ];

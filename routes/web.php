@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('document-types', DocumentTypeController::class)->except(['show', 'create', 'edit']);
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])
             ->name('users.reset-password');
+        Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
+            ->name('users.toggle-status');
         Route::resource('users', UserController::class)->except(['show']);
     });
 

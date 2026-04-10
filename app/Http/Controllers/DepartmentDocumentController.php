@@ -221,6 +221,7 @@ class DepartmentDocumentController extends Controller
                 'updated_at' => $document->updated_at?->format('M j, Y g:i A'),
                 'url' => route('department-documents.index', $redirectParams),
                 'type' => 'document',
+                'extension' => strtolower(pathinfo($document->original_filename, PATHINFO_EXTENSION)),
             ];
         });
 

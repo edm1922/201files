@@ -34,8 +34,9 @@
                             <th style="width: 130px;">Username</th>
                             <th style="width: 100px;">Role</th>
                             <th style="min-width: 200px;">Department Access</th>
+                            <th style="width: 100px; text-align: center;">Status</th>
                             <th style="width: 140px; text-align: center;">Last Active</th>
-                            <th style="width: 120px; text-align: center;">Actions</th>
+                            <th style="width: 150px; text-align: center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,6 +77,13 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
+                                    @if($user->is_active)
+                                        <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 5px 10px; font-weight: 600;">Active</span>
+                                    @else
+                                        <span class="badge" style="background: rgba(107, 114, 128, 0.1); color: #6b7280; padding: 5px 10px; font-weight: 600;">Inactive</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
                                     <span class="text-muted" style="font-size: 0.8rem;">
                                         {{ $user->last_active_at ? $user->last_active_at->diffForHumans() : 'Never' }}
                                     </span>
@@ -97,6 +105,24 @@
                                                 ]) }})">
                                             <i class="fas fa-pen" style="font-size: 0.7rem;"></i>
                                         </button>
+
+                                        {{-- Toggle Status --}}
+                                        @if(auth()->id() !== $user->id)
+                                            <button class="btn-doc-action"
+                                                    title="{{ $user->is_active ? 'Deactivate user' : 'Activate user' }}"
+                                                    style="border-color: {{ $user->is_active ? '#f59e0b' : '#10b981' }}; color: {{ $user->is_active ? '#f59e0b' : '#10b981' }};"
+                                                    @click="openConfirmModal(
+                                                        '{{ route('settings.users.toggle-status', $user) }}',
+                                                        'PATCH',
+                                                        '{{ $user->is_active ? 'Deactivate User' : 'Activate User' }}',
+                                                        'Are you sure you want to &lt;strong&gt;{{ $user->is_active ? 'deactivate' : 'activate' }}&lt;/strong&gt; user &lt;strong&gt;{{ addslashes($user->name) }}&lt;/strong&gt;?',
+                                                        '{{ $user->is_active ? 'Deactivate' : 'Activate' }}',
+                                                        '{{ $user->is_active ? 'warning' : 'success' }}',
+                                                        '{{ $user->is_active ? 'fa-user-slash' : 'fa-user-check' }}'
+                                                    )">
+                                                <i class="fas {{ $user->is_active ? 'fa-user-slash' : 'fa-user-check' }}" style="font-size: 0.7rem;"></i>
+                                            </button>
+                                        @endif
 
                                         {{-- Delete --}}
                                         @if(auth()->id() !== $user->id)
@@ -127,7 +153,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-5">
+                                <td colspan="7" class="text-center text-muted py-5">
                                     <i class="fas fa-users mb-2" style="font-size: 2rem; opacity: 0.3;"></i>
                                     <p class="mb-0 mt-2">No users found.</p>
                                 </td>
@@ -165,6 +191,7 @@
                     suffix: '',
                     username: '',
                     role: '',
+                    is_active: true,
                     department_ids: []
                 },
 
@@ -188,6 +215,7 @@
                             suffix: '{!! addslashes(old("suffix")) !!}',
                             username: '{!! addslashes(old("username")) !!}',
                             role: '{!! addslashes(old("role")) !!}',
+                            is_active: {{ old('is_active', 1) ? 'true' : 'false' }},
                             department_ids: @json(old('department_ids', []))
                         };
                         var modal = new bootstrap.Modal(document.getElementById('editUserModal'));

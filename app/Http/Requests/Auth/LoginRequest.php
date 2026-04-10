@@ -41,11 +41,25 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('username', 'password'), $this->boolean('remember'))) {
+        $credentials = $this->only('username', 'password');
+        
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'username' => trans('auth.failed'),
+            ]);
+        }
+
+        // Check if user is active
+        $user = Auth::user();
+        if (!$user->is_active) {
+            Auth::logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'username' => 'Account deactivated. Please contact your supervisor.',
             ]);
         }
 

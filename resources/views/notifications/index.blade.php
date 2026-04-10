@@ -1,39 +1,11 @@
 <x-app-layout>
     @php
-        $pageUnreadCount = $notifications->getCollection()->filter(fn ($n) => is_null($n->read_at))->count();
+        $pageUnreadCount = $notifications->getCollection()->filter(fn($n) => is_null($n->read_at))->count();
         $totalUnreadCount = auth()->user()->unreadNotifications()->count();
     @endphp
 
     @push('styles')
         <style>
-            .notif-hero {
-                background: linear-gradient(120deg, #f6f9fc 0%, #eaf2ff 50%, #f9f5ff 100%);
-                border: 1px solid #dbe7ff;
-                border-radius: 18px;
-                padding: 0.9rem 1rem;
-            }
-
-            .notif-stat {
-                border-radius: 10px;
-                border: 1px solid #d9e4ff;
-                background: #fff;
-                padding: 0.45rem 0.65rem;
-            }
-
-            .notif-stat-label {
-                font-size: 0.66rem;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: #5b6b88;
-            }
-
-            .notif-stat-value {
-                font-size: 0.95rem;
-                font-weight: 700;
-                color: #16243b;
-                line-height: 1;
-            }
-
             .notif-list {
                 border-radius: 16px;
                 border: 1px solid #dce6f7;
@@ -118,35 +90,25 @@
         </style>
     @endpush
 
-    <section class="notif-hero mb-4" aria-labelledby="notifications-heading">
-        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
-            <div>
-                <h1 id="notifications-heading" class="h5 mb-1 fw-bold text-dark">Notifications</h1>
-                <p class="mb-0 text-muted small">Stay updated with document expiry reminders and alerts.</p>
-            </div>
-            <div class="d-flex flex-wrap gap-1">
-                <div class="notif-stat">
-                    <div class="notif-stat-label">Unread (All)</div>
-                    <div class="notif-stat-value">{{ number_format($totalUnreadCount) }}</div>
-                </div>
-                <div class="notif-stat">
-                    <div class="notif-stat-label">Unread (This Page)</div>
-                    <div class="notif-stat-value">{{ number_format($pageUnreadCount) }}</div>
-                </div>
-                @if ($notifications->count() > 0)
-                    <form method="POST" action="{{ route('notifications.mark-all-read') }}" class="d-flex align-items-center">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-check-double me-1" aria-hidden="true"></i>Mark all as read
-                        </button>
-                    </form>
-                @endif
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+        <div>
+            <h1 id="notifications-heading" class="h5 mb-1 fw-bold text-dark">Notifications</h1>
+            <p class="mb-0 text-muted small">Document expiry reminders and alerts.</p>
         </div>
-    </section>
+        @if ($notifications->count() > 0)
+            <form method="POST" action="{{ route('notifications.mark-all-read') }}" class="d-flex align-items-center">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-check-double me-1" aria-hidden="true"></i>Mark all as read
+                </button>
+            </form>
+        @endif
+    </div>
 
     @if (session('success'))
-        <div class="alert alert-success mb-3" role="status" aria-live="polite">{{ session('success') }}</div>
+        <div class="alert-flash alert-flash--success mb-4" role="status" aria-live="polite">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+        </div>
     @endif
 
     <section class="notif-list" aria-label="Notification list">
@@ -154,7 +116,15 @@
             @php
                 $data = $notification->data;
                 $isUnread = is_null($notification->read_at);
-                $url = $data['url'] ?? route('notifications.index');
+                $url = isset($data['url_route'])
+                    ? route($data['url_route'], $data['url_params'] ?? [])
+                    : ($data['url'] ?? route('notifications.index'));
+
+                // Smart repair for old absolute URLs missing the project subdirectory
+                if (!isset($data['url_route']) && str_contains((string) $url, 'department-documents')) {
+                    $query = parse_url((string) $url, PHP_URL_QUERY);
+                    $url = route('department-documents.index') . ($query ? '?' . $query : '');
+                }
                 $isExpired = (bool) ($data['is_expired'] ?? false);
             @endphp
 
@@ -173,11 +143,15 @@
                             @endif
                         </div>
 
-                        <h2 class="mb-1 fw-semibold text-dark" style="font-size: 0.95rem;">{{ $data['message'] ?? 'Notification' }}</h2>
+                        <h2 class="mb-1 fw-semibold text-dark" style="font-size: 0.95rem;">
+                            {{ $data['message'] ?? 'Notification' }}
+                        </h2>
                         <div class="text-muted" style="font-size: 0.78rem;">
-                            <i class="far fa-clock me-1" aria-hidden="true"></i>{{ $notification->created_at?->diffForHumans() }}
+                            <i class="far fa-clock me-1"
+                                aria-hidden="true"></i>{{ $notification->created_at?->diffForHumans() }}
                             @if (!empty($data['expiry_date']))
-                                <span class="ms-2"><i class="far fa-calendar-alt me-1" aria-hidden="true"></i>Expiry: {{ \Carbon\Carbon::parse($data['expiry_date'])->format('M d, Y') }}</span>
+                                <span class="ms-2"><i class="far fa-calendar-alt me-1" aria-hidden="true"></i>Expiry:
+                                    {{ \Carbon\Carbon::parse($data['expiry_date'])->format('M d, Y') }}</span>
                             @endif
                         </div>
                     </div>
@@ -187,7 +161,8 @@
                             <i class="fas fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>Open
                         </a>
                         @if ($isUnread)
-                            <form method="POST" action="{{ route('notifications.mark-as-read', $notification->id) }}">
+                            <form method="POST"
+                                action="{{ route('notifications.mark-as-read', ['id' => $notification->id, 'redirect' => 'back']) }}">
                                 @csrf
                                 <button type="submit" class="btn btn-danger">
                                     <i class="fas fa-check me-1" aria-hidden="true"></i>Mark as read
