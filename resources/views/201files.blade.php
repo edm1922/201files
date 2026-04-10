@@ -486,6 +486,7 @@
                                                 $displaySuffix = $isFull ? '<span class="text-full-limit">[FULL]</span>' : '[' . ($loc->employees_count ?? 0) . '/' . ($loc->max_capacity ?? 500) . ']';
                                             @endphp
                                             <option value="{{ $loc->id }}"
+                                                data-row-index="{{ $loc->getRowIndex() }}"
                                                 {{ $isCurrent ? 'selected' : '' }}
                                                 {{ ($isFull && !$isCurrent) ? 'disabled' : '' }}>
                                                 {{ $loc->full_location }} {{ $displaySuffix }}

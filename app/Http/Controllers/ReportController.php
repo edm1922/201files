@@ -183,7 +183,9 @@ class ReportController extends Controller
 
             if ($type === '201') {
                 fputcsv($file, ['Location', 'Total Slots', 'Occupied Slots', 'Available Slots']);
-                $locations = \App\Models\FolderLocation::withCount('employees')
+                $locations = \App\Models\FolderLocation::withCount(['employees' => function($query) {
+                    $query->withTrashed();
+                }])
                     ->orderByRaw('LENGTH(row_name) ASC')
                     ->orderBy('row_name', 'ASC')
                     ->get();
