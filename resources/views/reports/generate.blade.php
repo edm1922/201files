@@ -130,23 +130,22 @@
 
             {{-- ── Company Summary Card ── --}}
             <div class="col-lg-4 animate-fade-in stagger-3">
-                <div class="card report-card bg-dark text-white h-100 shadow-sm border-0">
+                <div class="card report-card h-100 shadow-sm border-0">
                     <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex align-items-center mb-4">
-                            <div class="icon-circle bg-white-10 text-white me-3">
+                            <div class="icon-circle bg-brand-light text-brand me-3">
                                 <i class="fas fa-chart-pie"></i>
                             </div>
                             <div>
-                                <h5 class="report-title text-white">Company Tally</h5>
-                                <p class="report-desc text-white-50">Headcount distribution & snapshots.</p>
+                                <h5 class="report-title">Company Tally</h5>
+                                <p class="report-desc">Headcount distribution & snapshots.</p>
                             </div>
                         </div>
                         <div class="mt-auto">
-                            <p class="small text-white-50 mb-4">Produces a summary of active vs resigned employees per
-                                company registered in the system.</p>
-                            <a href="{{ route('reports.export-company-summary') }}"
-                                class="btn btn-outline-light w-100 py-2 fw-bold">
-                                <i class="fas fa-download me-2"></i> Export Summary
+                            <p class="text-muted small mb-4">Produces a summary of active vs resigned employees per company registered in the system.</p>
+                            <a href="{{ route('reports.export-company-summary') }}" class="btn btn-brand w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm">
+                                <i class="fas fa-download me-2"></i> 
+                                <span>Export Summary</span>
                             </a>
                         </div>
                     </div>
@@ -163,7 +162,7 @@
 
             <div class="col-lg-6 animate-fade-in stagger-4">
                 <div class="card report-card h-100 shadow-sm border-0">
-                    <div class="card-body p-4">
+                    <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex align-items-center mb-4">
                             <div class="icon-circle bg-success-light text-success me-3">
                                 <i class="fas fa-warehouse"></i>
@@ -173,9 +172,8 @@
                                 <p class="report-desc">Occupancy report showing slots availability.</p>
                             </div>
                         </div>
-
-                        <form action="{{ route('reports.export-storage-utilization') }}" method="GET"
-                            data-report-export-form>
+                        
+                        <form action="{{ route('reports.export-storage-utilization') }}" method="GET" class="d-flex flex-column h-100" data-report-export-form>
                             <div class="mb-4">
                                 <label class="report-label">Filter by Storage Type</label>
                                 <select name="type" class="form-select report-input">
@@ -183,21 +181,21 @@
                                     <option value="docs">Department Documents Storage</option>
                                 </select>
                             </div>
-                            <p class="text-muted small mb-4">This report shows the total capacity, occupied slots, and
-                                space remaining.</p>
-                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm"
-                                data-export-submit>
-                                <i class="fas fa-file-csv me-2"></i>
-                                <span data-export-label>Download Storage Audit</span>
-                            </button>
+                            <p class="text-muted small mb-4">This report shows the total capacity, occupied slots, and space remaining. Occupant names are omitted for a clean audit view.</p>
+                            <div class="mt-auto">
+                                <button type="submit" class="btn btn-success w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm" data-export-submit>
+                                    <i class="fas fa-file-csv me-2"></i> 
+                                    <span data-export-label>Download Storage Audit</span>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-6 animate-fade-in stagger-5">
-                <div class="card report-card h-100 shadow-sm border-0 border-brand-dashed">
-                    <div class="card-body p-4">
+                <div class="card report-card h-100 shadow-sm border-0">
+                    <div class="card-body p-4 d-flex flex-column">
                         <div class="d-flex align-items-center mb-4">
                             <div class="icon-circle bg-brand-light text-brand me-3">
                                 <i class="fas fa-search-location"></i>
@@ -207,12 +205,13 @@
                                 <p class="report-desc">Find available space for new folders.</p>
                             </div>
                         </div>
-                        <p class="text-muted small mb-4">A list of folders that haven't been
-                            assigned to an employee.</p>
-                        <a href="{{ route('reports.export-available-folders') }}"
-                            class="btn btn-brand w-100 py-2 fw-bold">
-                            <i class="fas fa-file-csv me-2"></i> Export Available Folder Slots
-                        </a>
+                        <p class="text-muted small mb-4">A simple list of all physical coordinates that haven't been assigned to an employee yet.</p>
+                        <div class="mt-auto">
+                            <a href="{{ route('reports.export-available-folders') }}" class="btn btn-brand w-100 py-2 fw-bold d-flex align-items-center justify-content-center shadow-sm">
+                                <i class="fas fa-file-csv me-2"></i> 
+                                <span>Export Available Slots</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

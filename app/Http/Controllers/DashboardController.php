@@ -19,9 +19,9 @@ class DashboardController extends Controller
         $totalDocuments = Document::count();
         $totalUsers = \App\Models\User::count();
         
-        // Fetch all unique years from date_hired for the filter
-        $availableYears = Employee::whereNotNull('date_hired')
-            ->select(DB::raw('DISTINCT YEAR(date_hired) as year'))
+        // Fetch all unique years from event_date for the filter
+        $availableYears = DB::table('hiring_events')
+            ->select(DB::raw('DISTINCT YEAR(event_date) as year'))
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
@@ -32,21 +32,20 @@ class DashboardController extends Controller
         }
 
         // Hiring trends data
-        $query = Employee::select(
+        $query = DB::table('hiring_events')->select(
             DB::raw('count(id) as count'),
-            DB::raw('YEAR(date_hired) as year'),
-            DB::raw('MONTH(date_hired) as month')
-        )
-        ->whereNotNull('date_hired');
+            DB::raw('YEAR(event_date) as year'),
+            DB::raw('MONTH(event_date) as month')
+        );
 
         if ($year) {
-            $query->whereYear('date_hired', $year);
+            $query->whereYear('event_date', $year);
         }
         
         $daysInMonth = 0;
         if ($month) {
-            $query->whereMonth('date_hired', $month);
-            $query->addSelect(DB::raw('DAY(date_hired) as day'))
+            $query->whereMonth('event_date', $month);
+            $query->addSelect(DB::raw('DAY(event_date) as day'))
                   ->groupBy('day');
             
             // Calculate days in selected month
@@ -113,6 +112,41 @@ class DashboardController extends Controller
             ];
         }
 
+        // ── Reactive Hiring Stats for Summary Bar ──
+        $statYear = (int)$year;
+        $statMonth = (int)date('m', strtotime($calendarDate));
+        
+        $monthlyHiresCount = DB::table('hiring_events')
+            ->whereYear('event_date', $statYear)
+            ->whereMonth('event_date', $statMonth)
+            ->count();
+            
+        // Previous month relative to viewed period
+        $targetDate = date('Y-m-d', strtotime("$statYear-$statMonth-01"));
+        $prevMonthTimestamp = strtotime('-1 month', strtotime($targetDate));
+        $prevMonthlyHires = DB::table('hiring_events')
+            ->whereYear('event_date', date('Y', $prevMonthTimestamp))
+            ->whereMonth('event_date', date('m', $prevMonthTimestamp))
+            ->count();
+            
+        $yearlyHiresCount = DB::table('hiring_events')
+            ->whereYear('event_date', $statYear)
+            ->count();
+            
+        $prevYearlyHires = DB::table('hiring_events')
+            ->whereYear('event_date', $statYear - 1)
+            ->count();
+            
+        // monthly growth rate calculation
+        $monthlyGrowth = $prevMonthlyHires > 0 
+            ? (($monthlyHiresCount - $prevMonthlyHires) / $prevMonthlyHires) * 100 
+            : ($monthlyHiresCount > 0 ? 100 : 0);
+            
+        // yearly growth rate calculation
+        $yearlyGrowth = $prevYearlyHires > 0 
+            ? (($yearlyHiresCount - $prevYearlyHires) / $prevYearlyHires) * 100 
+            : ($yearlyHiresCount > 0 ? 100 : 0);
+
         return view('dashboard', compact(
             'totalEmployees',
             'totalCompanies',
@@ -128,7 +162,11 @@ class DashboardController extends Controller
             'calendarMonthName',
             'calendarYear',
             'availableYears',
-            'daysInMonth'
+            'daysInMonth',
+            'monthlyHiresCount',
+            'yearlyHiresCount',
+            'monthlyGrowth',
+            'yearlyGrowth'
         ));
     }
 }

@@ -17,6 +17,18 @@ class ActivityLogController extends Controller
             $query->where('action', $request->action);
         }
 
+        if ($request->has('user_id') && $request->user_id !== 'all') {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->has('date_from') && $request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->has('date_to') && $request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
         if ($request->has('model_id')) {
             $query->where('model_id', $request->model_id);
         }
@@ -26,7 +38,8 @@ class ActivityLogController extends Controller
         }
 
         $logs = $query->paginate(20)->withQueryString();
+        $users = \App\Models\User::orderBy('last_name')->get();
 
-        return view('reports.audit-log', compact('logs'));
+        return view('reports.audit-log', compact('logs', 'users'));
     }
 }

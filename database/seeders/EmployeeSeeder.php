@@ -10,9 +10,12 @@ class EmployeeSeeder extends Seeder
 {
     public function run(): void
     {
-        // Truncate is now handled in DatabaseSeeder globally
+        // Clear existing employees before seeding to avoid duplicates
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('employees')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         
-        $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-1820.csv');
+        $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-2151.csv');
         if (!file_exists($csvFile)) {
             return;
         }

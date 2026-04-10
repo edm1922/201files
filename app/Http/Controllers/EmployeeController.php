@@ -82,6 +82,14 @@ class EmployeeController extends Controller
             $employee->folder_id = $folder->id;
             $employee->saveQuietly();
 
+            // Create Hiring Event persistence record
+            if ($employee->date_hired) {
+                \App\Models\HiringEvent::updateOrCreate(
+                    ['employee_id' => $employee->id],
+                    ['event_date' => $employee->date_hired]
+                );
+            }
+
             $fresh = $employee->fresh()->load(['company', 'folder', 'folderLocation', 'bankType']);
             $after = $fresh->only([
                 'system_id', 'first_name', 'middle_name', 'last_name',
@@ -188,6 +196,14 @@ class EmployeeController extends Controller
                 'suffix', 'date_hired', 'status', 'barcode_id',
                 'company_id', 'folder_id', 'folder_location_id', 'atm_status', 'bank_type_id',
             ]));
+
+            // Sync Hiring Event if date_hired is present
+            if ($employee->date_hired) {
+                \App\Models\HiringEvent::updateOrCreate(
+                    ['employee_id' => $employee->id],
+                    ['event_date' => $employee->date_hired]
+                );
+            }
 
             $fresh = $employee->fresh()->load(['company', 'folder', 'folderLocation', 'bankType']);
             $after = $fresh->only([

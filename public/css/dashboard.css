@@ -126,6 +126,96 @@
     background: #fafafa;
 }
 
+.graph-container {
+    height: auto !important;
+    min-height: 350px;
+}
+
+/* Hiring Summary Bar Styles */
+.hiring-summary-bar {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.border-end-md {
+    border-right: 1px solid #f0f0f0;
+}
+
+@media (max-width: 767px) {
+    .border-end-md {
+        border-right: none;
+    }
+
+    .border-top-mobile {
+        border-top: 1px solid #f0f0f0;
+    }
+}
+
+.summary-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.summary-trend {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.trend-up {
+    color: #059669;
+}
+
+.trend-down {
+    color: #dc2626;
+}
+
+.summary-subtext {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+/* Circular Indicators */
+.stat-indicator-circle-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.stat-indicator-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--circle-color, #dd270d) var(--percent, 0%),
+            #eef0f3 0%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    mask: radial-gradient(circle, transparent 50%, black 51%);
+    -webkit-mask: radial-gradient(circle, transparent 50%, black 51%);
+}
+
+.stat-indicator-circle.monthly {
+    --circle-color: #3b82f6;
+    /* Blue for monthly */
+}
+
+.stat-indicator-circle.yearly {
+    --circle-color: #f59e0b;
+    /* Amber/Yellow for yearly */
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    CALENDAR STYLES
    ────────────────────────────────────────────────────────────────────────── */
@@ -272,4 +362,122 @@
 .calendar-day.today:hover {
     background: #dd270d;
     color: #ffffff !important;
+}
+
+/* Custom Chart Legend Styles (Redesigned) */
+.custom-chart-legend {
+    width: 100%;
+}
+
+.legend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 140px;
+    /* Fits approx 3 items */
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.legend-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.legend-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.legend-ring {
+    width: 12px;
+    height: 12px;
+    border: 2.5px solid #dd270d;
+    /* Border color set dynamically in JS */
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-label-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.legend-item-right {
+    flex-shrink: 0;
+}
+
+.legend-count {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* Center Text in Chart */
+.chart-with-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.center-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.center-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Custom Scrollbar for Legend */
+.legend-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.legend-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.legend-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+
+.legend-list::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
