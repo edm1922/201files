@@ -14,7 +14,9 @@ class FolderLocationController extends Controller
      */
     public function index()
     {
-        $rows = FolderLocation::withCount('employees')
+        $rows = FolderLocation::withCount(['employees' => function($query) {
+            $query->withTrashed();
+        }])
             ->orderByRaw('LENGTH(row_name) ASC')
             ->orderBy('row_name', 'ASC')
             ->get();
@@ -95,7 +97,7 @@ class FolderLocationController extends Controller
      */
     public function destroy(FolderLocation $folderLocation)
     {
-        $employeesCount = $folderLocation->employees()->count();
+        $employeesCount = $folderLocation->employees()->withTrashed()->count();
 
         if ($employeesCount > 0) {
             return redirect()->back()

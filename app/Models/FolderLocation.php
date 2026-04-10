@@ -67,7 +67,8 @@ class FolderLocation extends Model
      */
     public function scopeAvailable($query)
     {
-        return $query->whereRaw('(select count(*) from employees where employees.folder_location_id = folder_locations.id and employees.deleted_at is null) < max_capacity');
+        // Removed 'and employees.deleted_at is null' to include archived employees in the count
+        return $query->whereRaw('(select count(*) from employees where employees.folder_location_id = folder_locations.id) < max_capacity');
     }
 
     /**
@@ -76,7 +77,7 @@ class FolderLocation extends Model
     public function isFull(): bool
     {
         $capacity = $this->max_capacity ?? 500;
-        return $this->employees()->count() >= $capacity;
+        return $this->employees()->withTrashed()->count() >= $capacity;
     }
 
     /**

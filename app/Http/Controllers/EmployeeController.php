@@ -23,7 +23,9 @@ class EmployeeController extends Controller
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
-        $locations = FolderLocation::withCount('employees')->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
+        $locations = FolderLocation::withCount(['employees' => function ($query) {
+            $query->withTrashed();
+        }])->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
         $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
@@ -154,7 +156,9 @@ class EmployeeController extends Controller
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $folders   = \App\Models\Folder::where('is_available', true)->get();
-        $locations = FolderLocation::withCount('employees')->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
+        $locations = FolderLocation::withCount(['employees' => function ($query) {
+            $query->withTrashed();
+        }])->orderByRaw('LENGTH(row_name) ASC')->orderBy('row_name', 'ASC')->get();
         $lastFolderCode = \App\Models\Folder::where('folder_code', 'like', 'CSC-HR-%')->max('folder_code');
 
         return view('201files', [
