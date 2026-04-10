@@ -44,6 +44,8 @@ class UserController extends Controller
         $validated['password'] = Hash::make($defaultPassword);
         $validated['must_change_password'] = true;
         
+        $validated['is_active'] = $request->boolean('is_active', true);
+        
         $user = User::create($validated);
 
         // Sync department access (only for non-admin roles)
@@ -83,6 +85,17 @@ class UserController extends Controller
     public function update(UserRequest $request, User $user)
     {
         $validated = $request->validated();
+
+        // Prevent deactivating or demoting the last administrator
+        if ($user->role === 'admin' && ($validated['role'] !== 'admin' || !$request->boolean('is_active', true))) {
+            $adminCount = User::where('role', 'admin')->where('is_active', true)->count();
+            if ($adminCount <= 1) {
+                $reason = $validated['role'] !== 'admin' ? 'demote' : 'deactivate';
+                return back()->with('error', "Cannot {$reason} the last active administrator in the system.");
+            }
+        }
+
+        $validated['is_active'] = $request->boolean('is_active', true);
         
         $user->update($validated);
 
@@ -124,10 +137,19 @@ class UserController extends Controller
                              ->with('error', 'You cannot delete your own account.');
         }
 
+        // Prevent deleting the last administrator
+        if ($user->role === 'admin') {
+            $adminCount = User::where('role', 'admin')->count();
+            if ($adminCount <= 1) {
+                return redirect()->route('settings.users.index')
+                                 ->with('error', 'Cannot delete the last administrator in the system.');
+            }
+        }
+
         $username = $user->username;
         $user->delete();
 
-        AuditService::log('deleted', "Deleted user");
+        AuditService::log('deleted', "Deleted user: {$username}");
         return redirect()->route('settings.users.index')
                          ->with('success', 'User deleted successfully.');
     }
@@ -154,5 +176,31 @@ class UserController extends Controller
 
         return redirect()->route('settings.users.index')
                          ->with('success', 'Password reset successfully for ' . $user->name . '. Their new password is: ' . $defaultPassword);
+    }
+
+    /**
+     * Toggle the user's active status.
+     */
+    public function toggleStatus(User $user)
+    {
+        if (Auth::id() === $user->id) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        // Prevent deactivating the last administrator
+        if ($user->role === 'admin' && $user->is_active) {
+            $adminCount = User::where('role', 'admin')->where('is_active', true)->count();
+            if ($adminCount <= 1) {
+                return back()->with('error', 'Cannot deactivate the last administrator in the system.');
+            }
+        }
+
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $status = $user->is_active ? 'activated' : 'deactivated';
+        AuditService::log('updated', "User account {$status}", $user);
+
+        return back()->with('success', "User account has been {$status}.");
     }
 }

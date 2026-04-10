@@ -46,6 +46,14 @@ class DocumentExpiryAlertNotification extends Notification
             'is_expired' => $this->daysBeforeExpiry === null,
             'expiry_date' => $expiryDate?->toDateString(),
             'message' => $this->buildMessage(),
+            'expiry_date' => $expiryDate?->toDateString(),
+            'message' => $this->buildMessage(),
+            'url_route' => 'department-documents.index',
+            'url_params' => [
+                'department_id' => (int) $this->document->department_id,
+                'document_id' => (int) $this->document->id,
+            ],
+            // Keep 'url' as fallback for existing notifications
             'url' => route('department-documents.index', [
                 'department_id' => (int) $this->document->department_id,
                 'document_id' => (int) $this->document->id,

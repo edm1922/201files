@@ -57,6 +57,17 @@
                     @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
+                <div class="mb-3">
+                    <div class="form-check form-switch p-0 d-flex align-items-center gap-3">
+                        <label class="form-check-label fw-semibold text-muted" for="is_active" style="font-size: 0.85rem; margin-bottom: 0;">Account Active</label>
+                        <div style="margin-top: -2px;">
+                            <input type="hidden" name="is_active" value="0">
+                            <input class="form-check-input ms-0" type="checkbox" name="is_active" id="is_active" 
+                                   value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }} style="width: 2.8em; height: 1.4em; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Department Access Section --}}
                 <div id="createDeptSection" style="{{ old('role') === 'admin' ? 'display:none;' : '' }}">
                     <div class="dept-access-panel">
