@@ -48,6 +48,7 @@
         $unreadNotificationsCount = Auth::user()->unreadNotifications()->count();
     @endphp
 
+    @if(!request()->routeIs('about'))
     <!-- ── Top Navbar ── -->
     <nav class="navbar navbar-dark fixed-top topbar" role="navigation" aria-label="Primary">
         <div class="container-fluid topbar__inner">
@@ -99,9 +100,10 @@
 
     {{-- ── Sidebar ── --}}
     @include('layouts.sidebar')
+    @endif
 
     <!-- ── Main Content ── -->
-    <main class="main-content">
+    <main class="main-content {{ request()->routeIs('about') ? 'full-display' : '' }}">
         {{ $slot }}
     </main>
     <!-- Bootstrap JS -->
