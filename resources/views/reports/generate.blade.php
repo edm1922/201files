@@ -2,13 +2,9 @@
     <div class="animate-fade-in stagger-1">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="h4 mb-1 fw-bold text-dark">Data Export & Reports Hub</h2>
-                <p class="text-muted mb-0" style="font-size: 0.85rem;">Generate tailored datasets with advanced filtering and customized column selection.</p>
-            </div>
-            <div class="d-flex gap-2">
-                <a href="{{ route('reports.audit-log') }}" class="btn btn-action-round" title="View Real-time Logs">
-                    <i class="fas fa-history"></i>
-                </a>
+                <h2 class="h4 mb-1 fw-bold text-dark">Data Export & Reports</h2>
+                <p class="text-muted mb-0" style="font-size: 0.85rem;">Generate tailored datasets with advanced
+                    filtering and customized column selection.</p>
             </div>
         </div>
 
@@ -43,7 +39,7 @@
                             </div>
                             <div>
                                 <h5 class="report-title">Employee Master List</h5>
-                                <p class="report-desc">Comprehensive employee roster with customizable data columns.</p>
+                                <p class="report-desc">Comprehensive employee list with customizable data columns.</p>
                             </div>
                         </div>
 
@@ -89,22 +85,31 @@
 
                             <div class="mb-4">
                                 <label class="report-label mb-2 d-block">Select Columns to Include</label>
-                                <div class="column-picker scrollable-y bg-light p-3 rounded-3" style="max-height: 120px;">
+                                <div class="column-picker scrollable-y bg-light p-3 rounded-3"
+                                    style="max-height: 120px;">
                                     <div class="row g-2">
                                         @php
                                             $cols = [
-                                                'system_id' => 'System ID', 'barcode_id' => 'Barcode ID',
-                                                'full_name' => 'Full Name', 'company' => 'Company',
-                                                'status' => 'Status', 'date_hired' => 'Date Hired',
-                                                'folder_code' => 'Folder Code', 'location' => 'Physical Location',
+                                                'system_id' => 'System ID',
+                                                'barcode_id' => 'Barcode ID',
+                                                'full_name' => 'Full Name',
+                                                'company' => 'Company',
+                                                'status' => 'Status',
+                                                'date_hired' => 'Date Hired',
+                                                'folder_code' => 'Folder Code',
+                                                'location' => 'Physical Location',
+                                                'atm_status' => 'ATM Status',
+                                                'bank_type' => 'Bank Type',
                                                 'archive_date' => 'Archive Date'
                                             ];
                                         @endphp
                                         @foreach($cols as $val => $label)
                                             <div class="col-md-4 col-6">
                                                 <div class="form-check custom-checkbox">
-                                                    <input class="form-check-input" type="checkbox" name="columns[]" value="{{ $val }}" id="col_{{ $val }}" checked>
-                                                    <label class="form-check-label text-muted small" style="cursor: pointer;" for="col_{{ $val }}">{{ $label }}</label>
+                                                    <input class="form-check-input" type="checkbox" name="columns[]"
+                                                        value="{{ $val }}" id="col_{{ $val }}" checked>
+                                                    <label class="form-check-label text-muted small"
+                                                        style="cursor: pointer;" for="col_{{ $val }}">{{ $label }}</label>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -112,7 +117,9 @@
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn btn-brand w-100 py-2 d-flex align-items-center justify-content-center" data-export-submit>
+                            <button type="submit"
+                                class="btn btn-brand w-100 py-2 d-flex align-items-center justify-content-center"
+                                data-export-submit>
                                 <i class="fas fa-file-csv me-2"></i>
                                 <span class="fw-bold" data-export-label>Download Master List</span>
                             </button>
@@ -135,8 +142,10 @@
                             </div>
                         </div>
                         <div class="mt-auto">
-                            <p class="small text-white-50 mb-4">Produces a summary of active vs resigned employees per company registered in the system.</p>
-                            <a href="{{ route('reports.export-company-summary') }}" class="btn btn-outline-light w-100 py-2 fw-bold">
+                            <p class="small text-white-50 mb-4">Produces a summary of active vs resigned employees per
+                                company registered in the system.</p>
+                            <a href="{{ route('reports.export-company-summary') }}"
+                                class="btn btn-outline-light w-100 py-2 fw-bold">
                                 <i class="fas fa-download me-2"></i> Export Summary
                             </a>
                         </div>
@@ -164,8 +173,9 @@
                                 <p class="report-desc">Occupancy report showing slots availability.</p>
                             </div>
                         </div>
-                        
-                        <form action="{{ route('reports.export-storage-utilization') }}" method="GET" data-report-export-form>
+
+                        <form action="{{ route('reports.export-storage-utilization') }}" method="GET"
+                            data-report-export-form>
                             <div class="mb-4">
                                 <label class="report-label">Filter by Storage Type</label>
                                 <select name="type" class="form-select report-input">
@@ -173,9 +183,11 @@
                                     <option value="docs">Department Documents Storage</option>
                                 </select>
                             </div>
-                            <p class="text-muted small mb-4">This report shows the total capacity, occupied slots, and space remaining. Occupant names are omitted for a clean audit view.</p>
-                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm" data-export-submit>
-                                <i class="fas fa-file-csv me-2"></i> 
+                            <p class="text-muted small mb-4">This report shows the total capacity, occupied slots, and
+                                space remaining.</p>
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold shadow-sm"
+                                data-export-submit>
+                                <i class="fas fa-file-csv me-2"></i>
                                 <span data-export-label>Download Storage Audit</span>
                             </button>
                         </form>
@@ -191,13 +203,15 @@
                                 <i class="fas fa-search-location"></i>
                             </div>
                             <div>
-                                <h5 class="report-title">Identify Empty Slots</h5>
+                                <h5 class="report-title">Identify Available Folders</h5>
                                 <p class="report-desc">Find available space for new folders.</p>
                             </div>
                         </div>
-                        <p class="text-muted small mb-4">A simple list of all physical coordinates that haven't been assigned to an employee yet.</p>
-                        <a href="{{ route('reports.export-available-folders') }}" class="btn btn-outline-brand w-100 py-2 fw-bold">
-                            <i class="fas fa-file-csv me-2"></i> Export Available Slots
+                        <p class="text-muted small mb-4">A list of folders that haven't been
+                            assigned to an employee.</p>
+                        <a href="{{ route('reports.export-available-folders') }}"
+                            class="btn btn-brand w-100 py-2 fw-bold">
+                            <i class="fas fa-file-csv me-2"></i> Export Available Folder Slots
                         </a>
                     </div>
                 </div>
@@ -211,65 +225,18 @@
                 </h5>
             </div>
 
-            {{-- ── Missing Documents Report ── --}}
-            <div class="col-lg-6 animate-fade-in stagger-6">
-                <div class="card report-card h-100 shadow-sm border-0" style="border-top: 4px solid #dd270d;">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center mb-1">
-                            <h5 class="report-title fs-5 mb-0">Missing Documents Audit</h5>
-                            <span class="badge bg-danger ms-auto fw-medium">Compliance</span>
-                        </div>
-                        <p class="report-desc mb-4">Identify departments missing specific required documents.</p>
-                        
-                        <form action="{{ route('reports.export-missing-docs') }}" method="GET" data-report-export-form>
-                            <div class="row g-2 mb-3">
-                                <div class="col-8">
-                                    <label class="report-label">Target Document Type <span class="text-danger">*</span></label>
-                                    <select name="document_type_id" class="form-select report-input @error('document_type_id') is-invalid @enderror" required>
-                                        <option value="">- Select Type to Audit -</option>
-                                        @foreach ($documentTypes as $type)
-                                            <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-4">
-                                    <label class="report-label">Year Filter</label>
-                                    <select name="year" class="form-select report-input">
-                                        <option value="">All Years</option>
-                                        @for ($y = date('Y'); $y >= 2020; $y--)
-                                            <option value="{{ $y }}">{{ $y }}</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <label class="report-label">Company Filter</label>
-                                <select name="company_id" class="form-select report-input">
-                                    <option value="">All Companies</option>
-                                    @foreach ($companies as $company)
-                                        <option value="{{ $company->id }}">{{ $company->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-brand w-100 py-2 d-flex align-items-center justify-content-center" data-export-submit>
-                                <i class="fas fa-search me-2"></i>
-                                <span class="fw-bold" data-export-label>Generate Audit</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+
 
             {{-- ── Expiry Report ── --}}
             <div class="col-lg-6 animate-fade-in stagger-7">
                 <div class="card report-card h-100 shadow-sm border-0">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-1">
-                            <h5 class="report-title fs-5 mb-0">Document Expiry Hub</h5>
+                            <h5 class="report-title fs-5 mb-0">Document Expiry</h5>
                             <span class="badge bg-secondary ms-auto fw-medium">Monitoring</span>
                         </div>
                         <p class="report-desc mb-4">Manage document statuses by their expiry timelines.</p>
-                        
+
                         <form action="{{ route('reports.export-expiry-report') }}" method="GET" data-report-export-form>
                             <div class="mb-3">
                                 <label class="report-label">Filter by Status</label>
@@ -282,12 +249,22 @@
                             </div>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="report-label">From Date</label>
-                                    <input type="date" name="date_from" class="form-control report-input">
+                                    <label class="report-label">Target Year</label>
+                                    <select name="year" class="form-select report-input">
+                                        <option value="">All Years</option>
+                                        @for ($y = date('Y') + 5; $y >= 2023; $y--)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endfor
+                                    </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="report-label">To Date</label>
-                                    <input type="date" name="date_to" class="form-control report-input">
+                                    <label class="report-label">Target Month</label>
+                                    <select name="month" class="form-select report-input">
+                                        <option value="">All Months</option>
+                                        @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $i => $m)
+                                            <option value="{{ $i + 1 }}">{{ $m }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                             <div class="mb-4">
@@ -299,7 +276,9 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <button type="submit" class="btn btn-secondary w-100 py-2 d-flex align-items-center justify-content-center text-white" data-export-submit>
+                            <button type="submit"
+                                class="btn btn-secondary w-100 py-2 d-flex align-items-center justify-content-center text-white"
+                                data-export-submit>
                                 <i class="fas fa-hourglass-half me-2"></i>
                                 <span class="fw-bold" data-export-label>Download Expiry List</span>
                             </button>
@@ -309,53 +288,52 @@
             </div>
 
             {{-- ── Audit Log Export ── --}}
-            <div class="col-12 animate-fade-in stagger-8 mt-4">
-                <div class="card report-card border-0 shadow-sm">
+            <div class="col-lg-6 animate-fade-in stagger-8">
+                <div class="card report-card h-100 shadow-sm border-0">
                     <div class="card-body p-4">
-                        <div class="row g-4 align-items-center">
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <div class="icon-circle bg-secondary-light text-secondary me-3">
-                                        <i class="fas fa-file-invoice"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="report-title">Full Activity Logs</h5>
-                                        <p class="report-desc mb-0">Filtered systemic trace logs.</p>
-                                    </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <h5 class="report-title fs-5 mb-0">Full Activity Logs</h5>
+                            <span class="badge bg-dark ms-auto fw-medium">Auditing</span>
+                        </div>
+                        <p class="report-desc mb-4">Filtered systemic trace logs for security tracking.</p>
+
+                        <form action="{{ route('reports.export-audit-logs') }}" method="GET" data-report-export-form>
+                            <div class="mb-3">
+                                <label class="report-label">Target User</label>
+                                <select name="user_id" class="form-select report-input">
+                                    <option value="">All Users</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <label class="report-label">Year Filter</label>
+                                    <select name="year" class="form-select report-input">
+                                        <option value="">All Years</option>
+                                        @for ($y = date('Y'); $y >= 2023; $y--)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="report-label">Month Filter</label>
+                                    <select name="month" class="form-select report-input">
+                                        <option value="">All Months</option>
+                                        @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $i => $m)
+                                            <option value="{{ $i + 1 }}">{{ $m }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
-                            <div class="col-md-8">
-                                <form action="{{ route('reports.export-audit-logs') }}" method="GET" class="d-flex flex-wrap gap-2" data-report-export-form>
-                                    <div class="flex-grow-1" style="min-width: 150px;">
-                                        <select name="user_id" class="form-select report-input">
-                                            <option value="">All Users</option>
-                                            @foreach ($users as $user)
-                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div style="width: 140px;">
-                                        <select name="year" class="form-select report-input">
-                                            <option value="">Year</option>
-                                            @for ($y = date('Y'); $y >= 2023; $y--)
-                                                <option value="{{ $y }}">{{ $y }}</option>
-                                            @endfor
-                                        </select>
-                                    </div>
-                                    <div style="width: 140px;">
-                                        <select name="month" class="form-select report-input">
-                                            <option value="">Month</option>
-                                            @foreach(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as $i => $m)
-                                                <option value="{{ $i + 1 }}">{{ $m }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-dark px-4 d-flex align-items-center" data-export-submit>
-                                        <i class="fas fa-file-csv me-2"></i> <span data-export-label>Export Logs</span>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                            <button type="submit"
+                                class="btn btn-dark w-100 py-2 d-flex align-items-center justify-content-center"
+                                data-export-submit>
+                                <i class="fas fa-file-invoice me-2"></i>
+                                <span class="fw-bold" data-export-label>Export History</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -367,10 +345,12 @@
             border-radius: 12px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .report-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
         }
+
         .icon-circle {
             width: 48px;
             height: 48px;
@@ -380,23 +360,40 @@
             justify-content: center;
             font-size: 1.4rem;
         }
-        .bg-brand-light { background: rgba(221, 39, 13, 0.1); }
-        .bg-success-light { background: rgba(16, 185, 129, 0.1); }
-        .bg-secondary-light { background: rgba(100, 116, 139, 0.1); }
-        .bg-white-10 { background: rgba(255, 255, 255, 0.1); }
-        .border-brand-dashed { border: 1px dashed rgba(221, 39, 13, 0.3) !important; }
-        
+
+        .bg-brand-light {
+            background: rgba(221, 39, 13, 0.1);
+        }
+
+        .bg-success-light {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .bg-secondary-light {
+            background: rgba(100, 116, 139, 0.1);
+        }
+
+        .bg-white-10 {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .border-brand-dashed {
+            border: 1px dashed rgba(221, 39, 13, 0.3) !important;
+        }
+
         .report-title {
             color: #1e293b;
             font-weight: 700;
             font-size: 1.05rem;
             margin-bottom: 2px;
         }
+
         .report-desc {
             color: #64748b;
             font-size: 0.8rem;
             margin-bottom: 0;
         }
+
         .report-label {
             font-size: 0.7rem;
             font-weight: 700;
@@ -404,6 +401,7 @@
             color: #94a3b8;
             margin-bottom: 5px;
         }
+
         .report-input {
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -411,13 +409,21 @@
             background-color: #f8fafc;
             padding: 8px 12px;
         }
+
         .report-input:focus {
             background-color: #fff;
             border-color: #dd270d;
             box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.1);
         }
-        .column-picker::-webkit-scrollbar { width: 5px; }
-        .column-picker::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+        .column-picker::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .column-picker::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
     </style>
 
     @push('scripts')
@@ -426,7 +432,7 @@
                 document.querySelectorAll('form[data-report-export-form]').forEach((form) => {
                     if (form.dataset.exportBound === '1') return;
                     form.dataset.exportBound = '1';
-                    
+
                     form.addEventListener('submit', () => {
                         const button = form.querySelector('[data-export-submit]');
                         const label = form.querySelector('[data-export-label]');
@@ -440,7 +446,7 @@
                         spinner.className = 'spinner-border spinner-border-sm me-2';
                         spinner.dataset.exportSpinner = '1';
                         button.insertBefore(spinner, button.firstChild);
-                        
+
                         // Reactivate button after a while since browser download doesn't trigger "back" event
                         setTimeout(() => {
                             button.disabled = false;

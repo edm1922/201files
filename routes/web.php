@@ -116,7 +116,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/export/company-summary', [ReportController::class, 'exportCompanySummary'])->name('export-company-summary');
             Route::get('/export/storage-utilization', [ReportController::class, 'exportStorageUtilization'])->name('export-storage-utilization');
             Route::get('/export/available-folders', [ReportController::class, 'exportAvailableFolders'])->name('export-available-folders');
-            Route::get('/export/missing-documents', [ReportController::class, 'exportMissingDocuments'])->name('export-missing-docs');
+
             Route::get('/export/expiry-report', [ReportController::class, 'exportExpiryReport'])->name('export-expiry-report');
         });
     });
