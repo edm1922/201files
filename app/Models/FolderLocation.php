@@ -67,7 +67,7 @@ class FolderLocation extends Model
      */
     public function scopeAvailable($query)
     {
-        return $query->withCount('employees')->having('employees_count', '<', \DB::raw('max_capacity'));
+        return $query->whereRaw('(select count(*) from employees where employees.folder_location_id = folder_locations.id and employees.deleted_at is null) < max_capacity');
     }
 
     /**
