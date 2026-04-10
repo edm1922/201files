@@ -134,6 +134,56 @@
                         </div>
                     </div>
 
+                    {{-- ── Acknowledgements ── --}}
+                    <div class="mb-5 animate-fade-in-up-scroll">
+                        <div class="text-center mb-5">
+                            <span class="subheading d-block mb-1 text-uppercase">Gratitude</span>
+                            <h2 class="h2 fw-bold text-dark">Acknowledgements</h2>
+                        </div>
+
+                        <div class="row g-4">
+                            {{-- Mentors/Supervisors --}}
+                            <div class="col-md-6">
+                                <div class="acknowledgement-card p-4 h-100">
+                                    <h4 class="h6 fw-bold text-muted text-uppercase mb-3 letter-spacing-1 border-bottom pb-2">Our Mentors</h4>
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-3 d-flex align-items-center">
+                                            <div class="mentor-avatar-sm me-3 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                                <img src="{{ asset('image/JemarPic.png') }}" alt="Jemar L. Barrera" class="w-100 h-100 object-fit-cover">
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark text-uppercase small">Jemar L. Barrera</div>
+                                                <div class="small text-brand-red fw-600">Supervisor</div>
+                                            </div>
+                                        </li>
+                                        <li class="d-flex align-items-center">
+                                            <div class="mentor-avatar-sm me-3 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark text-uppercase small">Cristine Marie</div>
+                                                <div class="small text-brand-red fw-600">Position</div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {{-- Other Contributors (Fellow OJTs) --}}
+                            <div class="col-md-6">
+                                <div class="acknowledgement-card p-4 h-100">
+                                    <h4 class="h6 fw-bold text-muted text-uppercase mb-3 letter-spacing-1 border-bottom pb-2">Support Team (OJT)</h4>
+                                    <p class="small text-muted mb-3 opacity-75">Special thanks to our fellow OJTs who helped us navigate technical challenges:</p>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="ojt-badge px-3 py-1 rounded-pill small">Person 3</span>
+                                        <span class="ojt-badge px-3 py-1 rounded-pill small">Person 4</span>
+                                         <span class="ojt-badge px-3 py-1 rounded-pill small">Person 4</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ── Bottom: Powered By ── --}}
                     <div class="text-center mt-5 pt-4 animate-fade-in-up-scroll">
                         <h4 class="h6 text-muted text-uppercase mb-4 letter-spacing-1">Powered By</h4>
