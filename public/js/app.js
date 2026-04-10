@@ -336,13 +336,43 @@ document.addEventListener('DOMContentLoaded', function () {
     const folderCodeInput = document.getElementById('folderCodeInput');
     const availableSelect = document.getElementById('availableCodeSelect');
     const clearButton = document.getElementById('clearFolderCode');
+    const locationSelect = document.getElementById('locationSelectForm');
+
+    // Logic to sync location based on folder code numeric part
+    function syncLocationFromFolderCode(code) {
+        if (!code || !locationSelect) return;
+
+        // Strip prefix if present, extract numbers
+        const numericPart = code.replace(/[^0-9]/g, '');
+        if (!numericPart) return;
+
+        const folderNum = parseInt(numericPart);
+        if (isNaN(folderNum)) return;
+
+        // Calculate expected Row Index (500 folders per row)
+        const expectedRowIndex = Math.ceil(folderNum / 500);
+
+        // Find the option with the matching data-row-index
+        const $option = $(locationSelect).find(`option[data-row-index="${expectedRowIndex}"]`);
+        
+        if ($option.length) {
+            $(locationSelect).val($option.val()).trigger('change.select2');
+        }
+    }
 
     if (availableSelect && folderCodeInput) {
         availableSelect.addEventListener('change', function () {
             if (this.value) {
                 folderCodeInput.value = this.value;
-                // Optional: show a small feedback that it was replaced
+                syncLocationFromFolderCode(this.value);
             }
+        });
+    }
+
+    if (folderCodeInput) {
+        // Handle manual or programmatic value changes
+        folderCodeInput.addEventListener('input', function() {
+            syncLocationFromFolderCode(this.value);
         });
     }
 
@@ -351,7 +381,17 @@ document.addEventListener('DOMContentLoaded', function () {
             folderCodeInput.value = '';
             folderCodeInput.placeholder = 'Auto-generate';
             if (availableSelect) availableSelect.value = '';
+            
+            // Optionally clear location if it was auto-selected
+            if (locationSelect) {
+                $(locationSelect).val('').trigger('change.select2');
+            }
         });
+    }
+
+    // Trigger sync on page load if a code already exists (e.g., auto-generated next code)
+    if (folderCodeInput && folderCodeInput.value) {
+        syncLocationFromFolderCode(folderCodeInput.value);
     }
 });
 
