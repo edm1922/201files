@@ -29,6 +29,32 @@
                             } elseif ($ext === 'csv') {
                                 $iconClass = 'file-icon--csv';
                             }
+
+                            $mime = strtolower((string) ($doc->mime_type ?? ''));
+                            $previewKind = null;
+
+                            if (str_starts_with($mime, 'image/') || in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                                $previewKind = 'image';
+                            } elseif ($mime === 'application/pdf' || $ext === 'pdf') {
+                                $previewKind = 'pdf';
+                            } elseif ($ext === 'docx' || $mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                                $previewKind = 'docx';
+                            } elseif (in_array($ext, ['xls', 'xlsx', 'csv']) || in_array($mime, [
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-excel',
+                                'text/csv',
+                                'application/csv',
+                            ])) {
+                                $previewKind = 'sheet';
+                            }
+
+                            $previewUrl = null;
+                            if (in_array($previewKind, ['image', 'pdf'], true)) {
+                                $previewUrl = route('department-documents.preview', $doc);
+                            } elseif (in_array($previewKind, ['docx', 'sheet'], true)) {
+                                $previewUrl = route('department-documents.download', $doc);
+                            }
+                            $previewable = $previewUrl !== null;
                         @endphp
                         <tr>
                             <td class="border-bottom-0" style="padding: 16px 24px;">
@@ -68,14 +94,21 @@
                             <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
                                 <div class="d-flex justify-content-center gap-2">
                                     {{-- Preview Button --}}
-                                    <button type="button" class="btn btn-sm"
-                                            title="Preview Document"
-                                            style="border-radius: 6px; padding: 6px 12px; background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: 500; transition: all 0.2s; border: none;"
-                                            onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.2)'"
-                                            onmouseout="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'"
-                                            onclick="window.open('{{ route('department-documents.preview', $doc->id) }}', '_blank')">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
+                                    @if ($previewable)
+                                        <button type="button" class="btn btn-sm"
+                                                title="Preview Document"
+                                                style="border-radius: 6px; padding: 6px 12px; background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: 500; transition: all 0.2s; border: none;"
+                                                onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.2)'"
+                                                onmouseout="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'"
+                                                data-preview-trigger
+                                                data-preview-url="{{ $previewUrl }}"
+                                                data-preview-kind="{{ $previewKind }}"
+                                                data-preview-mime="{{ $doc->mime_type }}"
+                                                data-preview-name="{{ $doc->original_filename }}"
+                                                data-preview-ext="{{ $ext }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    @endif
 
                                     {{-- Restore Button --}}
                                     @can('restore', $doc)
