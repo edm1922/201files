@@ -138,7 +138,10 @@
                     <div class="mb-5 animate-fade-in-up-scroll">
                         <div class="text-center mb-5">
                             <span class="subheading d-block mb-1 text-uppercase">Gratitude</span>
-                            <h2 class="h2 fw-bold text-dark">Acknowledgements</h2>
+                            <h2 class="h2 fw-bold text-dark mb-3">Acknowledgements</h2>
+                            <p class="text-secondary mx-auto" style="max-width: 600px;">
+                                We would like to thanks our mentors and colleagues for their guidance, support, and contribution to the success of this project.
+                            </p>
                         </div>
 
                         <div class="row g-4">
@@ -147,22 +150,22 @@
                                 <div class="acknowledgement-card p-4 h-100">
                                     <h4 class="h6 fw-bold text-muted text-uppercase mb-3 letter-spacing-1 border-bottom pb-2">Our Mentors</h4>
                                     <ul class="list-unstyled mb-0">
-                                        <li class="mb-3 d-flex align-items-center">
-                                            <div class="mentor-avatar-sm me-3 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                        <li class="mb-4 d-flex align-items-center">
+                                            <div class="mentor-avatar-sm me-4 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
                                                 <img src="{{ asset('image/JemarPic.png') }}" alt="Jemar L. Barrera" class="w-100 h-100 object-fit-cover">
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark text-uppercase small">Jemar L. Barrera</div>
-                                                <div class="small text-brand-red fw-600">Supervisor</div>
+                                                <div class="fw-bold text-dark text-uppercase mb-1">Jemar L. Barrera</div>
+                                                <div class="text-brand-red fw-600">Supervisor</div>
                                             </div>
                                         </li>
                                         <li class="d-flex align-items-center">
-                                            <div class="mentor-avatar-sm me-3 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
-                                                <i class="fas fa-user-graduate"></i>
+                                            <div class="mentor-avatar-sm me-4 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                               <img src="{{ asset('image/CristinePic.png') }}" alt="Cristine Marie M. Bernales" class="w-100 h-100 object-fit-cover">
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark text-uppercase small">Cristine Marie</div>
-                                                <div class="small text-brand-red fw-600">Position</div>
+                                                <div class="fw-bold text-dark text-uppercase mb-1">Cristine Marie M. Bernales</div>
+                                                <div class="text-brand-red fw-600">HR recruitment officer</div>
                                             </div>
                                         </li>
                                     </ul>
@@ -175,9 +178,9 @@
                                     <h4 class="h6 fw-bold text-muted text-uppercase mb-3 letter-spacing-1 border-bottom pb-2">Support Team (OJT)</h4>
                                     <p class="small text-muted mb-3 opacity-75">Special thanks to our fellow OJTs who helped us navigate technical challenges:</p>
                                     <div class="d-flex flex-wrap gap-2">
-                                        <span class="ojt-badge px-3 py-1 rounded-pill small">Person 3</span>
-                                        <span class="ojt-badge px-3 py-1 rounded-pill small">Person 4</span>
-                                         <span class="ojt-badge px-3 py-1 rounded-pill small">Person 4</span>
+                                        <span class="ojt-badge px-3 py-1 rounded-pill small">Lossaly Sobretodo</span>
+                                        <span class="ojt-badge px-3 py-1 rounded-pill small">Maryam U. Musa</span>
+                                         <span class="ojt-badge px-3 py-1 rounded-pill small">Lucy Zina</span>
                                     </div>
                                 </div>
                             </div>
