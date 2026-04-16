@@ -42,16 +42,14 @@ $(document).ready(function () {
         const tokens = String(query).trim().split(/[\s,.]+/).filter(t => t.length > 0);
         if (tokens.length === 0) return text;
 
-        let highlighted = text;
-        // Sort tokens by length descending to avoid partial replacements of longer matches
-        tokens.sort((a, b) => b.length - a.length).forEach(token => {
-            const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`(^|\\s|\\W)(${escapedToken})`, 'gi');
-            // Use placeholders to prevent double-wrapping, and preserve preceding char
-            highlighted = highlighted.replace(regex, '$1<<$2>>');
-        });
+        const escapedTokens = Array.from(new Set(tokens))
+            .sort((a, b) => b.length - a.length)
+            .map(token => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-        return highlighted.replace(/<<([^>]+)>>/g, '<b>$1</b>');
+        if (escapedTokens.length === 0) return text;
+
+        const regex = new RegExp(`(${escapedTokens.join('|')})`, 'gi');
+        return String(text).replace(regex, '<b>$1</b>');
     }
 
     function performSearch(query, autoSelectFirst = false) {
@@ -332,67 +330,220 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Folder Code: Handle selection and clear
-    const folderCodeInput = document.getElementById('folderCodeInput');
-    const availableSelect = document.getElementById('availableCodeSelect');
-    const clearButton = document.getElementById('clearFolderCode');
+    const companySelectForm = document.getElementById('companySelectForm');
+    const folderCodeSelect = document.getElementById('folderCodeSelect');
     const locationSelect = document.getElementById('locationSelectForm');
+    const close201Btn = document.getElementById('close201Btn');
 
-    // Logic to sync location based on folder code numeric part
-    function syncLocationFromFolderCode(code) {
-        if (!code || !locationSelect) return;
+    if (close201Btn) {
+        const navigationEntries = window.performance && typeof window.performance.getEntriesByType === 'function'
+            ? window.performance.getEntriesByType('navigation')
+            : [];
+        const navigationType = navigationEntries.length > 0 ? navigationEntries[0].type : '';
+        const isReload = navigationType === 'reload';
+        const isEmployeeProfilePath = /^\/employees\/\d+$/.test(window.location.pathname);
 
-        // Strip prefix if present, extract numbers
-        const numericPart = code.replace(/[^0-9]/g, '');
-        if (!numericPart) return;
-
-        const folderNum = parseInt(numericPart);
-        if (isNaN(folderNum)) return;
-
-        // Calculate expected Row Index (500 folders per row)
-        const expectedRowIndex = Math.ceil(folderNum / 500);
-
-        // Find the option with the matching data-row-index
-        const $option = $(locationSelect).find(`option[data-row-index="${expectedRowIndex}"]`);
-        
-        if ($option.length) {
-            $(locationSelect).val($option.val()).trigger('change.select2');
+        if (isReload && isEmployeeProfilePath) {
+            const baseTarget = close201Btn.getAttribute('href') || '/201files';
+            const separator = baseTarget.includes('?') ? '&' : '?';
+            window.location.replace(`${baseTarget}${separator}refresh=${Date.now()}`);
+            return;
         }
     }
 
-    if (availableSelect && folderCodeInput) {
-        availableSelect.addEventListener('change', function () {
-            if (this.value) {
-                folderCodeInput.value = this.value;
-                syncLocationFromFolderCode(this.value);
+    const initialLocation = locationSelect ? locationSelect.value : '';
+    const allLocationOptions = locationSelect
+        ? Array.from(locationSelect.options)
+            .filter(function (option) { return !!option.value; })
+            .map(function (option) {
+                return {
+                    value: option.value,
+                    text: option.textContent,
+                    companyId: option.getAttribute('data-company-id') || '',
+                    initiallyDisabled: option.getAttribute('data-initial-disabled') === '1',
+                    selected: option.selected,
+                };
+            })
+        : [];
+    let firstLocationFilterPass = true;
+
+    function getCompanyFolderMap() {
+        if (!folderCodeSelect) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(folderCodeSelect.getAttribute('data-company-folders') || '{}');
+        } catch (_err) {
+            return {};
+        }
+    }
+
+    function refreshFolderCodeOptions() {
+        if (!folderCodeSelect || !companySelectForm) {
+            return;
+        }
+
+        const selectedCompanyId = String(companySelectForm.value || '');
+        const oldSelectedFolderId = String(folderCodeSelect.getAttribute('data-selected-folder-id') || '').trim();
+        const currentFolderId = String(folderCodeSelect.getAttribute('data-current-folder-id') || '').trim();
+        const currentFolderCode = String(folderCodeSelect.getAttribute('data-current-folder-code') || '').trim();
+        const currentCompanyId = String(folderCodeSelect.getAttribute('data-current-company-id') || '').trim();
+        const userTouched = folderCodeSelect.getAttribute('data-user-touched') === '1';
+        const selectedFolderId = String(folderCodeSelect.value || oldSelectedFolderId || '').trim();
+        const folderMap = getCompanyFolderMap();
+        const companyFolders = folderMap[selectedCompanyId] || [];
+        const effectiveSelectedFolderId = selectedFolderId || ((!userTouched && currentFolderId && currentCompanyId === selectedCompanyId) ? currentFolderId : '');
+
+        const selectedCompanyOption = companySelectForm.options[companySelectForm.selectedIndex];
+        const companyCode = selectedCompanyOption ? selectedCompanyOption.getAttribute('data-code') : '';
+        const nextCode = selectedCompanyOption ? (selectedCompanyOption.getAttribute('data-next-folder-code') || '') : '';
+        const fallbackCode = companyCode ? `CSC-${companyCode.toUpperCase()}-0001` : '';
+        const displayCode = nextCode || fallbackCode || 'N/A';
+        const autoOptionText = selectedCompanyId
+            ? displayCode
+            : '- Auto Assign Next Available -';
+
+        folderCodeSelect.innerHTML = '';
+
+        const autoOption = document.createElement('option');
+        autoOption.value = '';
+        autoOption.textContent = autoOptionText;
+        folderCodeSelect.appendChild(autoOption);
+
+        if (currentFolderId && currentFolderCode && currentCompanyId === selectedCompanyId) {
+            const currentOption = document.createElement('option');
+            currentOption.value = currentFolderId;
+            currentOption.textContent = `${currentFolderCode} (Current)`;
+            folderCodeSelect.appendChild(currentOption);
+        }
+
+        companyFolders.forEach(function (folder) {
+            const option = document.createElement('option');
+            option.value = String(folder.id);
+            option.textContent = folder.folder_code;
+
+            if (effectiveSelectedFolderId && option.value === effectiveSelectedFolderId) {
+                option.selected = true;
             }
-        });
-    }
 
-    if (folderCodeInput) {
-        // Handle manual or programmatic value changes
-        folderCodeInput.addEventListener('input', function() {
-            syncLocationFromFolderCode(this.value);
+            folderCodeSelect.appendChild(option);
         });
-    }
 
-    if (clearButton && folderCodeInput) {
-        clearButton.addEventListener('click', function () {
-            folderCodeInput.value = '';
-            folderCodeInput.placeholder = 'Auto-generate';
-            if (availableSelect) availableSelect.value = '';
-            
-            // Optionally clear location if it was auto-selected
-            if (locationSelect) {
-                $(locationSelect).val('').trigger('change.select2');
+        folderCodeSelect.value = '';
+
+        if (effectiveSelectedFolderId) {
+            const existsInList = Array.from(folderCodeSelect.options).some(function (option) {
+                return option.value === effectiveSelectedFolderId;
+            });
+
+            if (existsInList) {
+                folderCodeSelect.value = effectiveSelectedFolderId;
             }
+        }
+
+        if (window.jQuery && $(folderCodeSelect).hasClass('select2-hidden-accessible')) {
+            $(folderCodeSelect).trigger('change.select2');
+        }
+    }
+
+    if (folderCodeSelect) {
+        folderCodeSelect.addEventListener('change', function () {
+            this.setAttribute('data-user-touched', '1');
+            this.setAttribute('data-selected-folder-id', this.value || '');
+            refreshFolderCodeOptions();
         });
     }
 
-    // Trigger sync on page load if a code already exists (e.g., auto-generated next code)
-    if (folderCodeInput && folderCodeInput.value) {
-        syncLocationFromFolderCode(folderCodeInput.value);
+    function filterLocationsByCompany() {
+        if (!locationSelect || !companySelectForm) {
+            return;
+        }
+
+        const selectedCompanyId = companySelectForm.value;
+        const previousValue = locationSelect.value;
+        let hasSelectedVisible = false;
+
+        locationSelect.innerHTML = '<option value=""></option>';
+
+        allLocationOptions.forEach(function (item) {
+            const shouldShow = !!selectedCompanyId && item.companyId === selectedCompanyId;
+            if (!shouldShow) {
+                return;
+            }
+
+            const option = document.createElement('option');
+            option.value = item.value;
+            option.textContent = item.text;
+            option.setAttribute('data-company-id', item.companyId);
+            option.setAttribute('data-initial-disabled', item.initiallyDisabled ? '1' : '0');
+
+            if (item.value === initialLocation) {
+                option.disabled = false;
+            } else {
+                option.disabled = item.initiallyDisabled;
+            }
+
+            if (item.value === previousValue) {
+                option.selected = true;
+                hasSelectedVisible = true;
+            }
+
+            locationSelect.appendChild(option);
+        });
+
+        if (selectedCompanyId && !hasSelectedVisible && (!firstLocationFilterPass || previousValue !== initialLocation)) {
+            locationSelect.value = '';
+        }
+
+        if (window.jQuery && $(locationSelect).hasClass('select2-hidden-accessible')) {
+            $(locationSelect).trigger('change.select2');
+        }
+
+        firstLocationFilterPass = false;
     }
+
+    function handleCompanySelectionChange(openFolderPicker = false) {
+        folderCodeSelect?.setAttribute('data-user-touched', '1');
+        folderCodeSelect?.setAttribute('data-selected-folder-id', '');
+        refreshFolderCodeOptions();
+        filterLocationsByCompany();
+
+        if (openFolderPicker && folderCodeSelect && companySelectForm?.value && window.jQuery && $(folderCodeSelect).hasClass('select2-hidden-accessible')) {
+            setTimeout(function () {
+                $(folderCodeSelect).select2('open');
+            }, 0);
+        }
+    }
+
+    if (companySelectForm) {
+        companySelectForm.addEventListener('change', function () {
+            handleCompanySelectionChange(true);
+        });
+
+        if (window.jQuery) {
+            $(companySelectForm).on('select2:select select2:clear', function () {
+                handleCompanySelectionChange(true);
+            });
+        }
+    }
+
+    refreshFolderCodeOptions();
+    filterLocationsByCompany();
+
+    if (close201Btn) {
+        close201Btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            const target = this.getAttribute('href') || '/201files';
+            const separator = target.includes('?') ? '&' : '?';
+            window.location.replace(`${target}${separator}refresh=${Date.now()}`);
+        });
+    }
+
+    window.addEventListener('pageshow', function () {
+        refreshFolderCodeOptions();
+        filterLocationsByCompany();
+    });
 });
 
 /**
