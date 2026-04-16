@@ -2,13 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
 use App\Models\Department;
 use App\Models\DocumentType;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -46,14 +43,14 @@ class DatabaseSeeder extends Seeder
             DocumentType::updateOrCreate(['code' => $type['code']], $type);
         }
 
+        // ── Sample Companies ──
+        $this->call(CompanySeeder::class);
+
         // ── Physical Storage ──
         $this->call(FolderLocationSeeder::class);
 
         // ── Digital Folders ──
         $this->call(FolderSeeder::class);
-
-        // ── Sample Companies ──
-        $this->call(CompanySeeder::class);
 
         $this->call(BankTypeSeeder::class);
 

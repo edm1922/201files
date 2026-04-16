@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class EmployeeSeeder extends Seeder
 {
@@ -14,9 +13,9 @@ class EmployeeSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('employees')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        
+
         $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-2151.csv');
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             return;
         }
 
@@ -26,30 +25,38 @@ class EmployeeSeeder extends Seeder
         // Starting folder ID
         $firstFolder = DB::table('folders')->orderBy('id')->first();
         $nextFolderId = $firstFolder ? $firstFolder->id : 1;
-        
+
         $now = '2026-03-31 00:00:00';
         $seenBarcodes = [];
         $seenSystemIds = [];
         $idCounter = 1;
-        
+
         while (($data = fgetcsv($handle)) !== false) {
             // Basic validation
-            if (empty($data[0]) && empty($data[4])) continue;
+            if (empty($data[0]) && empty($data[4])) {
+                continue;
+            }
 
             $barcode = trim($data[0] ?? '');
             $systemId = trim($data[1] ?? '');
-            
-            if ($barcode && in_array($barcode, $seenBarcodes)) continue;
-            if ($systemId && in_array($systemId, $seenSystemIds)) continue;
 
-            if (empty($systemId)) $systemId = 'TEMP-' . uniqid();
+            if ($barcode && in_array($barcode, $seenBarcodes)) {
+                continue;
+            }
+            if ($systemId && in_array($systemId, $seenSystemIds)) {
+                continue;
+            }
+
+            if (empty($systemId)) {
+                $systemId = 'TEMP-'.uniqid();
+            }
 
             $hiredDateRaw = trim($data[3] ?? '');
             $fullName = trim($data[4] ?? '');
             $statusRaw = trim($data[5] ?? 'active');
 
             // Parse Name
-            $firstName = $middleName = $lastName = "";
+            $firstName = $middleName = $lastName = '';
             if ($fullName) {
                 if (strpos($fullName, ',') !== false) {
                     $parts = explode(',', $fullName);
@@ -85,9 +92,9 @@ class EmployeeSeeder extends Seeder
             DB::table('employees')->insert([
                 'system_id' => $systemId,
                 'barcode_id' => $barcode,
-                'first_name' => mb_convert_case((string)$firstName, MB_CASE_UPPER, "UTF-8"),
-                'middle_name' => mb_convert_case((string)$middleName, MB_CASE_UPPER, "UTF-8"),
-                'last_name' => mb_convert_case((string)$lastName, MB_CASE_UPPER, "UTF-8"),
+                'first_name' => mb_convert_case((string) $firstName, MB_CASE_UPPER, 'UTF-8'),
+                'middle_name' => mb_convert_case((string) $middleName, MB_CASE_UPPER, 'UTF-8'),
+                'last_name' => mb_convert_case((string) $lastName, MB_CASE_UPPER, 'UTF-8'),
                 'date_hired' => $hiredDate,
                 'status' => in_array(strtolower($statusRaw), ['active', 'awol', 'resigned']) ? strtolower($statusRaw) : 'active',
                 // 'atm_status' => 'not_applicable',  // UNCOMMENT IF YOU WANT TO ADD ATM STATUS
@@ -99,16 +106,31 @@ class EmployeeSeeder extends Seeder
                 'updated_at' => $now,
             ]);
 
-            // Mark folder occupied
-            DB::table('folders')->where('id', $nextFolderId)->update(['is_available' => 0]);
+            // Mark folder occupied and sync company-sequence metadata for the new model
+            $folder = DB::table('folders')->where('id', $nextFolderId)->first();
+            $sequenceNumber = null;
 
-            if ($barcode) $seenBarcodes[] = $barcode;
-            if ($systemId) $seenSystemIds[] = $systemId;
-            
+            if ($folder && preg_match('/(\d+)$/', (string) $folder->folder_code, $matches) === 1) {
+                $sequenceNumber = (int) $matches[1];
+            }
+
+            DB::table('folders')->where('id', $nextFolderId)->update([
+                'is_available' => 0,
+                'company_id' => 1,
+                'sequence_number' => $sequenceNumber,
+            ]);
+
+            if ($barcode) {
+                $seenBarcodes[] = $barcode;
+            }
+            if ($systemId) {
+                $seenSystemIds[] = $systemId;
+            }
+
             $idCounter++;
             $nextFolderId++;
         }
-        
+
         fclose($handle);
     }
 }

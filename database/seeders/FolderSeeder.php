@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class FolderSeeder extends Seeder
 {
@@ -23,13 +22,14 @@ class FolderSeeder extends Seeder
         for ($i = 1; $i <= 2151; $i++) {
             $folders[] = [
                 'id' => $i,
-                'folder_code' => 'CSC-HR-' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'company_id' => 1,
+                'sequence_number' => $i,
+                'folder_code' => 'CSC-HR-'.str_pad($i, 4, '0', STR_PAD_LEFT),
                 'is_available' => 1,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
-
 
         foreach (array_chunk($folders, 200) as $chunk) {
             DB::table('folders')->insert($chunk);
