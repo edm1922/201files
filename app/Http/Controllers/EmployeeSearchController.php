@@ -37,7 +37,14 @@ class EmployeeSearchController extends Controller
     {
         if ($this->shouldUseScoutSearch()) {
             try {
-                return $this->searchWithScout($query);
+                $scoutResults = $this->searchWithScout($query);
+                $databaseResults = $this->searchWithDatabase($query);
+
+                return $scoutResults
+                    ->concat($databaseResults)
+                    ->unique('id')
+                    ->take(10)
+                    ->values();
             } catch (\Throwable $exception) {
                 Log::warning('Scout employee meili-search failed. Falling back to SQL.', [
                     'message' => $exception->getMessage(),
@@ -92,12 +99,14 @@ class EmployeeSearchController extends Controller
 
         foreach ($tokens as $token) {
             $queryBuilder->where(function ($q) use ($token) {
-                $q->where('first_name', 'LIKE', $token . '%')
-                    ->orWhere('middle_name', 'LIKE', $token . '%')
-                    ->orWhere('last_name', 'LIKE', $token . '%')
-                    ->orWhere('barcode_id', 'LIKE', $token . '%')
+                $pattern = '%'.$token.'%';
+
+                $q->where('first_name', 'LIKE', $pattern)
+                    ->orWhere('middle_name', 'LIKE', $pattern)
+                    ->orWhere('last_name', 'LIKE', $pattern)
+                    ->orWhere('barcode_id', 'LIKE', $pattern)
                     ->orWhereHas('folder', function ($sq) use ($token) {
-                        $sq->where('folder_code', 'LIKE', $token . '%');
+                        $sq->where('folder_code', 'LIKE', '%'.$token.'%');
                     });
             });
         }

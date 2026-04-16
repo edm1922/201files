@@ -68,6 +68,7 @@
                             <li><hr class="dropdown-divider opacity-50"></li>
                             <li><a class="dropdown-item rounded {{ request('action') == 'created' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('created')">Created</a></li>
                             <li><a class="dropdown-item rounded {{ request('action') == 'updated' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('updated')">Updated</a></li>
+                            <li><a class="dropdown-item rounded {{ request('action') == 'uploaded' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('uploaded')">Uploaded</a></li>
                             <li><a class="dropdown-item rounded {{ request('action') == 'deleted' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('deleted')">Deleted</a></li>
                             <li><a class="dropdown-item rounded {{ request('action') == 'archived' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('archived')">Archived</a></li>
                             <li><a class="dropdown-item rounded {{ request('action') == 'restored' ? 'active-filter' : '' }}" href="#" onclick="applyFilter('restored')">Restored</a></li>
@@ -121,16 +122,18 @@
                                             <span class="badge rounded-pill {{ 
                                                 $log->action === 'created' ? 'bg-success-subtle text-success' : 
                                                 ($log->action === 'updated' ? 'bg-info-subtle text-info' : 
+                                                ($log->action === 'uploaded' ? 'bg-info-subtle text-info' : 
                                                 ($log->action === 'deleted' ? 'bg-danger-subtle text-danger' : 
                                                 ($log->action === 'archived' ? 'bg-warning-subtle text-warning' : 
-                                                ($log->action === 'restored' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary')))) 
+                                                ($log->action === 'restored' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary'))))) 
                                             }}" style="font-size: 0.7rem; padding: 4px 10px; border: 1px solid currentColor;">
                                                 <i class="fas {{ 
                                                     $log->action === 'created' ? 'fa-plus-circle' : 
                                                     ($log->action === 'updated' ? 'fa-edit' : 
+                                                    ($log->action === 'uploaded' ? 'fa-upload' : 
                                                     ($log->action === 'deleted' ? 'fa-trash-alt' : 
                                                     ($log->action === 'archived' ? 'fa-archive' : 
-                                                    ($log->action === 'restored' ? 'fa-undo' : 'fa-history')))) 
+                                                    ($log->action === 'restored' ? 'fa-undo' : 'fa-history'))))) 
                                                 }} me-1"></i>
                                                 {{ strtoupper($log->action) }}
                                             </span>
@@ -177,6 +180,7 @@
                                                     {{ class_basename($log->model_type) }} #{{ $log->model_id }}
                                                 </div>
                                             @endif -->
+                                        </td>
                                         <td>
                                             <div class="fw-bold text-dark">{{ $log->target_name }}</div>
                                             @if($log->model_type)

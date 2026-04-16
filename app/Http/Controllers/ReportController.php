@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employee;
 use App\Models\AuditLog;
 use App\Models\Company;
 use App\Models\Department;
+use App\Models\Document;
+use App\Models\DocumentLocation;
+use App\Models\DocumentType;
+use App\Models\Employee;
+use App\Models\Folder;
+use App\Models\FolderLocation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -19,8 +25,8 @@ class ReportController extends Controller
     {
         $companies = Company::orderBy('name')->get();
         $departments = Department::orderBy('name')->get();
-        $documentTypes = \App\Models\DocumentType::orderBy('name')->get();
-        $users = \App\Models\User::orderBy('last_name')->get();
+        $documentTypes = DocumentType::orderBy('name')->get();
+        $users = User::orderBy('last_name')->get();
 
         return view('reports.generate', compact('companies', 'departments', 'documentTypes', 'users'));
     }
@@ -41,22 +47,22 @@ class ReportController extends Controller
 
         $query = Employee::with(['company', 'folder', 'folderLocation', 'bankType']);
 
-        if (!empty($validated['company_id'])) {
+        if (! empty($validated['company_id'])) {
             $query->where('company_id', (int) $validated['company_id']);
         }
 
-        if (!empty($validated['status'])) {
+        if (! empty($validated['status'])) {
             $query->where('status', $validated['status']);
             if ($validated['status'] === 'resigned') {
                 $query->withTrashed();
             }
         }
 
-        if (!empty($validated['year'])) {
+        if (! empty($validated['year'])) {
             $query->whereYear('date_hired', $validated['year']);
         }
 
-        if (!empty($validated['month'])) {
+        if (! empty($validated['month'])) {
             $query->whereMonth('date_hired', $validated['month']);
         }
 
@@ -87,7 +93,7 @@ class ReportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="employee_master_list_' . now()->format('Y-m-d_His') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="employee_master_list_'.now()->format('Y-m-d_His').'.csv"',
         ];
 
         $callback = function () use ($employees, $selectedColumns, $headersRow) {
@@ -137,7 +143,7 @@ class ReportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="company_summary_' . now()->format('Y-m-d_His') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="company_summary_'.now()->format('Y-m-d_His').'.csv"',
         ];
 
         $callback = function () use ($companies) {
@@ -175,7 +181,7 @@ class ReportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="storage_audit_' . $type . '_' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="storage_audit_'.$type.'_'.now()->format('Y-m-d').'.csv"',
         ];
 
         return response()->stream(function () use ($type) {
@@ -183,7 +189,7 @@ class ReportController extends Controller
 
             if ($type === '201') {
                 fputcsv($file, ['Location', 'Total Slots', 'Occupied Slots', 'Available Slots']);
-                $locations = \App\Models\FolderLocation::withCount(['employees' => function($query) {
+                $locations = FolderLocation::withCount(['employees' => function ($query) {
                     $query->withTrashed();
                 }])
                     ->orderByRaw('LENGTH(row_name) ASC')
@@ -199,18 +205,18 @@ class ReportController extends Controller
             } else {
                 fputcsv($file, ['Storage Location', 'Unique Folders Count', 'Total Documents Count']);
                 // Department Documents use DocumentLocation
-                $locations = \App\Models\DocumentLocation::withCount([
+                $locations = DocumentLocation::withCount([
                     'documents',
                     'documents as unique_folders_count' => function ($q) {
                         $q->select(\DB::raw('count(distinct(document_folder_id))'));
-                    }
+                    },
                 ])->get();
 
                 foreach ($locations as $loc) {
                     fputcsv($file, [
                         $loc->name,
                         $loc->unique_folders_count ?? 0,
-                        $loc->documents_count ?? 0
+                        $loc->documents_count ?? 0,
                     ]);
                 }
             }
@@ -223,41 +229,58 @@ class ReportController extends Controller
      */
     public function exportAvailableFolders(): StreamedResponse
     {
-        $folders = \App\Models\Folder::where('is_available', true)->orderBy('folder_code', 'asc')->get();
+        $folders = Folder::query()
+            ->with('company:id,name,code')
+            ->where('is_available', true)
+            ->orderBy('folder_code', 'asc')
+            ->get();
 
-        // Build a lookup map for locations based on row index
-        $locations = \App\Models\FolderLocation::all();
-        $locationMap = [];
-        foreach ($locations as $loc) {
-            $idx = $loc->getRowIndex();
-            if ($idx > 0) {
-                $locationMap[$idx] = $loc;
-            }
-        }
+        $locationsByCompany = FolderLocation::query()
+            ->with('company:id,name,code')
+            ->orderBy('company_id')
+            ->orderByRaw('range_start asc')
+            ->get()
+            ->groupBy('company_id');
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="available_folder_codes_' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="available_folder_codes_'.now()->format('Y-m-d').'.csv"',
         ];
 
-        return response()->stream(function () use ($folders, $locationMap) {
+        return response()->stream(function () use ($folders, $locationsByCompany) {
             $file = fopen('php://output', 'w');
             fputcsv($file, ['Folder Code', 'Physical Location', 'Range Status']);
 
             foreach ($folders as $folder) {
-                // Extract numeric part from code (e.g., CSC-HR-0001 -> 1)
                 $codeString = $folder->folder_code;
-                preg_match('/\d+$/', $codeString, $matches);
+                preg_match('/\d+$/', (string) $codeString, $matches);
                 $numericPart = isset($matches[0]) ? (int) $matches[0] : 0;
 
-                // standard 500 capacity mapping
-                $rowIdx = ($numericPart > 0) ? (int) ceil($numericPart / 500) : 0;
-                $locGroup = $locationMap[$rowIdx] ?? null;
+                $locGroup = null;
+                $companyLocations = $locationsByCompany->get($folder->company_id, collect());
+
+                if ($numericPart > 0) {
+                    foreach ($companyLocations as $location) {
+                        if ($location->range_start === null || $location->range_end === null) {
+                            continue;
+                        }
+
+                        if ($numericPart >= (int) $location->range_start && $numericPart <= (int) $location->range_end) {
+                            $locGroup = $location;
+                            break;
+                        }
+                    }
+                }
+
+                $locationLabel = 'Unknown Location';
+                if ($locGroup) {
+                    $locationLabel = ($locGroup->company?->code ?? 'N/A').' - Row '.$locGroup->row_name;
+                }
 
                 fputcsv($file, [
                     $codeString,
-                    $locGroup ? 'Row ' . $locGroup->row_name : 'Unknown Location',
-                    $locGroup ? $locGroup->range : 'N/A'
+                    $locationLabel,
+                    $locGroup ? $locGroup->range : 'N/A',
                 ]);
             }
 
@@ -280,23 +303,23 @@ class ReportController extends Controller
 
         $query = AuditLog::with('user')->orderBy('created_at', 'desc');
 
-        if (!empty($validated['user_id'])) {
+        if (! empty($validated['user_id'])) {
             $query->where('user_id', (int) $validated['user_id']);
         }
 
-        if (!empty($validated['date_from'])) {
+        if (! empty($validated['date_from'])) {
             $query->whereDate('created_at', '>=', $validated['date_from']);
         }
 
-        if (!empty($validated['date_to'])) {
+        if (! empty($validated['date_to'])) {
             $query->whereDate('created_at', '<=', $validated['date_to']);
         }
 
-        if (!empty($validated['year'])) {
+        if (! empty($validated['year'])) {
             $query->whereYear('created_at', $validated['year']);
         }
 
-        if (!empty($validated['month'])) {
+        if (! empty($validated['month'])) {
             $query->whereMonth('created_at', $validated['month']);
         }
 
@@ -304,7 +327,7 @@ class ReportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="audit_logs_' . now()->format('Y-m-d_His') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="audit_logs_'.now()->format('Y-m-d_His').'.csv"',
         ];
 
         $callback = function () use ($logs) {
@@ -346,11 +369,11 @@ class ReportController extends Controller
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
         ]);
 
-        $query = \App\Models\Document::with(['department', 'documentType', 'documentFolder'])
+        $query = Document::with(['department', 'documentType', 'documentFolder'])
             ->whereNotNull('expiry_date')
             ->where('status', 'active');
 
-        if (!empty($validated['department_id'])) {
+        if (! empty($validated['department_id'])) {
             $query->where('department_id', (int) $validated['department_id']);
         }
 
@@ -367,11 +390,11 @@ class ReportController extends Controller
             $query->whereDate('expiry_date', '>', $thirtyDays);
         }
 
-        if (!empty($validated['year'])) {
+        if (! empty($validated['year'])) {
             $query->whereYear('expiry_date', $validated['year']);
         }
 
-        if (!empty($validated['month'])) {
+        if (! empty($validated['month'])) {
             $query->whereMonth('expiry_date', $validated['month']);
         }
 
@@ -379,7 +402,7 @@ class ReportController extends Controller
 
         $headers = [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="expiry_report_' . $status . '_' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="expiry_report_'.$status.'_'.now()->format('Y-m-d').'.csv"',
         ];
 
         return response()->stream(function () use ($documents) {
@@ -388,10 +411,11 @@ class ReportController extends Controller
 
             foreach ($documents as $doc) {
                 $status = 'Valid';
-                if ($doc->expiry_date->isPast())
+                if ($doc->expiry_date->isPast()) {
                     $status = 'EXPIRED';
-                elseif ($doc->isExpiringSoon(30))
+                } elseif ($doc->isExpiringSoon(30)) {
                     $status = 'Expiring Soon';
+                }
 
                 fputcsv($file, [
                     $status,
