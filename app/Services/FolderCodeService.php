@@ -40,17 +40,19 @@ class FolderCodeService
             ->where('company_id', $company->id)
             ->first();
 
+        $number = 1;
         if ($sequence) {
             $number = (int) $sequence->next_number;
-
-            return $this->formatCode($company->code, $number);
+        } else {
+            $maxExisting = (int) (Folder::query()
+                ->where('company_id', $company->id)
+                ->max('sequence_number') ?? 0);
+            $number = $maxExisting > 0 ? $maxExisting + 1 : 1;
         }
 
-        $maxExisting = (int) (Folder::query()
-            ->where('company_id', $company->id)
-            ->max('sequence_number') ?? 0);
-
-        $number = $maxExisting > 0 ? $maxExisting + 1 : 1;
+        while (Folder::where('company_id', $company->id)->where('sequence_number', $number)->exists()) {
+            $number++;
+        }
 
         return $this->formatCode($company->code, $number);
     }
@@ -144,6 +146,11 @@ class FolderCodeService
         }
 
         $number = (int) $sequence->next_number;
+
+        while (Folder::where('company_id', $companyId)->where('sequence_number', $number)->exists()) {
+            $number++;
+        }
+
         $sequence->update(['next_number' => $number + 1]);
 
         return $number;

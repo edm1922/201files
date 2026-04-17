@@ -19,12 +19,16 @@ class FolderSeeder extends Seeder
 
         $now = '2026-03-16 08:33:00';
         $folders = [];
-        for ($i = 1; $i <= 2151; $i++) {
+        
+        $company = \App\Models\Company::find(1);
+        $prefix = $company ? 'CSC-' . strtoupper($company->code) . '-' : 'CSC-HR-';
+        
+        for ($i = 1; $i <= 2152; $i++) {
             $folders[] = [
                 'id' => $i,
                 'company_id' => 1,
                 'sequence_number' => $i,
-                'folder_code' => 'CSC-HR-'.str_pad($i, 4, '0', STR_PAD_LEFT),
+                'folder_code' => $prefix.str_pad($i, 4, '0', STR_PAD_LEFT),
                 'is_available' => 1,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -33,6 +37,15 @@ class FolderSeeder extends Seeder
 
         foreach (array_chunk($folders, 200) as $chunk) {
             DB::table('folders')->insert($chunk);
+        }
+
+        if ($company) {
+            DB::table('company_folder_sequences')->insert([
+                'company_id' => $company->id,
+                'next_number' => 2151,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
         }
     }
 }

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         DB::table('employees')->truncate();
         DB::table('folders')->truncate();
         DB::table('folder_locations')->truncate();
+        DB::table('company_folder_sequences')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // ── Administrative Users ──

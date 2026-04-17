@@ -22,7 +22,7 @@ class CompanySeeder extends Seeder
             [
                 'id' => 1,
                 'name' => 'General Tuna Corporation',
-                'code' => 'GTC',
+                'code' => 'HR',
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
