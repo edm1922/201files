@@ -228,7 +228,7 @@ class DepartmentDocumentController extends Controller
         $folderResults = $folders->map(function (DocumentFolder $folder) {
             return [
                 'id' => (int) $folder->id,
-                'title' => $folder->name . ($folder->folder_code ? ' ('.$folder->folder_code.')' : ''),
+                'title' => $folder->name.($folder->folder_code ? ' ('.$folder->folder_code.')' : ''),
                 'department_name' => $folder->department?->name,
                 'folder_label' => 'Folder',
                 'updated_at_raw' => $folder->updated_at,
@@ -528,28 +528,54 @@ class DepartmentDocumentController extends Controller
         $oldCode = $folder->folder_code;
         $oldLocation = $folder->document_location_id;
 
+        $before = [];
+        $after = [];
+
+        $track = static function (array &$beforeMap, array &$afterMap, string $key, mixed $oldValue, mixed $newValue): void {
+            $old = $oldValue === null ? null : (string) $oldValue;
+            $new = $newValue === null ? null : (string) $newValue;
+
+            if ($old !== $new) {
+                $beforeMap[$key] = $oldValue;
+                $afterMap[$key] = $newValue;
+            }
+        };
+
+        $track($before, $after, 'name', $oldName, $folderName);
+        $track($before, $after, 'folder_code', $oldCode, $folderCode);
+        $track($before, $after, 'document_location_id', $oldLocation, $documentLocationId);
+
+        if (empty($after)) {
+            return $this->folderActionSuccess(
+                $request,
+                'No changes were made.',
+                [
+                    'department_id' => $departmentId,
+                    'document_folder_id' => $folder->id,
+                ],
+                $folder
+            );
+        }
+
         $folder->update([
             'name' => $folderName,
             'folder_code' => $folderCode,
             'document_location_id' => $documentLocationId,
         ]);
 
-        AuditService::log('updated', "Department folder updated: {$oldName}.", $folder, [
-            'before' => [
-                'name' => $oldName,
-                'folder_code' => $oldCode,
-                'document_location_id' => $oldLocation,
-            ],
-            'after' => [
-                'name' => $folderName,
-                'folder_code' => $folderCode,
-                'document_location_id' => $documentLocationId,
-            ],
+        $changedFields = collect(array_keys($after))
+            ->map(fn (string $key) => str_replace('_', ' ', $key))
+            ->map(fn (string $key) => ucwords($key))
+            ->implode(', ');
+
+        AuditService::log('updated', "Department folder updated ({$changedFields}).", $folder, [
+            'before' => $before,
+            'after' => $after,
         ]);
 
         return $this->folderActionSuccess(
             $request,
-            'Folder renamed successfully.',
+            'Folder updated successfully.',
             [
                 'department_id' => $departmentId,
                 'document_folder_id' => $folder->id,
@@ -642,9 +668,9 @@ class DepartmentDocumentController extends Controller
             });
 
             // Catch documents that were previously in these folders if the metadata exists (Fallback)
-            if (!empty($allFolderIds)) {
+            if (! empty($allFolderIds)) {
                 // Leverage REGEXP to prevent thousands of 'OR LIKE' query clauses overloading the DB
-                $pattern = '"document_folder_id":\s*(' . implode('|', $allFolderIds) . ')[,}\s]';
+                $pattern = '"document_folder_id":\s*('.implode('|', $allFolderIds).')[,}\s]';
                 $query->orWhere('changes', 'REGEXP', $pattern);
             }
         });
@@ -679,7 +705,7 @@ class DepartmentDocumentController extends Controller
                 'user_role' => $log->user?->role ?: 'System',
                 'date' => optional($log->created_at)->format('M d, Y') ?: '-',
                 'time' => optional($log->created_at)->format('h:i A') ?: '-',
-                'description' => "{$context}: " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'description' => "{$context}: ".($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
                 'changes' => $log->changes,
             ];
         });
@@ -688,12 +714,12 @@ class DepartmentDocumentController extends Controller
         $mappedDocumentLogs = $documentLogs->map(function (AuditLog $log) use ($documentsById, $allFolderIds) {
             $document = $documentsById->get((int) $log->model_id);
             $documentName = $document?->original_filename ?: ($log->target_name ?: 'Document');
-            
+
             // Check if it's currently in a subfolder for better context
             $currDocFolderId = $document ? (int) $document->document_folder_id : null;
-            $subContext = "";
+            $subContext = '';
             if ($currDocFolderId && in_array($currDocFolderId, $allFolderIds)) {
-                // If it's a descendant, maybe we don't need to specify which one to keep it simple, 
+                // If it's a descendant, maybe we don't need to specify which one to keep it simple,
                 // but let's just say "File"
             }
 
@@ -703,7 +729,7 @@ class DepartmentDocumentController extends Controller
                 'user_role' => $log->user?->role ?: 'System',
                 'date' => optional($log->created_at)->format('M d, Y') ?: '-',
                 'time' => optional($log->created_at)->format('h:i A') ?: '-',
-                'description' => "File ({$documentName}): " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'description' => "File ({$documentName}): ".($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
                 'changes' => $log->changes,
             ];
         });
@@ -714,6 +740,7 @@ class DepartmentDocumentController extends Controller
             ->values()
             ->map(function (array $entry) {
                 unset($entry['logged_at']);
+
                 return $entry;
             });
 
@@ -724,7 +751,7 @@ class DepartmentDocumentController extends Controller
     {
         $this->authorize('viewAny', Document::class);
 
-        if (!$request->user()->isAdmin()) {
+        if (! $request->user()->isAdmin()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -735,7 +762,7 @@ class DepartmentDocumentController extends Controller
         }
 
         // Verify user can access this department
-        if (!$request->user()->canAccessDepartment($departmentId)) {
+        if (! $request->user()->canAccessDepartment($departmentId)) {
             abort(403, 'Unauthorized access to department activity.');
         }
 
@@ -747,20 +774,20 @@ class DepartmentDocumentController extends Controller
             ->where('model_type', Document::class)
             ->whereIn('action', ['uploaded', 'updated', 'archived', 'restored', 'deleted']);
 
-        $folderLogsQuery->where(function($q) use ($departmentId) {
+        $folderLogsQuery->where(function ($q) use ($departmentId) {
             $q->whereIn('model_id', function ($sub) use ($departmentId) {
                 $sub->select('id')->from('document_folders')->where('department_id', '=', $departmentId);
             });
-            $q->orWhere('changes', 'LIKE', '%"department_id":' . $departmentId . '%');
-            $q->orWhere('changes', 'LIKE', '%"department_id": ' . $departmentId . '%');
+            $q->orWhere('changes', 'LIKE', '%"department_id":'.$departmentId.'%');
+            $q->orWhere('changes', 'LIKE', '%"department_id": '.$departmentId.'%');
         });
 
-        $documentLogsQuery->where(function($q) use ($departmentId) {
+        $documentLogsQuery->where(function ($q) use ($departmentId) {
             $q->whereIn('model_id', function ($sub) use ($departmentId) {
                 $sub->select('id')->from('documents')->where('department_id', '=', $departmentId);
             });
-            $q->orWhere('changes', 'LIKE', '%"department_id":' . $departmentId . '%');
-            $q->orWhere('changes', 'LIKE', '%"department_id": ' . $departmentId . '%');
+            $q->orWhere('changes', 'LIKE', '%"department_id":'.$departmentId.'%');
+            $q->orWhere('changes', 'LIKE', '%"department_id": '.$departmentId.'%');
         });
 
         $folderLogs = $folderLogsQuery->with(['user'])->latest('created_at')->limit(500)->get();
@@ -777,13 +804,14 @@ class DepartmentDocumentController extends Controller
 
         $mappedFolderLogs = $folderLogs->map(function (AuditLog $log) use ($foldersById) {
             $targetName = $foldersById->get((int) $log->model_id)?->name ?: ($log->target_name ?: 'Folder');
+
             return [
                 'logged_at' => $log->created_at,
                 'user_name' => $log->user?->name ?: 'System',
                 'user_role' => $log->user?->role ?: 'System',
                 'date' => optional($log->created_at)->format('M d, Y') ?: '-',
                 'time' => optional($log->created_at)->format('h:i A') ?: '-',
-                'description' => "Folder '{$targetName}': " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'description' => "Folder '{$targetName}': ".($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
                 'changes' => $log->changes,
             ];
         });
@@ -791,13 +819,14 @@ class DepartmentDocumentController extends Controller
         $mappedDocumentLogs = $documentLogs->map(function (AuditLog $log) use ($documentsById) {
             $document = $documentsById->get((int) $log->model_id);
             $documentName = $document?->original_filename ?: ($log->target_name ?: 'Document');
+
             return [
                 'logged_at' => $log->created_at,
                 'user_name' => $log->user?->name ?: 'System',
                 'user_role' => $log->user?->role ?: 'System',
                 'date' => optional($log->created_at)->format('M d, Y') ?: '-',
                 'time' => optional($log->created_at)->format('h:i A') ?: '-',
-                'description' => "File '{$documentName}': " . ($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
+                'description' => "File '{$documentName}': ".($log->clean_description ?: ($log->description ?: ucfirst((string) $log->action))),
                 'changes' => $log->changes,
             ];
         });
@@ -808,6 +837,7 @@ class DepartmentDocumentController extends Controller
             ->values()
             ->map(function (array $entry) {
                 unset($entry['logged_at']);
+
                 return $entry;
             });
 
@@ -873,7 +903,7 @@ class DepartmentDocumentController extends Controller
 
         // Force location inheritance if folder has an assigned location
         if ($nextFolderId) {
-            $targetFolder = \App\Models\DocumentFolder::query()->find($nextFolderId);
+            $targetFolder = DocumentFolder::query()->find($nextFolderId);
             if ($targetFolder && $targetFolder->document_location_id) {
                 $nextLocationId = (int) $targetFolder->document_location_id;
             }
