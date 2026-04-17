@@ -140,6 +140,16 @@ class FolderLocationController extends Controller
         if ($overlapExists) {
             return back()->withErrors(['range_start' => 'The range overlaps an existing row for this company.'])->withInput();
         }
+ 
+        // Ensure new capacity is not less than current occupancy
+        $newCapacity = ((int) $validated['range_end'] - (int) $validated['range_start'] + 1);
+        $currentOccupancy = $folderLocation->employees()->withTrashed()->count();
+ 
+        if ($newCapacity < $currentOccupancy) {
+            return back()->withErrors([
+                'range_end' => "The new capacity ({$newCapacity}) cannot be less than the current occupancy ({$currentOccupancy})."
+            ])->withInput();
+        }
 
         if ($request->filled('id') && (int) $request->input('id') !== (int) $folderLocation->id) {
             return back()->withErrors(['id' => 'Invalid location identifier.'])->withInput();
