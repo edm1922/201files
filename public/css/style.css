@@ -247,7 +247,15 @@
 
 .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
     background-color: #dd270d !important;
-    color: white !important;
+    color: #ffffff !important;
+}
+
+#select2-folderCodeSelect-container {
+    color: #212529 !important;
+}
+
+.select2-results__option.select2-results__option--selectable {
+    color: #212529;
 }
 
 /* ─── Documents Tab For 201files.blade.php ────────────────────────────────────────── */

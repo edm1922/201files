@@ -47,7 +47,7 @@
                         @error('code')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <div class="form-text" style="font-size: 0.78rem; color: #6b7280; margin-top: 6px;">A unique short code. Auto-uppercased.</div>
+                        <div class="form-text" style="font-size: 0.78rem; color: #6b7280; margin-top: 6px;">A unique short code. Auto-uppercased. Once employees are assigned, code changes are blocked.</div>
                     </div>
 
                     {{-- Status --}}

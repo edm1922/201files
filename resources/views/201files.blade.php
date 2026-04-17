@@ -92,7 +92,7 @@
                     <button type="submit" class="btn-file-save" x-show="activeTab !== 'employee'">
                         <i class="fas fa-save me-1"></i>Save
                     </button>
-                    <a href="{{ route('201files') }}" class="btn btn-secondary ms-2" style="border-radius:4px; font-weight:500;">
+                    <a href="{{ route('201files') }}" id="close201Btn" class="btn btn-secondary ms-2" style="border-radius:4px; font-weight:500;">
                         <i class="fas fa-times me-1"></i>Close
                     </a>
                 </div>
@@ -146,7 +146,7 @@
                                         </span>
                                     </div>
                                     <div class="profile-field">
-                                        <span class="profile-field__label">Physical Location</span>
+                                        <span class="profile-field__label">Folder Location</span>
                                         <span class="profile-field__value profile-field__value--red profile-field__value--mono">
                                             {{ $employee->folderLocation?->full_location ?? '—' }}
                                         </span>
@@ -389,10 +389,13 @@
                                 <label class="form-label" for="companySelectForm">Company <span class="text-danger">*</span></label>
                                 <select id="companySelectForm" name="company_id" 
                                     class="form-control basic-select field-input @error('company_id') is-invalid @enderror"
-                                    data-placeholder="- Choose -">
+                                    data-placeholder="- Choose -"
+                                    required>
                                     <option value=""></option>
                                     @foreach($companies as $company)
                                         <option value="{{ $company->id }}" 
+                                            data-code="{{ $company->code }}"
+                                            data-next-folder-code="{{ $companyNextFolderCodes[$company->id] ?? '' }}"
                                             {{ old('company_id', $employee?->company_id) == $company->id ? 'selected' : '' }}>
                                             {{ $company->name }}
                                         </option>
@@ -405,60 +408,18 @@
 
                             <h6 class="panel-section-title mt-4">Document Location Information</h6>
 
-                             <div class="col-md-4">
-                                <label class="form-label" for="folderCodeInput">Folder Code</label>
-                                @php
-                                    $numericPart = $lastFolderCode ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
-                                    $dynamicMaxLength = max(4, strlen($numericPart));
-                                    
-                                    $currentCodeValue = ($employee && $employee->folder) ? str_replace('CSC-HR-', '', $employee->folder->folder_code) : old('folder_code');
-                                @endphp
-                                <div class="input-group">
-                                    <span class="input-group-text" style="background-color: #f8f9fa; border-color: #dee2e6; color: #6c757d; font-weight: 500; color: rgb(221, 39, 13);">CSC-HR-</span>
-                                    @php
-                                        $nextNumber = intval($numericPart) + 1;
-                                        $nextCodeNumeric = str_pad($nextNumber, $dynamicMaxLength, '0', STR_PAD_LEFT);
-                                        
-                                        $value = $currentCodeValue;
-                                        if (is_null($value) || $value === '') {
-                                            $value = $nextCodeNumeric;
-                                        }
-                                    @endphp
-                                    <input type="text" id="folderCodeInput" name="folder_code"
-                                           class="form-control field-input @error('folder_code') is-invalid @enderror"
-                                           placeholder="{{ $nextCodeNumeric }}"
-                                           maxlength="{{ $dynamicMaxLength }}"
-                                           value="{{ $value }}"
-                                           readonly
-                                           style="background-color: #e9ecef; cursor: not-allowed;">
-                                    <button class="btn btn-outline-secondary px-2" type="button" id="clearFolderCode" title="Clear to auto-generate" style="border-color: #dee2e6; color: #6c757d;">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-                                    <small class="text-muted">
-                                        Last number: <span class="fw-bold">{{ $lastFolderCode ?? 'None' }}</span>
-                                    </small>
-                                    
-                                    @if($folders && $folders->count() > 0)
-                                        <div class="d-flex align-items-center gap-2">
-                                            <small class="fw-bold" style="color: rgb(221, 39, 13);">Available Code:</small>
-                                            <select id="availableCodeSelect" class="form-select form-select-sm py-0" style="width: auto; height: 24px; font-size: 0.75rem; color: rgb(221, 39, 13); border-color: rgb(221, 39, 13);">
-                                                <option value="">- Select -</option>
-                                                @foreach($folders as $folder)
-                                                    @php $code = str_replace('CSC-HR-', '', $folder->folder_code); @endphp
-                                                    <option value="{{ $code }}">{{ $code }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    @endif
-                                </div>
-                                @if($folders && $folders->count() > 0)
-                                    <small class="mt-1 d-block" style="color: rgb(221, 39, 13); line-height: 1.2;">
-                                        <strong>Note:</strong> Update the folder location based on the selected folder code.
-                                    </small>
-                                @endif
-                                @error('folder_code')
+                            <div class="col-md-4">
+                                <label class="form-label" for="folderCodeSelect">Folder Code</label>
+                                <select id="folderCodeSelect" name="folder_id"
+                                    class="form-control basic-select field-input @error('folder_id') is-invalid @enderror"
+                                    data-selected-folder-id="{{ old('folder_id') }}"
+                                    data-current-folder-id="{{ $employee?->folder?->id ?? '' }}"
+                                    data-current-folder-code="{{ $employee?->folder?->folder_code ?? '' }}"
+                                    data-current-company-id="{{ $employee?->company_id ?? '' }}"
+                                    data-company-folders='@json($availableFoldersByCompany ?? [])'>
+                                    <option value=""></option>
+                                </select>
+                                @error('folder_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -468,33 +429,26 @@
                                     class="form-control basic-select field-input @error('folder_location_id') is-invalid @enderror"
                                     data-placeholder="- Choose Location -">
                                     <option value=""></option>
-                                    
-                                    @if($employee?->folderLocation)
-                                        <optgroup label="Current Assignment">
-                                            <option value="{{ $employee->folderLocation->id }}" selected>
-                                                {{ $employee->folderLocation->full_location }}
-                                            </option>
-                                        </optgroup>
-                                    @endif
 
                                     @if(isset($locations) && count($locations) > 0)
-                                        <optgroup label="Available Locations">
                                         @foreach($locations as $loc)
                                             @php
                                                 $isFull = ($loc->employees_count ?? 0) >= ($loc->max_capacity ?? 500);
                                                 $isCurrent = old('folder_location_id', $employee?->folder_location_id) == $loc->id;
-                                                $displaySuffix = $isFull ? '<span class="text-full-limit">[FULL]</span>' : '[' . ($loc->employees_count ?? 0) . '/' . ($loc->max_capacity ?? 500) . ']';
+                                                $companyCode = $loc->company?->code ?? 'N/A';
+                                                $statusLabel = $isFull ? '[FULL]' : '[' . ($loc->employees_count ?? 0) . '/' . ($loc->max_capacity ?? 500) . ']';
                                             @endphp
                                             <option value="{{ $loc->id }}"
-                                                data-row-index="{{ $loc->getRowIndex() }}"
-                                                {{ $isCurrent ? 'selected' : '' }}
-                                                {{ ($isFull && !$isCurrent) ? 'disabled' : '' }}>
-                                                {{ $loc->full_location }} {{ $displaySuffix }}
+                                                    data-company-id="{{ $loc->company_id }}"
+                                                    data-initial-disabled="{{ ($isFull && !$isCurrent) ? '1' : '0' }}"
+                                                    {{ $isCurrent ? 'selected' : '' }}
+                                                    {{ ($isFull && !$isCurrent) ? 'disabled' : '' }}>
+                                                {{ $companyCode }} - Row {{ $loc->row_name }} ({{ $loc->range }}) {{ $statusLabel }}
                                             </option>
                                         @endforeach
-                                        </optgroup>
                                     @endif
                                 </select>
+                                <small class="text-muted mt-1 d-block">Locations are filtered by selected company.</small>
                                 @error('folder_location_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror

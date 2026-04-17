@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
+use App\Models\Employee;
 use App\Services\AuditService;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class CompanyController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%");
             });
         }
 
@@ -53,12 +54,12 @@ class CompanyController extends Controller
     public function store(CompanyRequest $request)
     {
         $company = Company::create([
-            'name'      => $request->validated('name'),
-            'code'      => strtoupper($request->validated('code')),
+            'name' => $request->validated('name'),
+            'code' => strtoupper($request->validated('code')),
             'is_active' => $request->boolean('is_active', true),
         ]);
 
-        AuditService::log('created', "Created new company", $company);
+        AuditService::log('created', 'Created new company', $company);
 
         return redirect()
             ->route('settings.companies.index')
@@ -78,13 +79,22 @@ class CompanyController extends Controller
      */
     public function update(CompanyRequest $request, Company $company)
     {
+        $newCode = strtoupper($request->validated('code'));
+
+        $hasEmployees = Employee::query()->where('company_id', $company->id)->exists();
+        if ($hasEmployees && $company->code !== $newCode) {
+            return redirect()
+                ->route('settings.companies.index')
+                ->with('error', 'Company code cannot be changed after employees have been assigned. This protects folder code history.');
+        }
+
         $company->update([
-            'name'      => $request->validated('name'),
-            'code'      => strtoupper($request->validated('code')),
+            'name' => $request->validated('name'),
+            'code' => $newCode,
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        AuditService::log('updated', "Updated company", $company);
+        AuditService::log('updated', 'Updated company', $company);
 
         return redirect()
             ->route('settings.companies.index')
@@ -96,7 +106,7 @@ class CompanyController extends Controller
      */
     public function toggleActive(Company $company)
     {
-        $company->update(['is_active' => !$company->is_active]);
+        $company->update(['is_active' => ! $company->is_active]);
 
         $status = $company->is_active ? 'activated' : 'deactivated';
         AuditService::log('updated', "Company status updated to {$status}", $company);
@@ -107,6 +117,7 @@ class CompanyController extends Controller
             ->route('settings.companies.index')
             ->with('success', "Company {$status} successfully.");
     }
+
     /**
      * Remove the specified company from storage (only if it has no employees).
      */
@@ -121,7 +132,7 @@ class CompanyController extends Controller
         $name = $company->name;
         $company->delete();
 
-        AuditService::log('deleted', "Deleted company");
+        AuditService::log('deleted', 'Deleted company');
 
         return redirect()
             ->route('settings.companies.index')

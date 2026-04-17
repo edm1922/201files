@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FolderLocation extends Model
 {
     protected $fillable = [
+        'company_id',
         'row_name',
+        'range_start',
+        'range_end',
         'max_capacity',
     ];
 
@@ -28,6 +31,7 @@ class FolderLocation extends Model
                 $index += ord($name[$i]) - 64;
             }
         }
+
         return $index;
     }
 
@@ -36,14 +40,25 @@ class FolderLocation extends Model
      */
     public function getRangeAttribute(): string
     {
+        if ($this->range_start !== null && $this->range_end !== null) {
+            return number_format((int) $this->range_start).' - '.number_format((int) $this->range_end);
+        }
+
         $idx = $this->getRowIndex();
-        if ($idx <= 0) return '—';
+        if ($idx <= 0) {
+            return '—';
+        }
 
         $capacity = $this->max_capacity ?? 500;
         $start = ($idx - 1) * $capacity + 1;
         $end = $idx * $capacity;
 
-        return number_format($start) . ' - ' . number_format($end);
+        return number_format($start).' - '.number_format($end);
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     /**
@@ -62,12 +77,16 @@ class FolderLocation extends Model
         return $this->hasMany(Document::class);
     }
 
+    public function departments(): HasMany
+    {
+        return $this->hasMany(Department::class);
+    }
+
     /**
      * Scope a query to only include available folder locations.
      */
     public function scopeAvailable($query)
     {
-        // Removed 'and employees.deleted_at is null' to include archived employees in the count
         return $query->whereRaw('(select count(*) from employees where employees.folder_location_id = folder_locations.id) < max_capacity');
     }
 
@@ -77,6 +96,7 @@ class FolderLocation extends Model
     public function isFull(): bool
     {
         $capacity = $this->max_capacity ?? 500;
+
         return $this->employees()->withTrashed()->count() >= $capacity;
     }
 
@@ -85,7 +105,7 @@ class FolderLocation extends Model
      */
     public function getFullLocationAttribute(): string
     {
-        return 'Row ' . $this->row_name . ' (' . $this->range . ')';
+        return 'Row '.$this->row_name.' ('.$this->range.')';
     }
 
     /**
@@ -93,6 +113,6 @@ class FolderLocation extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        return 'Row ' . $this->row_name . ' (' . $this->range . ')';
+        return 'Row '.$this->row_name.' ('.$this->range.')';
     }
 }
