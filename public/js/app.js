@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const companySelectForm = document.getElementById('companySelectForm');
-    const folderCodeSelect = document.getElementById('folderCodeSelect');
+    const availableCodeSelect = document.getElementById('availableCodeSelect');
     const locationSelect = document.getElementById('locationSelectForm');
     const close201Btn = document.getElementById('close201Btn');
 
@@ -368,90 +368,126 @@ document.addEventListener('DOMContentLoaded', function () {
     let firstLocationFilterPass = true;
 
     function getCompanyFolderMap() {
-        if (!folderCodeSelect) {
+        if (!availableCodeSelect) {
             return {};
         }
 
         try {
-            return JSON.parse(folderCodeSelect.getAttribute('data-company-folders') || '{}');
+            return JSON.parse(availableCodeSelect.getAttribute('data-company-folders') || '{}');
         } catch (_err) {
             return {};
         }
     }
 
     function refreshFolderCodeOptions() {
-        if (!folderCodeSelect || !companySelectForm) {
+        if (!availableCodeSelect || !companySelectForm) {
             return;
         }
-
+ 
         const selectedCompanyId = String(companySelectForm.value || '');
-        const oldSelectedFolderId = String(folderCodeSelect.getAttribute('data-selected-folder-id') || '').trim();
-        const currentFolderId = String(folderCodeSelect.getAttribute('data-current-folder-id') || '').trim();
-        const currentFolderCode = String(folderCodeSelect.getAttribute('data-current-folder-code') || '').trim();
-        const currentCompanyId = String(folderCodeSelect.getAttribute('data-current-company-id') || '').trim();
-        const userTouched = folderCodeSelect.getAttribute('data-user-touched') === '1';
-        const selectedFolderId = String(folderCodeSelect.value || oldSelectedFolderId || '').trim();
-        const folderMap = getCompanyFolderMap();
+        const folderMap = JSON.parse(availableCodeSelect.getAttribute('data-company-folders') || '{}');
+        const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
+        const lastCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-last-codes') || '{}');
+ 
         const companyFolders = folderMap[selectedCompanyId] || [];
-        const effectiveSelectedFolderId = selectedFolderId || ((!userTouched && currentFolderId && currentCompanyId === selectedCompanyId) ? currentFolderId : '');
-
+        const nextCode = nextCodesMap[selectedCompanyId] || '';
+        const lastCode = lastCodesMap[selectedCompanyId] || 'None';
+ 
         const selectedCompanyOption = companySelectForm.options[companySelectForm.selectedIndex];
-        const companyCode = selectedCompanyOption ? selectedCompanyOption.getAttribute('data-code') : '';
-        const nextCode = selectedCompanyOption ? (selectedCompanyOption.getAttribute('data-next-folder-code') || '') : '';
-        const fallbackCode = companyCode ? `CSC-${companyCode.toUpperCase()}-0001` : '';
-        const displayCode = nextCode || fallbackCode || 'N/A';
-        const autoOptionText = selectedCompanyId
-            ? displayCode
-            : '- Auto Assign Next Available -';
-
-        folderCodeSelect.innerHTML = '';
-
-        const autoOption = document.createElement('option');
-        autoOption.value = '';
-        autoOption.textContent = autoOptionText;
-        folderCodeSelect.appendChild(autoOption);
-
-        if (currentFolderId && currentFolderCode && currentCompanyId === selectedCompanyId) {
-            const currentOption = document.createElement('option');
-            currentOption.value = currentFolderId;
-            currentOption.textContent = `${currentFolderCode} (Current)`;
-            folderCodeSelect.appendChild(currentOption);
-        }
-
+        const companyCode = selectedCompanyOption ? (selectedCompanyOption.getAttribute('data-code') || '') : '';
+        const prefix = companyCode ? `CSC-${companyCode.toUpperCase()}-` : 'CSC-HR-';
+ 
+        // Update UI elements
+        const prefixSpan = document.getElementById('companyPrefixSpan');
+        if (prefixSpan) prefixSpan.textContent = prefix;
+ 
+        const lastCodeSpan = document.getElementById('lastFolderCodeSpan');
+        if (lastCodeSpan) lastCodeSpan.textContent = lastCode;
+ 
+        // Populate availableCodeSelect
+        availableCodeSelect.innerHTML = '<option value="">- Select -</option>';
         companyFolders.forEach(function (folder) {
+            const numeric = folder.folder_code.replace(prefix, '');
             const option = document.createElement('option');
             option.value = String(folder.id);
-            option.textContent = folder.folder_code;
-
-            if (effectiveSelectedFolderId && option.value === effectiveSelectedFolderId) {
-                option.selected = true;
-            }
-
-            folderCodeSelect.appendChild(option);
+            option.setAttribute('data-numeric', numeric);
+            option.textContent = numeric;
+            availableCodeSelect.appendChild(option);
         });
-
-        folderCodeSelect.value = '';
-
-        if (effectiveSelectedFolderId) {
-            const existsInList = Array.from(folderCodeSelect.options).some(function (option) {
-                return option.value === effectiveSelectedFolderId;
-            });
-
-            if (existsInList) {
-                folderCodeSelect.value = effectiveSelectedFolderId;
-            }
+ 
+        // Toggle visibility of Available Code select and Note
+        const availableCodeGroup = document.getElementById('availableCodeGroup');
+        const folderNote = document.getElementById('folderNote');
+        const hasAvailable = companyFolders.length > 0;
+ 
+        if (availableCodeGroup) {
+            availableCodeGroup.style.setProperty('display', hasAvailable ? 'flex' : 'none', 'important');
         }
-
-        if (window.jQuery && $(folderCodeSelect).hasClass('select2-hidden-accessible')) {
-            $(folderCodeSelect).trigger('change.select2');
+        if (folderNote) {
+            folderNote.style.setProperty('display', hasAvailable ? 'block' : 'none', 'important');
+        }
+ 
+        // Logic for setting initial/current values
+        const hiddenIdField = document.getElementById('folderIdHidden');
+        const codeInput = document.getElementById('folderCodeInput');
+        
+        if (hiddenIdField && codeInput && !codeInput.getAttribute('data-user-touched')) {
+            const currentFolderId = hiddenIdField.value;
+            if (currentFolderId) {
+                // If we have a folder ID (editing or already selected), try to find it in available
+                const matching = companyFolders.find(f => String(f.id) === String(currentFolderId));
+                if (matching) {
+                    codeInput.value = matching.folder_code.replace(prefix, '');
+                    availableCodeSelect.value = currentFolderId;
+                }
+            } else {
+                // Default to next code
+                codeInput.value = nextCode.replace(prefix, '');
+            }
         }
     }
-
-    if (folderCodeSelect) {
-        folderCodeSelect.addEventListener('change', function () {
-            this.setAttribute('data-user-touched', '1');
-            this.setAttribute('data-selected-folder-id', this.value || '');
-            refreshFolderCodeOptions();
+ 
+    if (availableCodeSelect) {
+        availableCodeSelect.addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const hiddenIdField = document.getElementById('folderIdHidden');
+            const codeInput = document.getElementById('folderCodeInput');
+ 
+            if (hiddenIdField && codeInput) {
+                if (this.value) {
+                    hiddenIdField.value = this.value;
+                    codeInput.value = selectedOption.getAttribute('data-numeric');
+                } else {
+                    // Reset to next available
+                    const selectedCompanyId = String(companySelectForm.value || '');
+                    const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
+                    const nextCode = nextCodesMap[selectedCompanyId] || '';
+                    const prefix = (document.getElementById('companyPrefixSpan')?.textContent || 'CSC-HR-');
+                    
+                    hiddenIdField.value = '';
+                    codeInput.value = nextCode.replace(prefix, '');
+                }
+                codeInput.setAttribute('data-user-touched', '1');
+            }
+        });
+    }
+ 
+    const clearFolderBtn = document.getElementById('clearFolderCode');
+    if (clearFolderBtn) {
+        clearFolderBtn.addEventListener('click', function() {
+            const hiddenIdField = document.getElementById('folderIdHidden');
+            const codeInput = document.getElementById('folderCodeInput');
+            const selectedCompanyId = String(companySelectForm.value || '');
+            const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
+            const nextCode = nextCodesMap[selectedCompanyId] || '';
+            const prefix = (document.getElementById('companyPrefixSpan')?.textContent || 'CSC-HR-');
+ 
+            if (hiddenIdField) hiddenIdField.value = '';
+            if (availableCodeSelect) availableCodeSelect.value = '';
+            if (codeInput) {
+                codeInput.value = nextCode.replace(prefix, '');
+                codeInput.setAttribute('data-user-touched', '1');
+            }
         });
     }
 
@@ -504,15 +540,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleCompanySelectionChange(openFolderPicker = false) {
-        folderCodeSelect?.setAttribute('data-user-touched', '1');
-        folderCodeSelect?.setAttribute('data-selected-folder-id', '');
+        const codeInput = document.getElementById('folderCodeInput');
+        if (codeInput) codeInput.removeAttribute('data-user-touched');
+        
         refreshFolderCodeOptions();
         filterLocationsByCompany();
 
-        if (openFolderPicker && folderCodeSelect && companySelectForm?.value && window.jQuery && $(folderCodeSelect).hasClass('select2-hidden-accessible')) {
-            setTimeout(function () {
-                $(folderCodeSelect).select2('open');
-            }, 0);
+        if (openFolderPicker && availableCodeSelect && companySelectForm?.value) {
+            // No automated opening for the simple select
         }
     }
 

@@ -24,6 +24,7 @@ class EmployeeController extends Controller
     {
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $companyNextFolderCodes = $this->buildCompanyNextFolderCodes($companies, $folderCodeService);
+        $companyLastFolderCodes = $this->buildCompanyLastFolderCodes($companies);
         $availableFoldersByCompany = $this->buildAvailableFoldersByCompany();
         $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $locations = FolderLocation::with('company:id,name,code')
@@ -39,6 +40,7 @@ class EmployeeController extends Controller
             'employee' => null,
             'companies' => $companies,
             'companyNextFolderCodes' => $companyNextFolderCodes,
+            'companyLastFolderCodes' => $companyLastFolderCodes,
             'availableFoldersByCompany' => $availableFoldersByCompany,
             'bankTypes' => $bankTypes,
             'locations' => $locations,
@@ -141,6 +143,7 @@ class EmployeeController extends Controller
 
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $companyNextFolderCodes = $this->buildCompanyNextFolderCodes($companies, $folderCodeService);
+        $companyLastFolderCodes = $this->buildCompanyLastFolderCodes($companies);
         $availableFoldersByCompany = $this->buildAvailableFoldersByCompany();
         $bankTypes = BankType::where('is_active', true)->orderBy('name')->get();
         $locations = FolderLocation::with('company:id,name,code')
@@ -157,6 +160,7 @@ class EmployeeController extends Controller
             'latestUpdate' => $latestUpdate,
             'companies' => $companies,
             'companyNextFolderCodes' => $companyNextFolderCodes,
+            'companyLastFolderCodes' => $companyLastFolderCodes,
             'availableFoldersByCompany' => $availableFoldersByCompany,
             'bankTypes' => $bankTypes,
             'locations' => $locations,
@@ -169,6 +173,22 @@ class EmployeeController extends Controller
 
         foreach ($companies as $company) {
             $codes[(int) $company->id] = $folderCodeService->previewNextCodeForCompany($company);
+        }
+
+        return $codes;
+    }
+
+    private function buildCompanyLastFolderCodes($companies): array
+    {
+        $codes = [];
+
+        foreach ($companies as $company) {
+            $lastFolder = Folder::query()
+                ->where('company_id', $company->id)
+                ->orderBy('sequence_number', 'desc')
+                ->first();
+
+            $codes[(int) $company->id] = $lastFolder ? $lastFolder->folder_code : 'None';
         }
 
         return $codes;

@@ -27,6 +27,14 @@ class CompanySeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'id' => 2,
+                'name' => 'PG-Ang',
+                'code' => 'ANG',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         DB::table('companies')->insert($companies);

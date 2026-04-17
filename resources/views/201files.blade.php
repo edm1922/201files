@@ -409,16 +409,68 @@
                             <h6 class="panel-section-title mt-4">Document Location Information</h6>
 
                             <div class="col-md-4">
-                                <label class="form-label" for="folderCodeSelect">Folder Code</label>
-                                <select id="folderCodeSelect" name="folder_id"
-                                    class="form-control basic-select field-input @error('folder_id') is-invalid @enderror"
-                                    data-selected-folder-id="{{ old('folder_id') }}"
-                                    data-current-folder-id="{{ $employee?->folder?->id ?? '' }}"
-                                    data-current-folder-code="{{ $employee?->folder?->folder_code ?? '' }}"
-                                    data-current-company-id="{{ $employee?->company_id ?? '' }}"
-                                    data-company-folders='@json($availableFoldersByCompany ?? [])'>
-                                    <option value=""></option>
-                                </select>
+                                <label class="form-label" for="folderCodeInput">Folder Code</label>
+                                @php
+                                    $selectedCompanyId = old('company_id', $employee?->company_id ?? ($companies->first()?->id ?? null));
+                                    $lastFolderCode = $companyLastFolderCodes[$selectedCompanyId] ?? 'None';
+                                    $nextFolderCode = $companyNextFolderCodes[$selectedCompanyId] ?? '';
+                                    
+                                    $company = $companies->firstWhere('id', $selectedCompanyId);
+                                    $prefix = $company ? 'CSC-' . strtoupper($company->code) . '-' : 'CSC-HR-';
+                                    
+                                    $numericPart = $lastFolderCode !== 'None' ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
+                                    $dynamicMaxLength = max(4, strlen($numericPart));
+                                    
+                                    $currentCodeValue = ($employee && $employee->folder) 
+                                        ? str_replace($prefix, '', $employee->folder->folder_code) 
+                                        : (old('folder_id') ? '' : str_replace($prefix, '', $nextFolderCode));
+                                    
+                                    // If user selected an available folder code (not next available)
+                                    if (old('folder_id') && isset($availableFoldersByCompany[$selectedCompanyId])) {
+                                        foreach($availableFoldersByCompany[$selectedCompanyId] as $f) {
+                                            if ($f['id'] == old('folder_id')) {
+                                                $currentCodeValue = str_replace($prefix, '', $f['folder_code']);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    $hasAvailable = isset($availableFoldersByCompany[$selectedCompanyId]) && count($availableFoldersByCompany[$selectedCompanyId]) > 0;
+                                @endphp
+                                <div class="input-group">
+                                    <span class="input-group-text" id="companyPrefixSpan" style="background-color: #f8f9fa; border-color: #dee2e6; color: rgb(221, 39, 13); font-weight: 500;">{{ $prefix }}</span>
+                                    <input type="text" id="folderCodeInput" 
+                                           class="form-control field-input @error('folder_id') is-invalid @enderror"
+                                           placeholder="0001"
+                                           maxlength="{{ $dynamicMaxLength }}"
+                                           value="{{ $currentCodeValue }}"
+                                           readonly
+                                           style="background-color: #e9ecef; cursor: not-allowed;">
+                                    <button class="btn btn-outline-secondary px-2" type="button" id="clearFolderCode" title="Clear to auto-generate" style="border-color: #dee2e6; color: #6c757d;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
+                                    <small class="text-muted">
+                                        Last number: <span class="fw-bold" id="lastFolderCodeSpan">{{ $lastFolderCode }}</span>
+                                    </small>
+                                    
+                                    <div id="availableCodeGroup" class="d-flex align-items-center gap-2" style="{{ $hasAvailable ? '' : 'display: none !important;' }}">
+                                        <small class="fw-bold" style="color: rgb(221, 39, 13);">Available Code:</small>
+                                        <select id="availableCodeSelect" class="form-select form-select-sm py-0" 
+                                            style="width: auto; height: 24px; font-size: 0.75rem; color: rgb(221, 39, 13); border-color: rgb(221, 39, 13);"
+                                            data-company-folders='@json($availableFoldersByCompany ?? [])'
+                                            data-company-next-codes='@json($companyNextFolderCodes ?? [])'
+                                            data-company-last-codes='@json($companyLastFolderCodes ?? [])'>
+                                            <option value="">- Select -</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <small id="folderNote" class="mt-1 d-block" style="color: rgb(221, 39, 13); line-height: 1.2; {{ $hasAvailable ? '' : 'display: none !important;' }}">
+                                    <strong>Note:</strong> Update the folder location based on the selected folder code.
+                                </small>
+                                
+                                <input type="hidden" name="folder_id" id="folderIdHidden" value="{{ old('folder_id', $employee?->folder_id) }}">
+
                                 @error('folder_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror

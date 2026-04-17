@@ -15,34 +15,35 @@ class FolderSeeder extends Seeder
         // Disable foreign key checks to allow truncation
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('folders')->truncate();
+        DB::table('company_folder_sequences')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $now = '2026-03-16 08:33:00';
-        $folders = [];
+        $companies = \App\Models\Company::all();
         
-        $company = \App\Models\Company::find(1);
-        $prefix = $company ? 'CSC-' . strtoupper($company->code) . '-' : 'CSC-HR-';
-        
-        for ($i = 1; $i <= 2152; $i++) {
-            $folders[] = [
-                'id' => $i,
-                'company_id' => 1,
-                'sequence_number' => $i,
-                'folder_code' => $prefix.str_pad($i, 4, '0', STR_PAD_LEFT),
-                'is_available' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
+        foreach ($companies as $company) {
+            $folders = [];
+            $prefix = 'CSC-' . strtoupper($company->code) . '-';
+            $count = ($company->id == 1) ? 2151 : 50; // More for General Tuna, less for others
+            
+            for ($i = 1; $i <= $count; $i++) {
+                $folders[] = [
+                    'company_id' => $company->id,
+                    'sequence_number' => $i,
+                    'folder_code' => $prefix.str_pad($i, 4, '0', STR_PAD_LEFT),
+                    'is_available' => 1,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
 
-        foreach (array_chunk($folders, 200) as $chunk) {
-            DB::table('folders')->insert($chunk);
-        }
+            foreach (array_chunk($folders, 200) as $chunk) {
+                DB::table('folders')->insert($chunk);
+            }
 
-        if ($company) {
             DB::table('company_folder_sequences')->insert([
                 'company_id' => $company->id,
-                'next_number' => 2151,
+                'next_number' => $count + 1,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
