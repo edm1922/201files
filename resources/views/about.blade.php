@@ -140,7 +140,7 @@
                             <span class="subheading d-block mb-1 text-uppercase">Gratitude</span>
                             <h2 class="h2 fw-bold text-dark mb-3">Acknowledgements</h2>
                             <p class="text-secondary mx-auto" style="max-width: 600px;">
-                                We would like to thanks our mentors and fellow OJTs for their guidance, support, and contribution to the success of this project.
+                                We would like to thank our mentors and fellow OJTs for their guidance, support, and contribution to the success of this project.
                             </p>
                         </div>
 
@@ -148,10 +148,10 @@
                             {{-- Mentors/Supervisors --}}
                             <div class="col-md-6">
                                 <div class="acknowledgement-card p-4 h-100">
-                                    <h4 class="h6 fw-bold text-muted text-uppercase mb-3 letter-spacing-1 border-bottom pb-2">Our Mentors</h4>
-                                    <ul class="list-unstyled mb-0">
-                                        <li class="mb-4 d-flex align-items-center">
-                                            <div class="mentor-avatar-sm me-4 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                    <h4 class="h6 fw-bold text-muted text-uppercase mb-4 letter-spacing-1 border-bottom pb-2">Our Mentors</h4>
+                                    <ul class="list-unstyled mb-0 d-flex flex-column gap-4">
+                                        <li class="d-flex align-items-center">
+                                            <div class="mentor-avatar-sm me-5 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
                                                 <img src="{{ asset('image/JemarPic.png') }}" alt="Jemar L. Barrera" class="w-100 h-100 object-fit-cover">
                                             </div>
                                             <div>
@@ -159,8 +159,8 @@
                                                 <div class="text-brand-red fw-600">Supervisor</div>
                                             </div>
                                         </li>
-                                        <li class="d-flex align-items-center">
-                                            <div class="mentor-avatar-sm me-4 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                        <li class="d-flex align-items-center">  
+                                            <div class="mentor-avatar-sm me-5 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
                                                <img src="{{ asset('image/CristinePic.png') }}" alt="Cristine Marie M. Bernales" class="w-100 h-100 object-fit-cover">
                                             </div>
                                             <div>
@@ -168,7 +168,16 @@
                                                 <div class="text-brand-red fw-600">HR recruitment officer</div>
                                             </div>
                                         </li>
-                                    </ul>
+                                        <li class="d-flex align-items-center">
+                                            <div class="mentor-avatar-sm me-5 bg-soft-danger text-danger d-flex align-items-center justify-content-center">
+                                               <img src="{{ asset('image/sample.jpg') }}" alt="Alejandro, Jr. Baricuatro Cabisares" class="w-100 h-100 object-fit-cover">
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark text-uppercase mb-1">Alejandro, Jr. Baricuatro Cabisares</div>
+                                                <div class="text-brand-red fw-600">HR recruitment officer</div>
+                                            </div>
+                                        </li>
+                                        </ul>
                                 </div>
                             </div>
 
