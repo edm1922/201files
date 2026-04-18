@@ -383,27 +383,27 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!availableCodeSelect || !companySelectForm) {
             return;
         }
- 
+
         const selectedCompanyId = String(companySelectForm.value || '');
         const folderMap = JSON.parse(availableCodeSelect.getAttribute('data-company-folders') || '{}');
         const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
         const lastCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-last-codes') || '{}');
- 
+
         const companyFolders = folderMap[selectedCompanyId] || [];
         const nextCode = nextCodesMap[selectedCompanyId] || '';
         const lastCode = lastCodesMap[selectedCompanyId] || 'None';
- 
+
         const selectedCompanyOption = companySelectForm.options[companySelectForm.selectedIndex];
         const companyCode = selectedCompanyOption ? (selectedCompanyOption.getAttribute('data-code') || '') : '';
         const prefix = companyCode ? `CSC-${companyCode.toUpperCase()}-` : 'CSC-HR-';
- 
+
         // Update UI elements
         const prefixSpan = document.getElementById('companyPrefixSpan');
         if (prefixSpan) prefixSpan.textContent = prefix;
- 
+
         const lastCodeSpan = document.getElementById('lastFolderCodeSpan');
         if (lastCodeSpan) lastCodeSpan.textContent = lastCode;
- 
+
         // Populate availableCodeSelect
         availableCodeSelect.innerHTML = '<option value="">- Select -</option>';
         companyFolders.forEach(function (folder) {
@@ -414,23 +414,23 @@ document.addEventListener('DOMContentLoaded', function () {
             option.textContent = numeric;
             availableCodeSelect.appendChild(option);
         });
- 
+
         // Toggle visibility of Available Code select and Note
         const availableCodeGroup = document.getElementById('availableCodeGroup');
         const folderNote = document.getElementById('folderNote');
         const hasAvailable = companyFolders.length > 0;
- 
+
         if (availableCodeGroup) {
             availableCodeGroup.style.setProperty('display', hasAvailable ? 'flex' : 'none', 'important');
         }
         if (folderNote) {
             folderNote.style.setProperty('display', hasAvailable ? 'block' : 'none', 'important');
         }
- 
+
         // Logic for setting initial/current values
         const hiddenIdField = document.getElementById('folderIdHidden');
         const codeInput = document.getElementById('folderCodeInput');
-        
+
         if (hiddenIdField && codeInput && !codeInput.getAttribute('data-user-touched')) {
             const currentFolderId = hiddenIdField.value;
             if (currentFolderId) {
@@ -446,13 +446,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
- 
+
     if (availableCodeSelect) {
         availableCodeSelect.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             const hiddenIdField = document.getElementById('folderIdHidden');
             const codeInput = document.getElementById('folderCodeInput');
- 
+
             if (hiddenIdField && codeInput) {
                 if (this.value) {
                     hiddenIdField.value = this.value;
@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
                     const nextCode = nextCodesMap[selectedCompanyId] || '';
                     const prefix = (document.getElementById('companyPrefixSpan')?.textContent || 'CSC-HR-');
-                    
+
                     hiddenIdField.value = '';
                     codeInput.value = nextCode.replace(prefix, '');
                 }
@@ -471,17 +471,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
- 
+
     const clearFolderBtn = document.getElementById('clearFolderCode');
     if (clearFolderBtn) {
-        clearFolderBtn.addEventListener('click', function() {
+        clearFolderBtn.addEventListener('click', function () {
             const hiddenIdField = document.getElementById('folderIdHidden');
             const codeInput = document.getElementById('folderCodeInput');
             const selectedCompanyId = String(companySelectForm.value || '');
             const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
             const nextCode = nextCodesMap[selectedCompanyId] || '';
             const prefix = (document.getElementById('companyPrefixSpan')?.textContent || 'CSC-HR-');
- 
+
             if (hiddenIdField) hiddenIdField.value = '';
             if (availableCodeSelect) availableCodeSelect.value = '';
             if (codeInput) {
@@ -542,7 +542,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function handleCompanySelectionChange(openFolderPicker = false) {
         const codeInput = document.getElementById('folderCodeInput');
         if (codeInput) codeInput.removeAttribute('data-user-touched');
-        
+
         refreshFolderCodeOptions();
         filterLocationsByCompany();
 
