@@ -22,27 +22,27 @@ class DatabaseSeeder extends Seeder
         // ── Administrative Users ──
         $this->call(UserSeeder::class);
 
-        // ── Departments (cooperative-internal) ──
-        $departments = [
-            ['name' => 'Finance', 'code' => 'FIN', 'description' => 'Financial and payroll documents'],
-            ['name' => 'Accounting', 'code' => 'ACCT', 'description' => 'Accounting records and reports'],
-            ['name' => 'CDA', 'code' => 'CDA', 'description' => 'Cooperative Development Authority documents'],
-            ['name' => 'Braveheart', 'code' => 'BH', 'description' => 'Braveheart division documents'],
-        ];
-        foreach ($departments as $dept) {
-            Department::updateOrCreate(['code' => $dept['code']], $dept);
-        }
+        // // ── Departments (cooperative-internal) ──
+        // $departments = [
+        //     ['name' => 'Finance', 'code' => 'FIN', 'description' => 'Financial and payroll documents'],
+        //     ['name' => 'Accounting', 'code' => 'ACCT', 'description' => 'Accounting records and reports'],
+        //     ['name' => 'CDA', 'code' => 'CDA', 'description' => 'Cooperative Development Authority documents'],
+        //     ['name' => 'Braveheart', 'code' => 'BH', 'description' => 'Braveheart division documents'],
+        // ];
+        // foreach ($departments as $dept) {
+        //     Department::updateOrCreate(['code' => $dept['code']], $dept);
+        // }
 
-        // ── Document Types ──
-        $finance = Department::where('name', 'Finance')->first();
+        // // ── Document Types ──
+        // $finance = Department::where('name', 'Finance')->first();
 
-        $documentTypes = [
-            ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true],
-        ];
+        // $documentTypes = [
+        //     ['department_id' => $finance?->id, 'name' => 'Business Permit', 'code' => 'BIZPERMIT', 'has_expiry' => true],
+        // ];
 
-        foreach ($documentTypes as $type) {
-            DocumentType::updateOrCreate(['code' => $type['code']], $type);
-        }
+        // foreach ($documentTypes as $type) {
+        //     DocumentType::updateOrCreate(['code' => $type['code']], $type);
+        // }
 
         // ── Sample Companies ──
         $this->call(CompanySeeder::class);
@@ -53,9 +53,8 @@ class DatabaseSeeder extends Seeder
         // ── Digital Folders ──
         $this->call(FolderSeeder::class);
 
-        $this->call(BankTypeSeeder::class);
-
-        // ── Test Employees ──
+        // $this->call(BankTypeSeeder::class);
+        // ── Employees ──
         $this->call(EmployeeSeeder::class);
     }
 }

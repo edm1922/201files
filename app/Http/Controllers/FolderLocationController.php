@@ -14,16 +14,21 @@ class FolderLocationController extends Controller
     /**
      * Display a listing of folder locations.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rows = FolderLocation::with('company:id,name,code')
+        $query = FolderLocation::with('company:id,name,code')
             ->withCount(['employees' => function ($query) {
                 $query->withTrashed();
             }])
             ->orderBy('company_id')
             ->orderByRaw('LENGTH(row_name) ASC')
-            ->orderBy('row_name', 'ASC')
-            ->get();
+            ->orderBy('row_name', 'ASC');
+
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $rows = $query->get();
 
         $companies = Company::query()
             ->where('is_active', true)

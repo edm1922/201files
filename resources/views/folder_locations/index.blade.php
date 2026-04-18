@@ -67,6 +67,54 @@
             </div>
         @endif
 
+        {{-- Filter Section --}}
+        <div class="card shadow-sm border-0 mb-3" style="border-radius: 12px; background: #fff;" x-show="activeTab === 'file-locations'" x-cloak>
+            <div class="card-body py-2 px-3">
+                <form action="{{ route('settings.folder-locations.index') }}" method="GET" class="d-flex align-items-center gap-3 flex-wrap">
+                    <input type="hidden" name="tab" value="file-locations">
+                    
+                    <div class="d-flex align-items-center gap-2 me-2">
+                        <div class="d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; border-radius: 6px; background-color: var(--company-primary-light); color: var(--company-primary);">
+                            <i class="fas fa-filter" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="toolbar-label" style="font-size: 0.7rem;">Filter by Company</span>
+                    </div>
+
+                    <div style="min-width: 350px;">
+                        <select name="company_id" id="companyFilter" class="form-select basic-select" data-placeholder="All Companies" onchange="this.form.submit()">
+                            <option value=""></option>
+                            @foreach($companies as $company)
+                                <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                                    {{ $company->name }} ({{ $company->code }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    @if(request('company_id'))
+                        <a href="{{ route('settings.folder-locations.index', ['tab' => 'file-locations']) }}" 
+                           class="btn btn-sm btn-light text-muted d-flex align-items-center gap-2 border-0" 
+                           style="background: #f3f4f6; border-radius: 6px; padding: 6px 14px; font-size: 0.8rem; font-weight: 600;">
+                            <i class="fas fa-undo-alt"></i> Reset Filter
+                        </a>
+                    @endif
+                </form>
+            </div>
+        </div>
+
+
+        <!-- // Script to handle select2 clear event and submit the form -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Handle Select2 clear event to submit the form
+                $('#companyFilter').on('select2:clear', function() {
+                    setTimeout(() => {
+                        this.form.submit();
+                    }, 50);
+                });
+            });
+        </script>
+
         <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;" x-show="activeTab === 'file-locations'" x-cloak>
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">

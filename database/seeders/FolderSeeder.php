@@ -19,12 +19,12 @@ class FolderSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $now = '2026-03-16 08:33:00';
-        $companies = \App\Models\Company::all();
+        $company = \App\Models\Company::find(1); // General Tuna Corporation
         
-        foreach ($companies as $company) {
+        if ($company) {
             $folders = [];
             $prefix = 'CSC-' . strtoupper($company->code) . '-';
-            $count = ($company->id == 1) ? 2151 : 50; // More for General Tuna, less for others
+            $count = 2151;
             
             for ($i = 1; $i <= $count; $i++) {
                 $folders[] = [
