@@ -18,28 +18,41 @@ class UserSeeder extends Seeder
         User::truncate();
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // ── Admin User ──
+        // // ── Admin User ──
+        // User::factory()->admin()->create([
+        //     'first_name' => 'System',
+        //     'last_name' => 'Admin',
+        //     'username' => 'admin',
+        //     'password' => Hash::make('admincsc'),
+        // ]);
+
+        // // ── Encoder User ──
+        // User::factory()->encoder()->create([
+        //     'first_name' => 'Test',
+        //     'last_name' => 'Encoder',
+        //     'username' => 'encode',
+        //     'password' => Hash::make('encodercsc'),
+        // ]);
+
+        // // ── Viewer User ──
+        // User::factory()->viewer()->create([
+        //     'first_name' => 'Test',
+        //     'last_name' => 'Viewer',
+        //     'username' => 'viewer',
+        //     'password' => Hash::make('viewercsc'),
+        // ]);
+
         User::factory()->admin()->create([
-            'first_name' => 'System',
-            'last_name' => 'Admin',
+            'first_name' => 'Jemar',
+            'last_name' => 'Barrera',
             'username' => 'admin',
-            'password' => Hash::make('admincsc'),
+            'password' => Hash::make('barreracsc'),
         ]);
-
-        // ── Encoder User ──
         User::factory()->encoder()->create([
-            'first_name' => 'Test',
-            'last_name' => 'Encoder',
-            'username' => 'encode',
-            'password' => Hash::make('encodercsc'),
-        ]);
-
-        // ── Viewer User ──
-        User::factory()->viewer()->create([
-            'first_name' => 'Test',
-            'last_name' => 'Viewer',
-            'username' => 'viewer',
-            'password' => Hash::make('viewercsc'),
-        ]);
+            'first_name' => 'Christine Marie',
+            'last_name' => 'Bernales',
+            'username' => 'Bernales',
+            'password' => Hash::make('bernalescsc'),
+        ]);     
     }
 }
