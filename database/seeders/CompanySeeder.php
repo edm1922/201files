@@ -19,7 +19,7 @@ class CompanySeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $companies = [
-            ['id' => 1, 'name' => 'GENERAL TUNA CORPORATION', 'code' => 'GTC', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 1, 'name' => 'GENERAL TUNA CORPORATION', 'code' => 'HR', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 2, 'name' => 'GAISANO', 'code' => 'G-MALL', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 3, 'name' => '7-ELEVEN', 'code' => '7-11', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 4, 'name' => 'TRANS PACIFIC JOURNEY FISHING CORPORATION', 'code' => 'TPJ', 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],

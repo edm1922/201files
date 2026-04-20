@@ -24,7 +24,7 @@ class FolderSeeder extends Seeder
         if ($company) {
             $folders = [];
             $prefix = 'CSC-' . strtoupper($company->code) . '-';
-            $count = 2151;
+            $count = 2505;
             
             for ($i = 1; $i <= $count; $i++) {
                 $folders[] = [

@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // ── Administrative Users ──
-        $this->call(UserSeeder::class);
+        // $this->call(UserSeeder::class);
 
         // // ── Departments (cooperative-internal) ──
         // $departments = [
