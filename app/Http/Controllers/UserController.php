@@ -42,7 +42,6 @@ class UserController extends Controller
         // Auto-generate default password: {last_name}csc
         $defaultPassword = strtolower($validated['last_name']) . 'csc';
         $validated['password'] = Hash::make($defaultPassword);
-        $validated['must_change_password'] = true;
         
         $validated['is_active'] = $request->boolean('is_active', true);
         
@@ -169,7 +168,6 @@ class UserController extends Controller
         
         $user->update([
             'password' => Hash::make($defaultPassword),
-            'must_change_password' => true,
         ]);
 
         AuditService::log('updated', "Reset password", $user);
