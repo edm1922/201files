@@ -43,5 +43,37 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // ── Stat Counter Animation ──
+    const animateValue = (id, start, end, duration) => {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            id.innerHTML = value.toLocaleString();
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                id.innerHTML = end.toLocaleString() + (id.dataset.suffix || "");
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+
+    const statObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const target = entry.target;
+                const endValue = parseInt(target.dataset.target);
+                animateValue(target, 0, endValue, 2000);
+                statObserver.unobserve(target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-number').forEach(stat => {
+        statObserver.observe(stat);
+    });
+
     console.log('About page Ronaldo-style redesign initialized.');
 });

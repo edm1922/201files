@@ -42,6 +42,80 @@
                         </p>
                     </div>
 
+                    {{-- ── Middle: Key Modules ── --}}
+                    <div class="mb-5 animate-fade-in-up-scroll">
+                        <div class="text-center mb-5">
+                            <span class="subheading d-block mb-1 text-uppercase">Core Features</span>
+                            <h2 class="h2 fw-bold text-dark">Key System Modules</h2>
+                        </div>
+
+                        <div class="module-grid">
+                            {{-- Module 1 --}}
+                            <div class="module-card">
+                                <div class="module-icon-box">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h4 class="h5 fw-bold mb-3">201 Management</h4>
+                                <p class="text-muted small mb-0">Streamlined tracking of employee records with company-scoped sequence logic.</p>
+                            </div>
+
+                            {{-- Module 2 --}}
+                            <div class="module-card">
+                                <div class="module-icon-box">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <h4 class="h5 fw-bold mb-3">Dept. Documents</h4>
+                                <p class="text-muted small mb-0">Secure archiving for departmental files with robust category management.</p>
+                            </div>
+
+                            {{-- Module 3 --}}
+                            <div class="module-card">
+                                <div class="module-icon-box">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <h4 class="h5 fw-bold mb-3">Storage Analytics</h4>
+                                <p class="text-muted small mb-0">Real-time monitoring of physical bin utilization and row occupancy.</p>
+                            </div>
+
+                            {{-- Module 4 --}}
+                            <div class="module-card">
+                                <div class="module-icon-box">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <h4 class="h5 fw-bold mb-3">Audit Logs</h4>
+                                <p class="text-muted small mb-0">Comprehensive tracking of system activities for compliance and integrity.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ── Fun Facts / Stats ── --}}
+                    <div class="row g-4 mb-5 animate-fade-in-up-scroll">
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number" data-target="{{ $totalEmployees + $totalDocuments }}" data-suffix="+">0</div>
+                                <div class="stat-label">Files Managed</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number" data-target="{{ $totalCompanies }}" data-suffix="">0</div>
+                                <div class="stat-label">Companies</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number" data-target="100" data-suffix="%">0</div>
+                                <div class="stat-label">Data Integrity</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-number" data-target="99" data-suffix="%">0</div>
+                                <div class="stat-label">Retrieval Speed</div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ── Middle: Development Team ── --}}
                     <div class="mb-5">
                         <div class="text-center mb-5 animate-fade-in-up-scroll">
@@ -214,6 +288,8 @@
                             </div>
                         </div>
                     </div>
+
+
 
                     {{-- ── Bottom: Powered By ── --}}
                     <div class="text-center mt-5 pt-4 animate-fade-in-up-scroll">

@@ -193,7 +193,11 @@ Route::middleware('auth')->group(function () {
             ->withTrashed();
     });
     Route::get('/about', function () {
-        return view('about');
+        $totalEmployees = \App\Models\Employee::count();
+        $totalDocuments = \App\Models\Document::count();
+        $totalCompanies = \App\Models\Company::where('is_active', true)->count();
+
+        return view('about', compact('totalEmployees', 'totalDocuments', 'totalCompanies'));
     })->name('about');
 });
 
