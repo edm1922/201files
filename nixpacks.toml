@@ -1,0 +1,17 @@
+[php]
+extensions = [
+  "bcmath",
+  "ctype",
+  "curl",
+  "fileinfo",
+  "gd",
+  "iconv",
+  "intl",
+  "mbstring",
+  "pdo",
+  "pdo_pgsql",
+  "pgsql",
+  "session",
+  "xml",
+  "zip"
+]
