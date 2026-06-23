@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('document_types', function (Blueprint $table) {
-            $table->enum('target', ['employee', 'department'])->default('employee');
+            $table->string('target', 20)->default('employee');
         });
     }
 };

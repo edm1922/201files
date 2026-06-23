@@ -107,13 +107,13 @@ return new class extends Migration
                 });
             }
             
-            // Check if foreign key exists using raw SQL (MySQL specific as hinted by error)
+            // Check if foreign key exists using raw SQL
             $fkExists = DB::select("
                 SELECT CONSTRAINT_NAME 
                 FROM information_schema.KEY_COLUMN_USAGE 
                 WHERE TABLE_NAME = ? 
                 AND CONSTRAINT_NAME = ? 
-                AND TABLE_SCHEMA = DATABASE()
+                AND TABLE_CATALOG = current_database()
             ", [$tableName, $tableName . '_folder_location_id_foreign']);
 
             if (empty($fkExists)) {

@@ -13,7 +13,9 @@ use App\Models\FolderLocation;
 use App\Models\HiringEvent;
 use App\Services\AuditService;
 use App\Services\FolderCodeService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class EmployeeController extends Controller
 {
@@ -69,6 +71,14 @@ class EmployeeController extends Controller
 
             $employee->folder_id = $folder->id;
             $employee->saveQuietly();
+
+            if (! $employee->folder_location_id) {
+                $location = $this->resolveFolderLocationFromSequence($company, $folder->sequence_number);
+                if ($location) {
+                    $employee->folder_location_id = $location->id;
+                    $employee->saveQuietly();
+                }
+            }
 
             // Create Hiring Event persistence record
             if ($employee->date_hired) {
@@ -222,6 +232,15 @@ class EmployeeController extends Controller
         return $mapped;
     }
 
+    private function resolveFolderLocationFromSequence(Company $company, int $sequenceNumber): ?FolderLocation
+    {
+        return FolderLocation::query()
+            ->where('company_id', $company->id)
+            ->where('range_start', '<=', $sequenceNumber)
+            ->where('range_end', '>=', $sequenceNumber)
+            ->first();
+    }
+
     /**
      * Update an existing employee.
      */
@@ -297,6 +316,18 @@ class EmployeeController extends Controller
                 $employee->saveQuietly();
             } elseif ($currentFolder->is_available) {
                 $currentFolder->update(['is_available' => false]);
+            }
+
+            if ($employee->folder_id && ! $request->filled('folder_location_id')) {
+                $assignedFolder = Folder::query()->find($employee->folder_id);
+                if ($assignedFolder && $assignedFolder->sequence_number) {
+                    $locationCompany = Company::query()->findOrFail($targetCompanyId);
+                    $location = $this->resolveFolderLocationFromSequence($locationCompany, $assignedFolder->sequence_number);
+                    if ($location) {
+                        $employee->folder_location_id = $location->id;
+                        $employee->saveQuietly();
+                    }
+                }
             }
 
             $fresh = $employee->fresh()->load(['company', 'folder', 'folderLocation', 'bankType']);
@@ -421,6 +452,209 @@ class EmployeeController extends Controller
         return redirect()
             ->route('archives.index', ['tab' => 'employees'])
             ->with('success', 'Employee permanently deleted. Folder is now available.');
+    }
+
+    /**
+     * Import employees from an uploaded Excel file.
+     */
+    public function importExcel(Request $request, FolderCodeService $folderCodeService)
+    {
+        $request->validate([
+            'file'       => ['required', 'file', 'mimes:xlsx,xls'],
+            'company_id' => ['required', 'integer', 'exists:companies,id'],
+        ]);
+
+        $file      = $request->file('file');
+        $companyId = (int) $request->input('company_id');
+
+        $spreadsheet = IOFactory::load($file->getRealPath());
+        $worksheet   = $spreadsheet->getActiveSheet();
+        $rows        = $worksheet->toArray(null, true, true, false);
+
+        if (empty($rows)) {
+            return back()->with('error', 'The uploaded file is empty.');
+        }
+
+        $header = array_map('trim', $rows[0]);
+
+        $nameCol    = null;
+        $barcodeCol = null;
+        $numberCol  = null;
+
+        foreach ($header as $i => $label) {
+            $upper = strtoupper($label);
+            if ($upper === 'NAME') {
+                $nameCol = $i;
+            } elseif ($upper === 'BARCODE') {
+                $barcodeCol = $i;
+            } elseif ($upper === 'NUMBER') {
+                $numberCol = $i;
+            }
+        }
+
+        if ($nameCol === null) {
+            return back()->with('error', 'The file must contain a column labelled "NAME".');
+        }
+
+        $imported = 0;
+        $updated  = 0;
+        $skipped  = [];
+        $seenBarcodes = [];
+
+        DB::transaction(function () use ($rows, $nameCol, $barcodeCol, $numberCol, $companyId, $folderCodeService, &$imported, &$updated, &$skipped, &$seenBarcodes) {
+            $company  = Company::query()->findOrFail($companyId);
+            $dataRows = array_slice($rows, 1);
+
+            foreach ($dataRows as $rowIndex => $row) {
+                $lineNumber = $rowIndex + 2;
+
+                $rawName = trim($row[$nameCol] ?? '');
+
+                if ($rawName === '') {
+                    continue;
+                }
+
+                $nameParts = explode(',', $rawName, 2);
+
+                if (count($nameParts) < 2) {
+                    $skipped[] = "Row {$lineNumber}: missing comma in NAME (\"{$rawName}\")";
+                    continue;
+                }
+
+                $lastName   = trim($nameParts[0]);
+                $firstMiddle = trim($nameParts[1]);
+
+                if ($lastName === '' || $firstMiddle === '') {
+                    $skipped[] = "Row {$lineNumber}: NAME field has empty last or first name (\"{$rawName}\")";
+                    continue;
+                }
+
+                $firstMiddleParts = explode(' ', $firstMiddle, 2);
+                $firstName = trim($firstMiddleParts[0]);
+                $middleName = isset($firstMiddleParts[1]) ? trim($firstMiddleParts[1]) : null;
+
+                $rawNumber = '';
+                $sequenceNumber = null;
+                if ($numberCol !== null) {
+                    $rawNumber = trim((string) ($row[$numberCol] ?? ''));
+                    if ($rawNumber !== '') {
+                        $sequenceNumber = (int) $rawNumber;
+                    }
+                }
+
+                $rawBarcode = '';
+                $barcode = null;
+                $existingEmployee = null;
+
+                if ($barcodeCol !== null) {
+                    $rawBarcode = trim((string) ($row[$barcodeCol] ?? ''));
+                    if ($rawBarcode !== '') {
+                        if (isset($seenBarcodes[$rawBarcode])) {
+                            $skipped[] = "Row {$lineNumber}: duplicate barcode \"{$rawBarcode}\" in file";
+                            continue;
+                        }
+
+                        $existingEmployee = Employee::query()
+                            ->where('barcode_id', $rawBarcode)
+                            ->orWhere('system_id', $rawBarcode)
+                            ->first();
+
+                        if (! $existingEmployee) {
+                            $barcode = $rawBarcode;
+                        }
+
+                        $seenBarcodes[$rawBarcode] = true;
+                    }
+                }
+
+                if ($existingEmployee) {
+                    if ($sequenceNumber !== null) {
+                        $folder = $folderCodeService->assignBySequenceNumber($company, $sequenceNumber, $existingEmployee->id);
+
+                        if ($folder && $existingEmployee->folder_id !== $folder->id) {
+                            if ($existingEmployee->folder_id) {
+                                Folder::where('id', $existingEmployee->folder_id)->update(['is_available' => true]);
+                            }
+
+                            $existingEmployee->folder_id = $folder->id;
+                            $existingEmployee->saveQuietly();
+                        } elseif (! $folder) {
+                            $skipped[] = "Row {$lineNumber}: folder number {$rawNumber} is already assigned to another employee";
+                        }
+
+                        if ($folder) {
+                            $location = $this->resolveFolderLocationFromSequence($company, $folder->sequence_number);
+                            if ($location) {
+                                $existingEmployee->folder_location_id = $location->id;
+                                $existingEmployee->saveQuietly();
+                            }
+                        }
+                    }
+
+                    $updated++;
+                } else {
+                    $systemId = $barcode ?: 'IMP-' . strtoupper(uniqid());
+
+                    $employee = Employee::withoutSyncingToSearch(function () use ($systemId, $barcode, $firstName, $middleName, $lastName, $companyId) {
+                        return Employee::create([
+                            'system_id'   => $systemId,
+                            'barcode_id'  => $barcode,
+                            'first_name'  => $firstName,
+                            'middle_name' => $middleName,
+                            'last_name'   => $lastName,
+                            'company_id'  => $companyId,
+                            'status'      => 'active',
+                        ]);
+                    });
+
+                    if ($sequenceNumber !== null) {
+                        $folder = $folderCodeService->assignBySequenceNumber($company, $sequenceNumber);
+
+                        if ($folder) {
+                            $employee->folder_id = $folder->id;
+                            $employee->saveQuietly();
+
+                            $location = $this->resolveFolderLocationFromSequence($company, $folder->sequence_number);
+                            if ($location) {
+                                $employee->folder_location_id = $location->id;
+                                $employee->saveQuietly();
+                            }
+                        } else {
+                            $skipped[] = "Row {$lineNumber}: folder number {$rawNumber} is already assigned to another employee";
+                        }
+                    }
+
+                    $imported++;
+                }
+            }
+        });
+
+        AuditService::log(
+            'imported',
+            "Imported {$imported} employees from Excel (updated {$updated} existing)" . (count($skipped) ? ', ' . count($skipped) . ' skipped' : ''),
+        );
+
+        $parts = [];
+
+        if ($imported > 0) {
+            $parts[] = "{$imported} new employee(s) created";
+        }
+
+        if ($updated > 0) {
+            $parts[] = "{$updated} existing employee(s) updated";
+        }
+
+        $message = 'Successfully processed. ' . implode(', ', $parts) . '.';
+
+        if (count($skipped) > 0) {
+            $message .= ' Skipped rows:<br>' . implode('<br>', $skipped);
+        }
+
+        if ($imported === 0 && $updated === 0) {
+            return back()->with('error', $message);
+        }
+
+        return back()->with('success', $message);
     }
 
     /**

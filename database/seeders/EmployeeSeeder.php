@@ -9,20 +9,14 @@ class EmployeeSeeder extends Seeder
 {
     public function run(): void
     {
-        // Clear existing employees before seeding to avoid duplicates
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('employees')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
         $csvFile = base_path('temporary file/ALL_EMPLOYEE 1-2505.csv');
-        if (! file_exists($csvFile)) {
+        if (!file_exists($csvFile)) {
             return;
         }
 
         $handle = fopen($csvFile, 'r');
-        fgetcsv($handle); // Skip header
+        fgetcsv($handle);
 
-        // Starting folder ID
         $firstFolder = DB::table('folders')->orderBy('id')->first();
         $nextFolderId = $firstFolder ? $firstFolder->id : 1;
 
@@ -32,7 +26,6 @@ class EmployeeSeeder extends Seeder
         $idCounter = 1;
 
         while (($data = fgetcsv($handle)) !== false) {
-            // Basic validation
             if (empty($data[0]) && empty($data[4])) {
                 continue;
             }
@@ -48,14 +41,13 @@ class EmployeeSeeder extends Seeder
             }
 
             if (empty($systemId)) {
-                $systemId = 'TEMP-'.uniqid();
+                $systemId = 'TEMP-' . uniqid();
             }
 
             $hiredDateRaw = trim($data[3] ?? '');
             $fullName = trim($data[4] ?? '');
             $statusRaw = trim($data[5] ?? 'active');
 
-            // Parse Name
             $firstName = $middleName = $lastName = '';
             if ($fullName) {
                 if (strpos($fullName, ',') !== false) {
@@ -78,7 +70,6 @@ class EmployeeSeeder extends Seeder
                 }
             }
 
-            // Parse Date
             $hiredDate = null;
             if ($hiredDateRaw) {
                 $time = strtotime($hiredDateRaw);
@@ -97,8 +88,6 @@ class EmployeeSeeder extends Seeder
                 'last_name' => mb_convert_case((string) $lastName, MB_CASE_UPPER, 'UTF-8'),
                 'date_hired' => $hiredDate,
                 'status' => in_array(strtolower($statusRaw), ['active', 'awol', 'resigned']) ? strtolower($statusRaw) : 'active',
-                // 'atm_status' => 'not_applicable',  // UNCOMMENT IF YOU WANT TO ADD ATM STATUS
-                // 'bank_type_id' => 1,  // UNCOMMENT IF YOU WANT TO ADD BANK TYPE
                 'company_id' => 1,
                 'folder_id' => $nextFolderId,
                 'folder_location_id' => $folderLocationId,
@@ -106,7 +95,6 @@ class EmployeeSeeder extends Seeder
                 'updated_at' => $now,
             ]);
 
-            // Mark folder occupied and sync company-sequence metadata for the new model
             $folder = DB::table('folders')->where('id', $nextFolderId)->first();
             $sequenceNumber = null;
 

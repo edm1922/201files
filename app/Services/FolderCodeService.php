@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Company;
 use App\Models\CompanyFolderSequence;
+use App\Models\Employee;
 use App\Models\Folder;
 use Illuminate\Support\Facades\DB;
 
@@ -72,6 +73,48 @@ class FolderCodeService
 
             return $folder;
         });
+    }
+
+    public function assignBySequenceNumber(Company $company, int $sequenceNumber, ?int $exceptEmployeeId = null): ?Folder
+    {
+        $folder = Folder::query()
+            ->where('company_id', $company->id)
+            ->where('sequence_number', $sequenceNumber)
+            ->lockForUpdate()
+            ->first();
+
+        if ($folder) {
+            if (! $folder->is_available) {
+                if ($exceptEmployeeId !== null) {
+                    $alreadyTheirs = Employee::query()
+                        ->where('id', $exceptEmployeeId)
+                        ->where('folder_id', $folder->id)
+                        ->exists();
+
+                    if ($alreadyTheirs) {
+                        return $folder;
+                    }
+                }
+
+                return null;
+            }
+
+            $folder->update([
+                'folder_code' => $this->formatCode($company->code, $sequenceNumber),
+                'is_available' => false,
+            ]);
+
+            return $folder->fresh();
+        }
+
+        $this->ensureSequenceHeadBeyond($company->id, $sequenceNumber);
+
+        return Folder::create([
+            'company_id' => $company->id,
+            'sequence_number' => $sequenceNumber,
+            'folder_code' => $this->formatCode($company->code, $sequenceNumber),
+            'is_available' => false,
+        ]);
     }
 
     public function formatCode(string $companyCode, int $number): string

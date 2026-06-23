@@ -32,7 +32,7 @@ class DashboardController extends Controller
         // Fetch all unique years from event_date for the filter
         $availableYears = DB::query()
             ->fromSub($hiringSource, 'hiring_source')
-            ->select(DB::raw('DISTINCT YEAR(source_date) as year'))
+            ->select(DB::raw('DISTINCT EXTRACT(YEAR FROM source_date) as year'))
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->toArray();
@@ -45,8 +45,8 @@ class DashboardController extends Controller
         // Hiring trends data
         $query = DB::query()->fromSub($hiringSource, 'hiring_source')->select(
             DB::raw('count(*) as count'),
-            DB::raw('YEAR(source_date) as year'),
-            DB::raw('MONTH(source_date) as month')
+            DB::raw('EXTRACT(YEAR FROM source_date) as year'),
+            DB::raw('EXTRACT(MONTH FROM source_date) as month')
         );
 
         if ($year) {
@@ -56,7 +56,7 @@ class DashboardController extends Controller
         $daysInMonth = 0;
         if ($month) {
             $query->whereMonth('source_date', $month);
-            $query->addSelect(DB::raw('DAY(source_date) as day'));
+            $query->addSelect(DB::raw('EXTRACT(DAY FROM source_date) as day'));
 
             // Calculate days in selected month
             $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year ?: date('Y'));

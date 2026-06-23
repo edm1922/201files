@@ -141,7 +141,8 @@ $(document).ready(function () {
     // Navigate to the employee's profile page
     function navigateToEmployee(emp) {
         if (emp.id) {
-            window.location.href = '/employees/' + emp.id;
+            const base = document.querySelector('meta[name="app-base-url"]')?.getAttribute('content') || '';
+            window.location.href = base + '/employees/' + emp.id;
         }
     }
 
@@ -642,7 +643,8 @@ function showUpdateHistory(employeeId) {
 
     modal.show();
 
-    fetch(`/employees/${employeeId}/update-history`)
+    const base = document.querySelector('meta[name="app-base-url"]')?.getAttribute('content') || '';
+    fetch(base + `/employees/${employeeId}/update-history`)
         .then(response => response.json())
         .then(data => {
             if (data.length === 0) {

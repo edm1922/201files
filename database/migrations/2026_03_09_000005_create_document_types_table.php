@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('department_id')->nullable()->constrained()->onDelete('set null');
             $table->string('name');
             $table->string('code', 20)->unique();
-            $table->enum('target', ['employee', 'department'])->default('employee');
+            $table->string('target', 20)->default('employee');
             $table->boolean('has_expiry')->default(false);
             $table->boolean('is_required')->default(false);
             $table->integer('max_pages')->default(1);

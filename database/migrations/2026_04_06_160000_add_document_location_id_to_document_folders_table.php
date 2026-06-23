@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::table('document_folders', function (Blueprint $table) {
             $table->foreignId('document_location_id')
                 ->nullable()
-                ->after('folder_code')
                 ->constrained('document_locations')
                 ->nullOnDelete();
         });

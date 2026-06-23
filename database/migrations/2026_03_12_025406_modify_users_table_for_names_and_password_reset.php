@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('name');
-            $table->string('first_name')->after('id');
-            $table->string('middle_name')->nullable()->after('first_name');
-            $table->string('last_name')->after('middle_name');
-            $table->string('suffix')->nullable()->after('last_name');
-            $table->boolean('must_change_password')->default(false)->after('password');
+            $table->string('first_name');
+            $table->string('middle_name')->nullable();
+            $table->string('last_name');
+            $table->string('suffix')->nullable();
+            $table->boolean('must_change_password')->default(false);
         });
     }
 
@@ -27,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('name')->after('id');
+            $table->string('name');
             $table->dropColumn(['first_name', 'middle_name', 'last_name', 'suffix', 'must_change_password']);
         });
     }

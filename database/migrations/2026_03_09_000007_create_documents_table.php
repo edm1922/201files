@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('page_count')->default(1);
             $table->integer('file_size_bytes')->default(0);
             $table->string('mime_type', 100)->default('application/pdf');
-            $table->enum('status', ['active', 'archived', 'expired'])->default('active');
+            $table->string('status', 20)->default('active');
             $table->date('date_received')->nullable();
             $table->date('expiry_date')->nullable();
             $table->text('ocr_text')->nullable()->comment('Future: OCR extracted text');

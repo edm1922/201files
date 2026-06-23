@@ -125,6 +125,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/201files', [EmployeeController::class, 'create'])->name('201files');
     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::post('/employees/import-excel', [EmployeeController::class, 'importExcel'])
+        ->name('employees.import-excel')
+        ->middleware('role:admin,encoder');
     Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
     Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
 

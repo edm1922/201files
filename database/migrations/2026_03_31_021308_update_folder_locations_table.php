@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->dropColumn('column_code');
             }
             if (!Schema::hasColumn('folder_locations', 'max_capacity')) {
-                $table->integer('max_capacity')->default(500)->after('row_name');
+                $table->integer('max_capacity')->default(500);
             }
             // Optional: Ensure row_name is unique if it isn't already
             // $table->unique('row_name'); 
@@ -30,7 +30,7 @@ return new class extends Migration
     {
         Schema::table('folder_locations', function (Blueprint $table) {
             $table->dropColumn('max_capacity');
-            $table->string('column_code')->nullable()->after('row_name');
+            $table->string('column_code')->nullable();
         });
     }
 };

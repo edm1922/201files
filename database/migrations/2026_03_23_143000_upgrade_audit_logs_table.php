@@ -12,16 +12,16 @@ return new class extends Migration
         Schema::table('audit_logs', function (Blueprint $table) {
             // Check if columns exist before adding
             if (!Schema::hasColumn('audit_logs', 'model_type')) {
-                $table->string('model_type')->nullable()->after('user_id');
+                $table->string('model_type')->nullable();
             }
             if (!Schema::hasColumn('audit_logs', 'model_id')) {
-                $table->unsignedBigInteger('model_id')->nullable()->after('model_type');
+                $table->unsignedBigInteger('model_id')->nullable();
             }
             if (!Schema::hasColumn('audit_logs', 'user_agent')) {
-                $table->string('user_agent')->nullable()->after('ip_address');
+                $table->string('user_agent')->nullable();
             }
             if (!Schema::hasColumn('audit_logs', 'updated_at')) {
-                $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
+                $table->timestamp('updated_at')->nullable();
             }
         });
 
