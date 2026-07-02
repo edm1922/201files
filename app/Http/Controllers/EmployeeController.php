@@ -38,8 +38,14 @@ class EmployeeController extends Controller
             ->orderBy('row_name', 'ASC')
             ->get();
 
+        $employees = Employee::with(['company', 'folder', 'folderLocation'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->paginate(15);
+
         return view('201files', [
             'employee' => null,
+            'employees' => $employees,
             'companies' => $companies,
             'companyNextFolderCodes' => $companyNextFolderCodes,
             'companyLastFolderCodes' => $companyLastFolderCodes,
@@ -454,220 +460,37 @@ class EmployeeController extends Controller
             ->with('success', 'Employee permanently deleted. Folder is now available.');
     }
 
-    /**
-     * Import employees from an uploaded Excel file.
-     */
-    public function importExcel(Request $request, FolderCodeService $folderCodeService)
-    {
-        $request->validate([
-            'file'       => ['required', 'file', 'mimes:xlsx,xls'],
-            'company_id' => ['required', 'integer', 'exists:companies,id'],
-        ]);
-
-        $file      = $request->file('file');
-        $companyId = (int) $request->input('company_id');
-
-        $spreadsheet = IOFactory::load($file->getRealPath());
-        $worksheet   = $spreadsheet->getActiveSheet();
-        $rows        = $worksheet->toArray(null, true, true, false);
-
-        if (empty($rows)) {
-            return back()->with('error', 'The uploaded file is empty.');
-        }
-
-        $header = array_map('trim', $rows[0]);
-
-        $nameCol    = null;
-        $barcodeCol = null;
-        $numberCol  = null;
-
-        foreach ($header as $i => $label) {
-            $upper = strtoupper($label);
-            if ($upper === 'NAME') {
-                $nameCol = $i;
-            } elseif ($upper === 'BARCODE') {
-                $barcodeCol = $i;
-            } elseif ($upper === 'NUMBER') {
-                $numberCol = $i;
-            }
-        }
-
-        if ($nameCol === null) {
-            return back()->with('error', 'The file must contain a column labelled "NAME".');
-        }
-
-        $imported = 0;
-        $updated  = 0;
-        $skipped  = [];
-        $seenBarcodes = [];
-
-        DB::transaction(function () use ($rows, $nameCol, $barcodeCol, $numberCol, $companyId, $folderCodeService, &$imported, &$updated, &$skipped, &$seenBarcodes) {
-            $company  = Company::query()->findOrFail($companyId);
-            $dataRows = array_slice($rows, 1);
-
-            foreach ($dataRows as $rowIndex => $row) {
-                $lineNumber = $rowIndex + 2;
-
-                $rawName = trim($row[$nameCol] ?? '');
-
-                if ($rawName === '') {
-                    continue;
-                }
-
-                $nameParts = explode(',', $rawName, 2);
-
-                if (count($nameParts) < 2) {
-                    $skipped[] = "Row {$lineNumber}: missing comma in NAME (\"{$rawName}\")";
-                    continue;
-                }
-
-                $lastName   = trim($nameParts[0]);
-                $firstMiddle = trim($nameParts[1]);
-
-                if ($lastName === '' || $firstMiddle === '') {
-                    $skipped[] = "Row {$lineNumber}: NAME field has empty last or first name (\"{$rawName}\")";
-                    continue;
-                }
-
-                $firstMiddleParts = explode(' ', $firstMiddle, 2);
-                $firstName = trim($firstMiddleParts[0]);
-                $middleName = isset($firstMiddleParts[1]) ? trim($firstMiddleParts[1]) : null;
-
-                $rawNumber = '';
-                $sequenceNumber = null;
-                if ($numberCol !== null) {
-                    $rawNumber = trim((string) ($row[$numberCol] ?? ''));
-                    if ($rawNumber !== '') {
-                        $sequenceNumber = (int) $rawNumber;
-                    }
-                }
-
-                $rawBarcode = '';
-                $barcode = null;
-                $existingEmployee = null;
-
-                if ($barcodeCol !== null) {
-                    $rawBarcode = trim((string) ($row[$barcodeCol] ?? ''));
-                    if ($rawBarcode !== '') {
-                        if (isset($seenBarcodes[$rawBarcode])) {
-                            $skipped[] = "Row {$lineNumber}: duplicate barcode \"{$rawBarcode}\" in file";
-                            continue;
-                        }
-
-                        $existingEmployee = Employee::query()
-                            ->where('barcode_id', $rawBarcode)
-                            ->orWhere('system_id', $rawBarcode)
-                            ->first();
-
-                        if (! $existingEmployee) {
-                            $barcode = $rawBarcode;
-                        }
-
-                        $seenBarcodes[$rawBarcode] = true;
-                    }
-                }
-
-                if ($existingEmployee) {
-                    if ($sequenceNumber !== null) {
-                        $folder = $folderCodeService->assignBySequenceNumber($company, $sequenceNumber, $existingEmployee->id);
-
-                        if ($folder && $existingEmployee->folder_id !== $folder->id) {
-                            if ($existingEmployee->folder_id) {
-                                Folder::where('id', $existingEmployee->folder_id)->update(['is_available' => true]);
-                            }
-
-                            $existingEmployee->folder_id = $folder->id;
-                            $existingEmployee->saveQuietly();
-                        } elseif (! $folder) {
-                            $skipped[] = "Row {$lineNumber}: folder number {$rawNumber} is already assigned to another employee";
-                        }
-
-                        if ($folder) {
-                            $location = $this->resolveFolderLocationFromSequence($company, $folder->sequence_number);
-                            if ($location) {
-                                $existingEmployee->folder_location_id = $location->id;
-                                $existingEmployee->saveQuietly();
-                            }
-                        }
-                    }
-
-                    $updated++;
-                } else {
-                    $systemId = $barcode ?: 'IMP-' . strtoupper(uniqid());
-
-                    $employee = Employee::withoutSyncingToSearch(function () use ($systemId, $barcode, $firstName, $middleName, $lastName, $companyId) {
-                        return Employee::create([
-                            'system_id'   => $systemId,
-                            'barcode_id'  => $barcode,
-                            'first_name'  => $firstName,
-                            'middle_name' => $middleName,
-                            'last_name'   => $lastName,
-                            'company_id'  => $companyId,
-                            'status'      => 'active',
-                        ]);
-                    });
-
-                    if ($sequenceNumber !== null) {
-                        $folder = $folderCodeService->assignBySequenceNumber($company, $sequenceNumber);
-
-                        if ($folder) {
-                            $employee->folder_id = $folder->id;
-                            $employee->saveQuietly();
-
-                            $location = $this->resolveFolderLocationFromSequence($company, $folder->sequence_number);
-                            if ($location) {
-                                $employee->folder_location_id = $location->id;
-                                $employee->saveQuietly();
-                            }
-                        } else {
-                            $skipped[] = "Row {$lineNumber}: folder number {$rawNumber} is already assigned to another employee";
-                        }
-                    }
-
-                    $imported++;
-                }
-            }
-        });
-
-        AuditService::log(
-            'imported',
-            "Imported {$imported} employees from Excel (updated {$updated} existing)" . (count($skipped) ? ', ' . count($skipped) . ' skipped' : ''),
-        );
-
-        $parts = [];
-
-        if ($imported > 0) {
-            $parts[] = "{$imported} new employee(s) created";
-        }
-
-        if ($updated > 0) {
-            $parts[] = "{$updated} existing employee(s) updated";
-        }
-
-        $message = 'Successfully processed. ' . implode(', ', $parts) . '.';
-
-        if (count($skipped) > 0) {
-            $message .= ' Skipped rows:<br>' . implode('<br>', $skipped);
-        }
-
-        if ($imported === 0 && $updated === 0) {
-            return back()->with('error', $message);
-        }
-
-        return back()->with('success', $message);
-    }
-
-    /**
-     * Get employee details as JSON (for Archive modal).
-     */
     public function details(int $id)
     {
         $employee = Employee::withTrashed()
-            ->with(['company', 'folder', 'folderLocation'])
+            ->with(['company', 'folder', 'folderLocation', 'bankType'])
             ->findOrFail($id);
 
+        $latestUpdate = AuditLog::where('model_type', Employee::class)
+            ->where('model_id', $employee->id)
+            ->whereIn('action', ['created', 'updated', 'restored'])
+            ->with('user')
+            ->latest()
+            ->first();
+
+        $initials = collect(explode(' ', $employee->full_name))
+            ->map(fn($n) => mb_substr($n, 0, 1))
+            ->take(2)
+            ->join('');
+
+        $atmStatusLabel = '—';
+        if ($employee->atm_status === 'on_process') {
+            $atmStatusLabel = 'On Process';
+        } elseif ($employee->atm_status === 'for_releasing') {
+            $atmStatusLabel = 'For Releasing';
+        } elseif ($employee->atm_status === 'received') {
+            $atmStatusLabel = 'Received';
+        }
+
         return response()->json([
+            'id' => $employee->id,
             'name' => $employee->full_name,
+            'initials' => strtoupper($initials),
             'system_id' => $employee->system_id,
             'barcode_id' => $employee->barcode_id ?: '—',
             'folder_code' => $employee->folder?->folder_code ?: '—',
@@ -676,7 +499,17 @@ class EmployeeController extends Controller
             'date_hired' => $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—',
             'archive_date' => $employee->archive_date ? $employee->archive_date->format('F d, Y') : '—',
             'archived_at' => $employee->deleted_at?->format('F d, Y h:i A'),
-            'status' => ucfirst($employee->status),
+            'status' => $employee->status,
+            'status_label' => ucfirst($employee->status),
+            'atm_status' => $employee->atm_status ?: 'none',
+            'atm_status_label' => $atmStatusLabel,
+            'bank_name' => $employee->bankType?->name ?: '—',
+            'latest_update' => $latestUpdate ? [
+                'user_name' => $latestUpdate->user?->name ?: 'System',
+                'date' => $latestUpdate->created_at->format('M d, Y'),
+                'time' => $latestUpdate->created_at->format('h:i A'),
+            ] : null,
+            'is_encoder_or_admin' => auth()->user()->hasRole('admin', 'encoder'),
         ]);
     }
 

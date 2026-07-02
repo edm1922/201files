@@ -141,8 +141,8 @@ $(document).ready(function () {
     // Navigate to the employee's profile page
     function navigateToEmployee(emp) {
         if (emp.id) {
-            const base = document.querySelector('meta[name="app-base-url"]')?.getAttribute('content') || '';
-            window.location.href = base + '/employees/' + emp.id;
+            $('#meiliResults').hide();
+            openEmployeeDetailModal(emp.id);
         }
     }
 
