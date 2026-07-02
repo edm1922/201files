@@ -40,14 +40,14 @@ return new class extends Migration
             $table->dropForeign(['physical_location_id']);
             $table->dropColumn('physical_location_id');
             $table->dropColumn('folder_code');
-            $table->foreignId('slot_id')->nullable()->after('company_id')->constrained()->nullOnDelete();
+            $table->foreignId('slot_id')->nullable()->constrained()->nullOnDelete();
         });
 
         // ── 5. Drop old FK on documents, add slot_id ──
         Schema::table('documents', function (Blueprint $table) {
             $table->dropForeign(['physical_location_id']);
             $table->dropColumn('physical_location_id');
-            $table->foreignId('slot_id')->nullable()->after('department_id')->constrained()->nullOnDelete();
+            $table->foreignId('slot_id')->nullable()->constrained()->nullOnDelete();
         });
 
         // ── 6. Drop old physical_locations table ──
@@ -71,7 +71,7 @@ return new class extends Migration
             $table->dropForeign(['slot_id']);
             $table->dropColumn('slot_id');
             $table->foreignId('physical_location_id')->nullable()->constrained('physical_locations')->nullOnDelete();
-            $table->string('folder_code')->nullable()->after('status');
+            $table->string('folder_code')->nullable();
         });
 
         // ── Reverse documents ──

@@ -10,15 +10,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('folders', function (Blueprint $table) {
-            $table->foreignId('company_id')->nullable()->after('id')->constrained('companies')->nullOnDelete();
-            $table->unsignedInteger('sequence_number')->nullable()->after('company_id');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
+            $table->unsignedInteger('sequence_number')->nullable();
             $table->unique(['company_id', 'sequence_number'], 'folders_company_sequence_unique');
         });
 
         Schema::table('folder_locations', function (Blueprint $table) {
-            $table->foreignId('company_id')->nullable()->after('id')->constrained('companies')->nullOnDelete();
-            $table->unsignedInteger('range_start')->nullable()->after('row_name');
-            $table->unsignedInteger('range_end')->nullable()->after('range_start');
+            $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
+            $table->unsignedInteger('range_start')->nullable();
+            $table->unsignedInteger('range_end')->nullable();
             $table->unique(['company_id', 'row_name'], 'folder_locations_company_row_unique');
         });
 

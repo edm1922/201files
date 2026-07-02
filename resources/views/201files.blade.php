@@ -94,6 +94,11 @@
                     <button type="submit" class="btn-file-save" x-show="activeTab !== 'employee'">
                         <i class="fas fa-save me-1"></i>Save
                     </button>
+                    @if($isEncoderOrAdmin)
+                        <button type="button" class="btn btn-secondary ms-2" style="border-radius:4px; font-weight:500;" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                            <i class="fas fa-file-import me-1"></i>Import Excel
+                        </button>
+                    @endif
                     <a href="{{ route('201files') }}" id="close201Btn" class="btn btn-secondary ms-2" style="border-radius:4px; font-weight:500;">
                         <i class="fas fa-times me-1"></i>Close
                     </a>
@@ -589,4 +594,125 @@
         @include('employees.partials.update_history_modal')
         @include('employees.partials.detail_modal')
     </form>
+
+    {{-- ── Import Excel Modal ── --}}
+    @if($isEncoderOrAdmin)
+    <div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 16px; overflow: hidden;">
+                <form action="{{ route('employees.import-excel') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+
+                    <div class="modal-header border-bottom-0 px-4 pt-4 pb-0">
+                        <h5 class="fw-bold mb-0" id="importExcelModalLabel" style="color: #111827; letter-spacing: -0.025em;">
+                            <i class="fas fa-file-import me-2" style="color: #dd270d;"></i>Import Excel
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body px-4 py-3">
+                        <div id="importFormContent">
+                            <div class="mb-3">
+                                <label for="importFile" class="form-label fw-semibold" style="font-size: 0.875rem;">
+                                    Excel File <span class="text-danger">*</span>
+                                </label>
+                                <input type="file" id="importFile" name="file"
+                                       class="form-control @error('file') is-invalid @enderror"
+                                       accept=".xlsx,.xls" required>
+                                <small class="text-muted">Only .xlsx and .xls files are accepted.</small>
+                                @error('file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="importCompany" class="form-label fw-semibold" style="font-size: 0.875rem;">
+                                    Company <span class="text-danger">*</span>
+                                </label>
+                                <select id="importCompany" name="company_id"
+                                        class="form-control @error('company_id') is-invalid @enderror"
+                                        required>
+                                    <option value="">- Choose Company -</option>
+                                    @foreach($companies as $company)
+                                        <option value="{{ $company->id }}">{{ $company->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('company_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="alert alert-info p-3 mb-0" role="alert" style="font-size: 0.85rem; border-radius: 8px;">
+                                <i class="fas fa-info-circle me-1"></i>
+                                The file must have a column labelled <strong>NAME</strong> (format: <em>Lastname, Firstname Middlename</em>) and optionally <strong>BARCODE</strong> and <strong>NUMBER</strong> (folder sequence number). All imported employees will be set as <strong>Active</strong>.
+                            </div>
+                        </div>
+
+                        <div id="importLoading" class="d-none text-center py-4">
+                            <div class="spinner-border text-danger mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="fw-semibold mb-1" style="color: #111827;">Uploading & Importing...</p>
+                            <p class="text-muted small mb-0">Please wait, this may take a moment.</p>
+                            <div class="mt-4">
+                                <div class="placeholder-glow mb-2">
+                                    <span class="placeholder col-12 rounded" style="height: 10px;"></span>
+                                </div>
+                                <div class="placeholder-glow mb-2">
+                                    <span class="placeholder col-8 rounded" style="height: 10px;"></span>
+                                </div>
+                                <div class="placeholder-glow mb-2">
+                                    <span class="placeholder col-10 rounded" style="height: 10px;"></span>
+                                </div>
+                                <div class="placeholder-glow mb-2">
+                                    <span class="placeholder col-7 rounded" style="height: 10px;"></span>
+                                </div>
+                                <div class="placeholder-glow">
+                                    <span class="placeholder col-11 rounded" style="height: 10px;"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-top-0 px-4 pb-4 pt-2">
+                        <button type="button" class="btn btn-light w-100 m-0"
+                                style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px; color: #4b5563; background-color: #f3f4f6; border: none;"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-danger w-100 m-0 d-inline-flex align-items-center justify-content-center gap-2"
+                                style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px; border: none; background-color: #dd270d;">
+                            <i class="fas fa-upload"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @push('scripts')
+    <script>
+        document.getElementById('importExcelModal')?.addEventListener('submit', function (e) {
+            const form  = e.target;
+            const btn   = form.querySelector('button[type="submit"]');
+            const modal = this;
+
+            document.getElementById('importFormContent').classList.add('d-none');
+            document.getElementById('importLoading').classList.remove('d-none');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span> Importing...';
+
+            form.querySelectorAll('button[data-bs-dismiss="modal"]').forEach(el => el.disabled = true);
+
+            modal.querySelector('.btn-close')?.classList.add('d-none');
+
+            if (typeof bootstrap !== 'undefined') {
+                const instance = bootstrap.Modal.getInstance(modal);
+                if (instance) instance._config.keyboard = false;
+            }
+        });
+    </script>
+    @endpush
 </x-app-layout>

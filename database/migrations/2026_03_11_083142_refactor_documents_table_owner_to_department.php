@@ -19,7 +19,7 @@ return new class extends Migration
             $table->dropColumn(['owner_type', 'owner_id']);
             
             // Add the new department_id foreign key
-            $table->foreignId('department_id')->nullable()->after('id')->constrained('departments')->onDelete('cascade');
+            $table->foreignId('department_id')->nullable()->constrained('departments')->onDelete('cascade');
         });
     }
 
@@ -32,8 +32,8 @@ return new class extends Migration
             $table->dropForeign(['department_id']);
             $table->dropColumn('department_id');
             
-            $table->string('owner_type')->after('id');
-            $table->unsignedBigInteger('owner_id')->after('owner_type');
+            $table->string('owner_type');
+            $table->unsignedBigInteger('owner_id');
             
             $table->index(['owner_type', 'owner_id', 'document_type_id'], 'docs_owner_type_idx');
         });

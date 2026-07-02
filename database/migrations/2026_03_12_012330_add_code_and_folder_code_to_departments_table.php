@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('departments', function (Blueprint $table) {
-            $table->string('code')->nullable()->after('name');
-            $table->string('folder_code')->nullable()->unique()->after('code');
+            $table->string('code')->nullable();
+            $table->string('folder_code')->nullable()->unique();
         });
     }
 

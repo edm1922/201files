@@ -20,9 +20,9 @@ return new class extends Migration
         });
 
         Schema::table('documents', function (Blueprint $table) {
-            $table->foreignId('document_folder_id')->nullable()->after('folder_location_id')->constrained('document_folders')->nullOnDelete();
-            $table->enum('upload_mode', ['standard', 'scan_packet'])->default('standard')->after('mime_type');
-            $table->json('source_filenames')->nullable()->after('metadata');
+            $table->foreignId('document_folder_id')->nullable()->constrained('document_folders')->nullOnDelete();
+            $table->string('upload_mode', 20)->default('standard');
+            $table->json('source_filenames')->nullable();
         });
     }
 

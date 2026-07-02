@@ -10,10 +10,10 @@ cd /d "%~dp0"
 echo ---------------------------------------------------
 echo  Starting CSC-Document-Management-System
 echo  Access locally at: http://localhost:8000
-echo  Access on Network: http://MyIP:8000
+echo  Access on Network: http://201files.duckdns.org:8000
 echo ---------------------------------------------------
 
-:: Using 0.0.0.0 ensures it broadcasts to your static IP automatically
+:: Using 0.0.0.0 ensures it broadcasts to any local IP automatically
 php artisan serve --host=0.0.0.0 --port=8000
 
 pause

@@ -13,7 +13,9 @@ use App\Models\FolderLocation;
 use App\Models\HiringEvent;
 use App\Services\AuditService;
 use App\Services\FolderCodeService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class EmployeeController extends Controller
 {
@@ -75,6 +77,14 @@ class EmployeeController extends Controller
 
             $employee->folder_id = $folder->id;
             $employee->saveQuietly();
+
+            if (! $employee->folder_location_id) {
+                $location = $this->resolveFolderLocationFromSequence($company, $folder->sequence_number);
+                if ($location) {
+                    $employee->folder_location_id = $location->id;
+                    $employee->saveQuietly();
+                }
+            }
 
             // Create Hiring Event persistence record
             if ($employee->date_hired) {
@@ -228,6 +238,15 @@ class EmployeeController extends Controller
         return $mapped;
     }
 
+    private function resolveFolderLocationFromSequence(Company $company, int $sequenceNumber): ?FolderLocation
+    {
+        return FolderLocation::query()
+            ->where('company_id', $company->id)
+            ->where('range_start', '<=', $sequenceNumber)
+            ->where('range_end', '>=', $sequenceNumber)
+            ->first();
+    }
+
     /**
      * Update an existing employee.
      */
@@ -303,6 +322,18 @@ class EmployeeController extends Controller
                 $employee->saveQuietly();
             } elseif ($currentFolder->is_available) {
                 $currentFolder->update(['is_available' => false]);
+            }
+
+            if ($employee->folder_id && ! $request->filled('folder_location_id')) {
+                $assignedFolder = Folder::query()->find($employee->folder_id);
+                if ($assignedFolder && $assignedFolder->sequence_number) {
+                    $locationCompany = Company::query()->findOrFail($targetCompanyId);
+                    $location = $this->resolveFolderLocationFromSequence($locationCompany, $assignedFolder->sequence_number);
+                    if ($location) {
+                        $employee->folder_location_id = $location->id;
+                        $employee->saveQuietly();
+                    }
+                }
             }
 
             $fresh = $employee->fresh()->load(['company', 'folder', 'folderLocation', 'bankType']);

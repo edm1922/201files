@@ -41,8 +41,8 @@ return new class extends Migration
 
         // Re-add the original columns
         Schema::table('departments', function (Blueprint $table) {
-            $table->string('folder_code')->nullable()->unique()->after('code');
-            $table->foreignId('folder_location_id')->nullable()->after('updated_at')->constrained('folder_locations')->nullOnDelete();
+            $table->string('folder_code')->nullable()->unique();
+            $table->foreignId('folder_location_id')->nullable()->constrained('folder_locations')->nullOnDelete();
         });
     }
 };

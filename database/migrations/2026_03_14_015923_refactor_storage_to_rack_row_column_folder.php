@@ -32,7 +32,7 @@ return new class extends Migration
             // Drop old unique constraint using exact index name
             $table->dropUnique('racks_cabinet_id_rack_code_unique');
             $table->renameColumn('rack_code', 'column_code');
-            $table->foreignId('row_id')->nullable()->after('rack_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('row_id')->nullable()->constrained()->cascadeOnDelete();
         });
 
         // Add rack foreign key back

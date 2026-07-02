@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('document_folders', function (Blueprint $table) {
-            $table->string('folder_code', 40)->nullable()->after('name');
+            $table->string('folder_code', 40)->nullable();
             $table->index(['department_id', 'folder_code'], 'doc_folders_dept_code_idx');
             $table->unique(['department_id', 'folder_code'], 'doc_folders_dept_folder_code_unique');
         });

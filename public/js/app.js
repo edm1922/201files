@@ -643,7 +643,8 @@ function showUpdateHistory(employeeId) {
 
     modal.show();
 
-    fetch(`/employees/${employeeId}/update-history`)
+    const base = document.querySelector('meta[name="app-base-url"]')?.getAttribute('content') || '';
+    fetch(base + `/employees/${employeeId}/update-history`)
         .then(response => response.json())
         .then(data => {
             if (data.length === 0) {
