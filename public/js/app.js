@@ -141,7 +141,8 @@ $(document).ready(function () {
     // Navigate to the employee's profile page
     function navigateToEmployee(emp) {
         if (emp.id) {
-            window.location.href = '/employees/' + emp.id;
+            $('#meiliResults').hide();
+            openEmployeeDetailModal(emp.id);
         }
     }
 

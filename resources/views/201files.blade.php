@@ -42,7 +42,9 @@
     @php
         $isNew      = $employee === null;
         $isEncoderOrAdmin = Auth::user()->hasRole('admin', 'encoder');
-        $initialTab = ($isNew && $isEncoderOrAdmin) ? 'personal' : 'employee';
+        $hasPageQuery = request()->has('page');
+        $isEditMode = request()->has('edit');
+        $initialTab = (($isNew || $isEditMode) && $isEncoderOrAdmin && !$hasPageQuery) ? 'personal' : 'employee';
         
         $formAction = $isNew ? route('employees.store') : route('employees.update', $employee);
         $formMethod = $isNew ? 'POST' : 'PUT';
@@ -102,7 +104,7 @@
             <div class="tab-content file-panel__body" id="fileTabsContent">
 
                 {{-- ══ EMPLOYEE TAB (display-only summary) ══ --}}
-                <div class="tab-pane fade {{ ($isNew && Auth::user()->hasRole('admin', 'encoder')) ? '' : 'show active' }}" id="panel-employee"
+                <div class="tab-pane fade {{ $initialTab === 'employee' ? 'show active' : '' }}" id="panel-employee"
                      role="tabpanel" aria-labelledby="tab-employee">
 
                     @if($employee)
@@ -218,16 +220,89 @@
                             </div>
                         @endif
                     @else
-                        <div class="text-center py-5 text-muted">
-                            <i class="fas fa-user-slash fa-2x mb-3"></i>
-                            <p class="mb-0">No employee loaded. Search above or click <strong>New</strong> to create one.</p>
+                        <div class="card shadow-sm border-0 mb-3" style="border-radius: 12px; overflow: hidden;">
+                            <div class="card-header bg-light py-3 border-0">
+                                <h5 class="mb-0 fw-bold text-dark d-flex align-items-center" style="font-size: 1rem;">
+                                    <i class="fas fa-users me-2 text-danger"></i>Employee Directory
+                                </h5>
+                            </div>
+                            @if(isset($employees) && $employees->count() > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0 align-middle" style="font-size: 0.9rem;">
+                                        <thead style="background-color: #f9fafb;">
+                                            <tr>
+                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Folder Code</th>
+                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Full Name</th>
+                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">System ID</th>
+                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Company</th>
+                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Location</th>
+                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Status</th>
+                                                <th class="border-0 text-uppercase text-muted text-center" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px; width: 150px;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($employees as $emp)
+                                                <tr>
+                                                    <td class="border-bottom-0" style="padding: 16px 24px;">
+                                                        <span class="fw-semibold" style="color: #dd270d; font-family: monospace;">
+                                                            {{ $emp->folder?->folder_code ?? '—' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="border-bottom-0 text-uppercase fw-semibold" style="padding: 16px 24px;">
+                                                        {{ $emp->full_name }}
+                                                    </td>
+                                                    <td class="border-bottom-0" style="padding: 16px 24px; font-family: monospace;">
+                                                        {{ $emp->system_id }}
+                                                    </td>
+                                                    <td class="border-bottom-0" style="padding: 16px 24px;">
+                                                        {{ $emp->company?->name ?? '—' }}
+                                                    </td>
+                                                    <td class="border-bottom-0 fw-semibold" style="padding: 16px 24px; color: #dd270d; font-family: monospace;">
+                                                        {{ $emp->folderLocation?->full_location ?? '—' }}
+                                                    </td>
+                                                    <td class="border-bottom-0" style="padding: 16px 24px;">
+                                                        <span class="emp-status-badge emp-status-badge--{{ $emp->status }}">
+                                                            {{ ucfirst($emp->status) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
+                                                        <button type="button" class="btn btn-sm"
+                                                           title="View Profile"
+                                                           style="border-radius: 6px; padding: 6px 12px; background-color: rgba(221, 39, 13, 0.1); color: #dd270d; font-weight: 500; transition: all 0.2s;"
+                                                           onmouseover="this.style.backgroundColor='rgba(221, 39, 13, 0.2)'"
+                                                           onmouseout="this.style.backgroundColor='rgba(221, 39, 13, 0.1)'"
+                                                           onclick="openEmployeeDetailModal({{ $emp->id }})">
+                                                            <i class="fas fa-eye me-1"></i> View
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @if($employees->hasPages())
+                                    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-3 px-4" style="border-radius: 0 0 12px 12px;">
+                                        <div class="text-muted" style="font-size: 0.8rem;">
+                                            Showing {{ $employees->firstItem() }}–{{ $employees->lastItem() }} of {{ $employees->total() }}
+                                        </div>
+                                        <div>
+                                            {{ $employees->links('pagination::bootstrap-5') }}
+                                        </div>
+                                    </div>
+                                @endif
+                            @else
+                                <div class="card-body text-center py-5 text-muted">
+                                    <i class="fas fa-users-slash fa-2x mb-3" style="opacity: 0.3;"></i>
+                                    <p class="mb-0">No active employees found.</p>
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
 
                 {{-- ══ PERSONAL TAB (editable form) (Admin/Encoder only) ══ --}}
                 @if(Auth::user()->hasRole('admin', 'encoder'))
-                    <div class="tab-pane fade {{ $isNew ? 'show active' : '' }}" id="panel-personal"
+                    <div class="tab-pane fade {{ $initialTab === 'personal' ? 'show active' : '' }}" id="panel-personal"
                          role="tabpanel" aria-labelledby="tab-personal">
 
                         <h6 class="panel-section-title">Personal Information</h6>
@@ -512,5 +587,6 @@
         </div>{{-- end file-panel --}}
         @include('employees.partials.resigned_modal')
         @include('employees.partials.update_history_modal')
+        @include('employees.partials.detail_modal')
     </form>
 </x-app-layout>

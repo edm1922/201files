@@ -36,8 +36,14 @@ class EmployeeController extends Controller
             ->orderBy('row_name', 'ASC')
             ->get();
 
+        $employees = Employee::with(['company', 'folder', 'folderLocation'])
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->paginate(15);
+
         return view('201files', [
             'employee' => null,
+            'employees' => $employees,
             'companies' => $companies,
             'companyNextFolderCodes' => $companyNextFolderCodes,
             'companyLastFolderCodes' => $companyLastFolderCodes,
@@ -423,17 +429,37 @@ class EmployeeController extends Controller
             ->with('success', 'Employee permanently deleted. Folder is now available.');
     }
 
-    /**
-     * Get employee details as JSON (for Archive modal).
-     */
     public function details(int $id)
     {
         $employee = Employee::withTrashed()
-            ->with(['company', 'folder', 'folderLocation'])
+            ->with(['company', 'folder', 'folderLocation', 'bankType'])
             ->findOrFail($id);
 
+        $latestUpdate = AuditLog::where('model_type', Employee::class)
+            ->where('model_id', $employee->id)
+            ->whereIn('action', ['created', 'updated', 'restored'])
+            ->with('user')
+            ->latest()
+            ->first();
+
+        $initials = collect(explode(' ', $employee->full_name))
+            ->map(fn($n) => mb_substr($n, 0, 1))
+            ->take(2)
+            ->join('');
+
+        $atmStatusLabel = '—';
+        if ($employee->atm_status === 'on_process') {
+            $atmStatusLabel = 'On Process';
+        } elseif ($employee->atm_status === 'for_releasing') {
+            $atmStatusLabel = 'For Releasing';
+        } elseif ($employee->atm_status === 'received') {
+            $atmStatusLabel = 'Received';
+        }
+
         return response()->json([
+            'id' => $employee->id,
             'name' => $employee->full_name,
+            'initials' => strtoupper($initials),
             'system_id' => $employee->system_id,
             'barcode_id' => $employee->barcode_id ?: '—',
             'folder_code' => $employee->folder?->folder_code ?: '—',
@@ -442,7 +468,17 @@ class EmployeeController extends Controller
             'date_hired' => $employee->date_hired ? $employee->date_hired->format('F d, Y') : '—',
             'archive_date' => $employee->archive_date ? $employee->archive_date->format('F d, Y') : '—',
             'archived_at' => $employee->deleted_at?->format('F d, Y h:i A'),
-            'status' => ucfirst($employee->status),
+            'status' => $employee->status,
+            'status_label' => ucfirst($employee->status),
+            'atm_status' => $employee->atm_status ?: 'none',
+            'atm_status_label' => $atmStatusLabel,
+            'bank_name' => $employee->bankType?->name ?: '—',
+            'latest_update' => $latestUpdate ? [
+                'user_name' => $latestUpdate->user?->name ?: 'System',
+                'date' => $latestUpdate->created_at->format('M d, Y'),
+                'time' => $latestUpdate->created_at->format('h:i A'),
+            ] : null,
+            'is_encoder_or_admin' => auth()->user()->hasRole('admin', 'encoder'),
         ]);
     }
 
