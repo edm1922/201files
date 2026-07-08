@@ -91,12 +91,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees/{id}/update-history', [EmployeeController::class, 'updateHistory'])
         ->name('employees.update-history');
 
+    Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
+        ->name('employees.details');
+
     // ── Archive (admin only) ──
     Route::middleware('role:admin')->group(function () {
         Route::get('/archives', [ArchiveController::class, 'index'])
             ->name('archives.index');
-        Route::get('/employees/{id}/details', [EmployeeController::class, 'details'])
-            ->name('employees.details');
         Route::patch('/employees/{id}/restore', [EmployeeController::class, 'restore'])
             ->name('employees.restore');
     });
