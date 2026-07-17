@@ -9,7 +9,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('SET session_replication_role = replica;');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
         DB::table('hiring_events')->truncate();
         DB::table('document_expiry_notifications')->truncate();
         DB::table('department_user_access')->truncate();
@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         DB::table('bank_types')->truncate();
         DB::table('document_locations')->truncate();
         DB::table('companies')->truncate();
-        DB::statement('SET session_replication_role = origin;');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
 
         $this->call(CompanySeeder::class);
         $this->call(UserSeeder::class);

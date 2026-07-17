@@ -17,6 +17,15 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <style>
+        :root {
+            --company-primary: {{ config('brand.primary_color') }};
+            --company-primary-hover: {{ config('brand.primary_color') }}dd;
+            --company-primary-light: {{ config('brand.primary_color') }}1a;
+            --company-primary-border: {{ config('brand.primary_color') }}33;
+            --brand-red: {{ config('brand.primary_color') }};
+        }
+    </style>
 </head>
 <body class="login-page-wrapper">
 

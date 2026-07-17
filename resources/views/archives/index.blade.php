@@ -74,7 +74,7 @@
                 color: {{ config('brand.primary_color') }} !important;
                 background-color: transparent !important;
                 border-color: transparent !important;
-                border-bottom: 3px solid rgba(221, 39, 13, 0.3) !important;
+                border-bottom: 3px solid var(--company-primary-border) !important;
             }
         </style>
     @endpush

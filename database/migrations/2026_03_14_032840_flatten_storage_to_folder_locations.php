@@ -113,7 +113,7 @@ return new class extends Migration
                 FROM information_schema.KEY_COLUMN_USAGE 
                 WHERE TABLE_NAME = ? 
                 AND CONSTRAINT_NAME = ? 
-                AND TABLE_CATALOG = current_database()
+                AND TABLE_SCHEMA = DATABASE()
             ", [$tableName, $tableName . '_folder_location_id_foreign']);
 
             if (empty($fkExists)) {

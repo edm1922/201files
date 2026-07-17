@@ -149,7 +149,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, {{ config('brand.primary_color') }} 0%, #a81d0a 100%); color: #fff;">
+                                        <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, {{ config('brand.primary_color') }} 0%, var(--company-primary-hover) 100%); color: #fff;">
                                             <i class="fas fa-layer-group" style="font-size: 0.8rem;"></i>
                                         </div>
                                         <span class="fw-bold" style="font-size: 1rem; color: #111827;">{{ $location->row_name }}</span>
@@ -590,7 +590,7 @@
                 color: {{ config('brand.primary_color') }} !important;
                 background-color: transparent !important;
                 border-color: transparent !important;
-                border-bottom: 3px solid rgba(221, 39, 13, 0.3) !important;
+                border-bottom: 3px solid var(--company-primary-border) !important;
             }
         </style>
     @endpush

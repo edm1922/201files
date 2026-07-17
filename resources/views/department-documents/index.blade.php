@@ -1296,7 +1296,7 @@
             }
 
             .doc-table tbody tr.doc-row--selected td {
-                background: rgba(221, 39, 13, 0.08);
+                background: var(--company-primary-light);
             }
 
             .doc-table tbody tr.doc-row--selected td:first-child {

@@ -376,7 +376,7 @@
         }
 
         .bg-brand-light {
-            background: rgba(221, 39, 13, 0.1);
+            background: var(--company-primary-light);
         }
 
         .bg-success-light {
@@ -392,7 +392,7 @@
         }
 
         .border-brand-dashed {
-            border: 1px dashed rgba(221, 39, 13, 0.3) !important;
+            border: 1px dashed var(--company-primary-border) !important;
         }
 
         .report-title {
@@ -427,7 +427,7 @@
         .report-input:focus {
             background-color: #fff;
             border-color: {{ config('brand.primary_color') }};
-            box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.1);
+            box-shadow: 0 0 0 3px var(--company-primary-light);
         }
 
         .column-picker::-webkit-scrollbar {

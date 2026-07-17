@@ -132,7 +132,7 @@
         .btn-home:hover {
             background-color: var(--company-primary-hover);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(221, 39, 13, 0.25);
+            box-shadow: 0 8px 20px var(--company-primary-light);
             color: #fff;
         }
 

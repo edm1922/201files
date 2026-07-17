@@ -269,9 +269,9 @@
                                                     <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
                                                         <button type="button" class="btn btn-sm"
                                                            title="View Profile"
-                                                           style="border-radius: 6px; padding: 6px 12px; background-color: rgba(221, 39, 13, 0.1); color: {{ config('brand.primary_color') }}; font-weight: 500; transition: all 0.2s;"
-                                                           onmouseover="this.style.backgroundColor='rgba(221, 39, 13, 0.2)'"
-                                                           onmouseout="this.style.backgroundColor='rgba(221, 39, 13, 0.1)'"
+                                                           style="border-radius: 6px; padding: 6px 12px; background-color: var(--company-primary-light); color: {{ config('brand.primary_color') }}; font-weight: 500; transition: all 0.2s;"
+                                                           onmouseover="this.style.backgroundColor='{{ config('brand.primary_color') }}33'"
+                                                           onmouseout="this.style.backgroundColor='var(--company-primary-light)'"
                                                            onclick="openEmployeeDetailModal({{ $emp->id }})">
                                                             <i class="fas fa-eye me-1"></i> View
                                                         </button>
