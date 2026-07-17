@@ -1,10 +1,9 @@
 /* ══════════════════════════════════════════════════════════════
-   CSC Document Management System — Theme
-   Brand Red: #dd270d  (matching CENTRO main system)
+   Document Management System — Theme
    ══════════════════════════════════════════════════════════════ */
 
 :root {
-    --brand-red: #dd270d;
+    --brand-red: var(--company-primary, #dd270d);
     --brand-red-dark: #b81f0a;
     --brand-red-light: #f44528;
     --sidebar-bg: #2c3340;
@@ -13,7 +12,7 @@
     --text-primary: #ffffff;
     --text-muted: #a0aab5;
     --hover-bg: rgba(255, 255, 255, 0.08);
-    --active-bg: rgba(221, 39, 13, 0.25);
+    --active-bg: var(--company-primary-light, rgba(221, 39, 13, 0.25));
     --active-border: var(--brand-red);
 }
 

@@ -37,7 +37,7 @@
                             <h2 class="h3 fw-bold mb-0">Project Purpose</h2>
                         </div>
                         <p class="text-secondary leading-loose">
-                            The <strong>CSC Document Management System</strong> was developed to bridge the gap between physical and digital document archiving. 
+                            The <strong>{{ config('brand.name') }}</strong> was developed to bridge the gap between physical and digital document archiving. 
                             It serves as a central hub for tracking 201 Files, Departmental Documents, and monitoring storage utilization with high precision, ensuring data integrity and rapid retrieval.
                         </p>
                     </div>
@@ -305,7 +305,7 @@
                         
                         <div class="mt-5 footer-note text-muted py-4">
                             <p class="mb-1">Developed as part of the <strong>OJT Internship Program</strong></p>
-                            <p class="small">&copy; {{ date('Y') }} CSC Document Management System. All rights reserved.</p>
+                            <p class="small">&copy; {{ date('Y') }} {{ config('brand.name') }}. All rights reserved.</p>
                         </div>
                     </div>
 

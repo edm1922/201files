@@ -85,7 +85,7 @@
                 </div>
                 <div class="modal-footer border-top-0 px-4 pb-4 pt-4" style="background-color: #ffffff;">
                     <button type="button" class="btn btn-light" style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 18px; color: #4b5563; background-color: #f3f4f6; border: none; transition: background 0.2s;" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn text-white d-inline-flex align-items-center gap-2" style="background-color: #dd270d; font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 20px; border: none;">
+                    <button type="submit" class="btn text-white d-inline-flex align-items-center gap-2" style="background-color: {{ config('brand.primary_color') }}; font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px 20px; border: none;">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>

@@ -16,7 +16,7 @@
                         <h2 class="text-uppercase mb-1 fw-extrabold text-dark" id="modal-name" style="font-size: 1.5rem; letter-spacing: -0.02em; margin: 0; font-weight: 800;"></h2>
                         <div class="profile-meta d-flex align-items-center gap-2 flex-wrap" style="color: #6b7280; font-size: 0.9rem; font-weight: 600;">
                             <span>Folder code:</span>
-                            <span class="profile-field__value profile-field__value--red profile-field__value--mono fw-bold" id="modal-folder-code" style="color: #dd270d; font-family: monospace;"></span>
+                            <span class="profile-field__value profile-field__value--red profile-field__value--mono fw-bold" id="modal-folder-code" style="color: {{ config('brand.primary_color') }}; font-family: monospace;"></span>
                             <span class="dot" style="width: 4px; height: 4px; background: #d1d5db; border-radius: 50%;"></span>
                             <span class="emp-status-badge" id="modal-status-badge" style="font-size: 0.72rem; padding: 3px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase;"></span>
                         </div>
@@ -76,7 +76,7 @@
                     <div class="profile-card__body p-3">
                         <div class="profile-field d-flex justify-content-between">
                             <span class="profile-field__label text-dark" style="font-size: 0.8rem;">Location</span>
-                            <span class="profile-field__value profile-field__value--red profile-field__value--mono fw-bold" id="modal-location" style="color: #dd270d; font-family: monospace; font-size: 0.85rem;"></span>
+                            <span class="profile-field__value profile-field__value--red profile-field__value--mono fw-bold" id="modal-location" style="color: {{ config('brand.primary_color') }}; font-family: monospace; font-size: 0.85rem;"></span>
                         </div>
                     </div>
                 </div>
@@ -96,7 +96,7 @@
             <div class="modal-footer border-0 bg-light d-flex justify-content-between px-4 py-3">
                 <div>
                     <!-- Edit Button for Admins/Encoders -->
-                    <a href="#" id="modal-edit-btn" class="btn btn-danger px-4" style="border-radius: 6px; font-size: 0.85rem; font-weight: 600; background-color: #dd270d; border: none; display: none;">
+                    <a href="#" id="modal-edit-btn" class="btn btn-danger px-4" style="border-radius: 6px; font-size: 0.85rem; font-weight: 600; background-color: {{ config('brand.primary_color') }}; border: none; display: none;">
                         <i class="fas fa-edit me-1"></i> Edit Profile
                     </a>
                 </div>
@@ -109,7 +109,8 @@
 <script>
     function openEmployeeDetailModal(employeeId) {
         // Fetch employee details via AJAX
-        fetch(`/employees/${employeeId}/details`)
+        const base = document.querySelector('meta[name="app-base-url"]')?.getAttribute('content') || '';
+        fetch(`${base}/employees/${employeeId}/details`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Failed to fetch details');

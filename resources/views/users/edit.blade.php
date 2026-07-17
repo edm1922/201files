@@ -103,7 +103,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="mb-1 fw-bold text-dark" style="font-size: 0.85rem;">Reset User Password</p>
-                            <p class="mb-0 text-muted" style="font-size: 0.8rem;">Resets the user's password to the default <code>{lastname}csc</code>.</p>
+                            <p class="mb-0 text-muted" style="font-size: 0.8rem;">Resets the user's password to the default <code>{lastname}{{ config('brand.password_suffix') }}</code>.</p>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-danger shadow-sm"
                                 @click="openConfirmModal(

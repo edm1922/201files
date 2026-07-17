@@ -396,7 +396,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const selectedCompanyOption = companySelectForm.options[companySelectForm.selectedIndex];
         const companyCode = selectedCompanyOption ? (selectedCompanyOption.getAttribute('data-code') || '') : '';
-        const prefix = companyCode ? `CSC-${companyCode.toUpperCase()}-` : 'CSC-HR-';
+        const folderPrefix = document.querySelector('meta[name="app-folder-prefix"]')?.getAttribute('content') || 'CSC';
+        const prefix = companyCode ? `${folderPrefix}-${companyCode.toUpperCase()}-` : `${folderPrefix}-HR-`;
 
         // Update UI elements
         const prefixSpan = document.getElementById('companyPrefixSpan');
@@ -463,7 +464,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     const selectedCompanyId = String(companySelectForm.value || '');
                     const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
                     const nextCode = nextCodesMap[selectedCompanyId] || '';
-                    const prefix = (document.getElementById('companyPrefixSpan')?.textContent || 'CSC-HR-');
+                    const folderPrefix = document.querySelector('meta[name="app-folder-prefix"]')?.getAttribute('content') || 'CSC';
+                    const prefix = (document.getElementById('companyPrefixSpan')?.textContent || `${folderPrefix}-HR-`);
 
                     hiddenIdField.value = '';
                     codeInput.value = nextCode.replace(prefix, '');
@@ -481,7 +483,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const selectedCompanyId = String(companySelectForm.value || '');
             const nextCodesMap = JSON.parse(availableCodeSelect.getAttribute('data-company-next-codes') || '{}');
             const nextCode = nextCodesMap[selectedCompanyId] || '';
-            const prefix = (document.getElementById('companyPrefixSpan')?.textContent || 'CSC-HR-');
+            const folderPrefix = document.querySelector('meta[name="app-folder-prefix"]')?.getAttribute('content') || 'CSC';
+            const prefix = (document.getElementById('companyPrefixSpan')?.textContent || `${folderPrefix}-HR-`);
 
             if (hiddenIdField) hiddenIdField.value = '';
             if (availableCodeSelect) availableCodeSelect.value = '';

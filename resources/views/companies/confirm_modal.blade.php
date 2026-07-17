@@ -22,7 +22,7 @@
                     <button type="button" class="btn btn-light w-100 m-0" style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px; color: #4b5563; background-color: #f3f4f6; border: none; transition: background 0.2s;" data-bs-dismiss="modal" onmouseover="this.style.backgroundColor='#e5e7eb'" onmouseout="this.style.backgroundColor='#f3f4f6'">Cancel</button>
                     <button type="submit" class="btn text-white w-100 m-0 d-inline-flex align-items-center justify-content-center gap-2"
                             :class="confirmTheme === 'danger' ? 'btn-danger' : (confirmTheme === 'success' ? 'btn-success' : '')"
-                            :style="confirmTheme !== 'danger' && confirmTheme !== 'success' ? 'background-color: #dd270d;' : ''"
+                            :style="confirmTheme !== 'danger' && confirmTheme !== 'success' ? 'background-color: {{ config('brand.primary_color') }};' : ''"
                             style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px; border: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
                         <span x-text="confirmButtonText">Confirm</span>
                     </button>

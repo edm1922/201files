@@ -39,8 +39,8 @@ class UserController extends Controller
     {
         $validated = $request->validated();
         
-        // Auto-generate default password: {last_name}csc
-        $defaultPassword = strtolower($validated['last_name']) . 'csc';
+        // Auto-generate default password: {last_name}{suffix}
+        $defaultPassword = strtolower($validated['last_name']) . config('brand.password_suffix');
         $validated['password'] = Hash::make($defaultPassword);
         
         $validated['is_active'] = $request->boolean('is_active', true);
@@ -164,7 +164,7 @@ class UserController extends Controller
                              ->with('error', 'You cannot reset your own password here. Please use normal password change mechanisms.');
         }
 
-        $defaultPassword = strtolower($user->last_name) . 'csc';
+        $defaultPassword = strtolower($user->last_name) . config('brand.password_suffix');
         
         $user->update([
             'password' => Hash::make($defaultPassword),

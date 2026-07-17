@@ -238,7 +238,6 @@
                                             <tr>
                                                 <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Folder Code</th>
                                                 <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Full Name</th>
-                                                <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">System ID</th>
                                                 <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Company</th>
                                                 <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Location</th>
                                                 <th class="border-0 text-uppercase text-muted" style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; padding: 12px 24px;">Status</th>
@@ -249,20 +248,17 @@
                                             @foreach($employees as $emp)
                                                 <tr>
                                                     <td class="border-bottom-0" style="padding: 16px 24px;">
-                                                        <span class="fw-semibold" style="color: #dd270d; font-family: monospace;">
+                                                        <span class="fw-semibold" style="color: {{ config('brand.primary_color') }}; font-family: monospace;">
                                                             {{ $emp->folder?->folder_code ?? '—' }}
                                                         </span>
                                                     </td>
                                                     <td class="border-bottom-0 text-uppercase fw-semibold" style="padding: 16px 24px;">
                                                         {{ $emp->full_name }}
                                                     </td>
-                                                    <td class="border-bottom-0" style="padding: 16px 24px; font-family: monospace;">
-                                                        {{ $emp->system_id }}
-                                                    </td>
                                                     <td class="border-bottom-0" style="padding: 16px 24px;">
                                                         {{ $emp->company?->name ?? '—' }}
                                                     </td>
-                                                    <td class="border-bottom-0 fw-semibold" style="padding: 16px 24px; color: #dd270d; font-family: monospace;">
+                                                    <td class="border-bottom-0 fw-semibold" style="padding: 16px 24px; color: {{ config('brand.primary_color') }}; font-family: monospace;">
                                                         {{ $emp->folderLocation?->full_location ?? '—' }}
                                                     </td>
                                                     <td class="border-bottom-0" style="padding: 16px 24px;">
@@ -273,7 +269,7 @@
                                                     <td class="border-bottom-0 text-center" style="padding: 16px 24px;">
                                                         <button type="button" class="btn btn-sm"
                                                            title="View Profile"
-                                                           style="border-radius: 6px; padding: 6px 12px; background-color: rgba(221, 39, 13, 0.1); color: #dd270d; font-weight: 500; transition: all 0.2s;"
+                                                           style="border-radius: 6px; padding: 6px 12px; background-color: rgba(221, 39, 13, 0.1); color: {{ config('brand.primary_color') }}; font-weight: 500; transition: all 0.2s;"
                                                            onmouseover="this.style.backgroundColor='rgba(221, 39, 13, 0.2)'"
                                                            onmouseout="this.style.backgroundColor='rgba(221, 39, 13, 0.1)'"
                                                            onclick="openEmployeeDetailModal({{ $emp->id }})">
@@ -496,7 +492,7 @@
                                     $nextFolderCode = $companyNextFolderCodes[$selectedCompanyId] ?? '';
                                     
                                     $company = $companies->firstWhere('id', $selectedCompanyId);
-                                    $prefix = $company ? 'CSC-' . strtoupper($company->code) . '-' : 'CSC-HR-';
+                                    $prefix = $company ? config('brand.folder_prefix') . '-' . strtoupper($company->code) . '-' : config('brand.folder_prefix') . '-HR-';
                                     
                                     $numericPart = $lastFolderCode !== 'None' ? preg_replace('/[^0-9]/', '', $lastFolderCode) : '0000';
                                     $dynamicMaxLength = max(4, strlen($numericPart));
@@ -605,7 +601,7 @@
 
                     <div class="modal-header border-bottom-0 px-4 pt-4 pb-0">
                         <h5 class="fw-bold mb-0" id="importExcelModalLabel" style="color: #111827; letter-spacing: -0.025em;">
-                            <i class="fas fa-file-import me-2" style="color: #dd270d;"></i>Import Excel
+                            <i class="fas fa-file-import me-2" style="color: {{ config('brand.primary_color') }};"></i>Import Excel
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -681,7 +677,7 @@
                             Cancel
                         </button>
                         <button type="submit" class="btn btn-danger w-100 m-0 d-inline-flex align-items-center justify-content-center gap-2"
-                                style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px; border: none; background-color: #dd270d;">
+                                style="font-weight: 600; font-size: 0.875rem; border-radius: 8px; padding: 10px; border: none; background-color: {{ config('brand.primary_color') }};">
                             <i class="fas fa-upload"></i> Import
                         </button>
                     </div>

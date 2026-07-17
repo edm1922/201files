@@ -36,7 +36,7 @@
                     <button type="button" class="nav-link border-0 text-decoration-none fw-semibold transition-colors duration-200"
                         @click="setTab('file-locations')"
                         style="font-size: 0.95rem; padding: 10px 20px;"
-                        :style="`border-bottom: 3px solid ${activeTab === 'file-locations' ? '#dd270d' : 'transparent'} !important; color: ${activeTab === 'file-locations' ? '#dd270d' : '#64748b'};`">
+                        :style="`border-bottom: 3px solid ${activeTab === 'file-locations' ? '{{ config('brand.primary_color') }}' : 'transparent'} !important; color: ${activeTab === 'file-locations' ? '{{ config('brand.primary_color') }}' : '#64748b'};`">
                         <i class="fas fa-users me-2"></i>201 File Locations
                     </button>
                 </li>
@@ -44,7 +44,7 @@
                     <button type="button" class="nav-link border-0 text-decoration-none fw-semibold transition-colors duration-200"
                         @click="setTab('document-locations')"
                         style="font-size: 0.95rem; padding: 10px 20px;"
-                        :style="`border-bottom: 3px solid ${activeTab === 'document-locations' ? '#dd270d' : 'transparent'} !important; color: ${activeTab === 'document-locations' ? '#dd270d' : '#64748b'};`">
+                        :style="`border-bottom: 3px solid ${activeTab === 'document-locations' ? '{{ config('brand.primary_color') }}' : 'transparent'} !important; color: ${activeTab === 'document-locations' ? '{{ config('brand.primary_color') }}' : '#64748b'};`">
                         <i class="fas fa-file-contract me-2"></i>Document Locations
                     </button>
                 </li>
@@ -149,7 +149,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #dd270d 0%, #a81d0a 100%); color: #fff;">
+                                        <div class="d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, {{ config('brand.primary_color') }} 0%, #a81d0a 100%); color: #fff;">
                                             <i class="fas fa-layer-group" style="font-size: 0.8rem;"></i>
                                         </div>
                                         <span class="fw-bold" style="font-size: 1rem; color: #111827;">{{ $location->row_name }}</span>
@@ -201,7 +201,7 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center py-5">
-                                    <i class="fas fa-box-open mb-3 d-block" style="font-size: 3rem; opacity: 0.15; color: #dd270d;"></i>
+                                    <i class="fas fa-box-open mb-3 d-block" style="font-size: 3rem; opacity: 0.15; color: {{ config('brand.primary_color') }};"></i>
                                     <h5 class="text-muted fw-bold">No 201 File Locations</h5>
                                     <p class="text-muted mb-0">Click "Add Location" to start organizing employee folders.</p>
                                 </td>
@@ -345,7 +345,7 @@
                         @empty
                             <tr>
                                 <td colspan="3" class="text-center py-5">
-                                    <i class="fas fa-map-marker-alt mb-3 d-block" style="font-size: 3rem; opacity: 0.15; color: #dd270d;"></i>
+                                    <i class="fas fa-map-marker-alt mb-3 d-block" style="font-size: 3rem; opacity: 0.15; color: {{ config('brand.primary_color') }};"></i>
                                     <h5 class="text-muted fw-bold">No Document Locations</h5>
                                     <p class="text-muted mb-0">Add your first location label for department documents.</p>
                                 </td>
@@ -587,7 +587,7 @@
             }
 
             .nav-tabs .nav-link:hover {
-                color: #dd270d !important;
+                color: {{ config('brand.primary_color') }} !important;
                 background-color: transparent !important;
                 border-color: transparent !important;
                 border-bottom: 3px solid rgba(221, 39, 13, 0.3) !important;

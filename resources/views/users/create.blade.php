@@ -96,7 +96,7 @@
                 </div>
                 
                 <div class="alert alert-info mt-3" role="alert" style="font-size: 0.85rem;">
-                    <i class="fas fa-info-circle me-1"></i> A default password will be automatically generated as <strong>{last_name}csc</strong>.
+                    <i class="fas fa-info-circle me-1"></i> A default password will be automatically generated as <strong>{last_name}{{ config('brand.password_suffix') }}</strong>.
                 </div>
             </div>
             

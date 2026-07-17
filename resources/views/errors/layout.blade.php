@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') - {{ config('app.name') }}</title>
+    <title>@yield('title') - {{ config('brand.name') }}</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('logo2.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset(config('brand.logo')) }}">
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
@@ -14,9 +14,9 @@
     
     <style>
         :root {
-            --company-primary: #dd270d;
-            --company-primary-hover: #b31e0a;
-            --company-primary-light: rgba(221, 39, 13, 0.1);
+            --company-primary: {{ config('brand.primary_color') }};
+            --company-primary-hover: {{ config('brand.primary_color') }}dd;
+            --company-primary-light: {{ config('brand.primary_color') }}1a;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --bg-color: #f8fafc;

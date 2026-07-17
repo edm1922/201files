@@ -22,7 +22,7 @@ class EmployeeFactory extends Factory
 
         return [
             'system_id'  => $this->faker->unique()->numerify('#####'),
-            'barcode_id' => 'CSC-' . date('Y') . '-' . $this->faker->unique()->numerify('####'),
+            'barcode_id' => config('brand.barcode_prefix') . '-' . date('Y') . '-' . $this->faker->unique()->numerify('####'),
             'first_name'  => strtoupper($this->faker->firstName()),
             'middle_name' => strtoupper($this->faker->optional(0.8)->lastName()),
             'last_name'   => strtoupper($this->faker->lastName()),

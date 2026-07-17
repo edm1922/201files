@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        folderCodePreview.value = `CSC-${companyCode.toUpperCase()}-0001`;
+        const folderPrefix = document.querySelector('meta[name="app-folder-prefix"]')?.getAttribute('content') || 'CSC';
+        folderCodePreview.value = `${folderPrefix}-${companyCode.toUpperCase()}-0001`;
     }
 
     function filterLocationsByCompany() {

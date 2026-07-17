@@ -75,7 +75,7 @@
                                 <div class="text-muted">{{ $doc->documentType->name }}</div>
                             </td>
                             <td class="border-bottom-0" style="padding: 16px 24px;">
-                                <div class="fw-semibold font-monospace" style="color: #dd270d;">
+                                <div class="fw-semibold font-monospace" style="color: {{ config('brand.primary_color') }};">
                                     {{ $doc->documentFolder?->folder_code ?? 'ROOT' }}
                                 </div>
                                 <div class="text-muted text-truncate" style="max-width: 200px; font-size: 0.85rem;" title="{{ $doc->documentFolder?->name ?? 'Root Department Level' }}">
@@ -204,7 +204,7 @@
                     <p class="mb-2">Are you sure you want to <strong class="text-danger">permanently delete</strong> this document?</p>
                     <div class="p-3 rounded-3" style="background-color: #fef2f2; border: 1px solid #fee2e2;">
                         <div class="fw-semibold text-break" style="color: #991b1b;" x-text="confirmName"></div>
-                        <div class="text-muted mt-1" style="font-size: 0.85rem;">Original Context: <span x-text="confirmContext" class="font-monospace fw-bold" style="color: #dd270d;"></span></div>
+                        <div class="text-muted mt-1" style="font-size: 0.85rem;">Original Context: <span x-text="confirmContext" class="font-monospace fw-bold" style="color: {{ config('brand.primary_color') }};"></span></div>
                     </div>
                     <p class="mt-3 mb-0 text-muted" style="font-size: 0.85rem;">
                         <i class="fas fa-info-circle me-1"></i>

@@ -14,7 +14,7 @@ class FolderSeeder extends Seeder
 
         if ($company) {
             $folders = [];
-            $prefix = 'CSC-' . strtoupper($company->code) . '-';
+            $prefix = config('brand.folder_prefix') . '-' . strtoupper($company->code) . '-';
             $count = 2505;
 
             for ($i = 1; $i <= $count; $i++) {

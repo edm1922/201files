@@ -18,14 +18,14 @@
                 <li class="nav-item">
                     <a href="{{ route('archives.index', ['tab' => 'employees']) }}"
                         class="nav-link border-0 text-decoration-none fw-semibold transition-colors duration-200"
-                        style="font-size: 0.95rem; padding: 10px 20px; border-bottom: 3px solid {{ $tab === 'employees' ? '#dd270d' : 'transparent' }} !important; color: {{ $tab === 'employees' ? '#dd270d' : '#64748b' }};">
+                        style="font-size: 0.95rem; padding: 10px 20px; border-bottom: 3px solid {{ $tab === 'employees' ? config('brand.primary_color') : 'transparent' }} !important; color: {{ $tab === 'employees' ? config('brand.primary_color') : '#64748b' }};">
                         <i class="fas fa-users me-2"></i>201 Files
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ route('archives.index', ['tab' => 'documents']) }}"
                         class="nav-link border-0 text-decoration-none fw-semibold transition-colors duration-200"
-                        style="font-size: 0.95rem; padding: 10px 20px; border-bottom: 3px solid {{ $tab === 'documents' ? '#dd270d' : 'transparent' }} !important; color: {{ $tab === 'documents' ? '#dd270d' : '#64748b' }};">
+                        style="font-size: 0.95rem; padding: 10px 20px; border-bottom: 3px solid {{ $tab === 'documents' ? config('brand.primary_color') : 'transparent' }} !important; color: {{ $tab === 'documents' ? config('brand.primary_color') : '#64748b' }};">
                         <i class="fas fa-file-contract me-2"></i>Department Documents
                     </a>
                 </li>
@@ -71,7 +71,7 @@
             }
 
             .nav-tabs .nav-link:hover {
-                color: #dd270d !important;
+                color: {{ config('brand.primary_color') }} !important;
                 background-color: transparent !important;
                 border-color: transparent !important;
                 border-bottom: 3px solid rgba(221, 39, 13, 0.3) !important;

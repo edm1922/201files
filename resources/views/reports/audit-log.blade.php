@@ -13,7 +13,7 @@
                     
                     {{-- Date Range Filter --}}
                     <div class="dropdown me-2">
-                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="rangeDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="background-color: #dd270dff; width: 160px; border-radius: 6px; font-weight: 500;">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="rangeDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="background-color: {{ config('brand.primary_color') }}ff; width: 160px; border-radius: 6px; font-weight: 500;">
                             <i class="fas fa-calendar-alt me-2 opacity-75"></i>
                             {{ request('date_from') || request('date_to') ? 'Date Screened' : 'Date Range' }}
                         </button>
@@ -27,7 +27,7 @@
                                 <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control form-control-sm shadow-none" onchange="document.getElementById('filterForm').submit()">
                             </div>
                             @if(request('date_from') || request('date_to'))
-                                <a href="{{ route('reports.audit-log', request()->except(['date_from', 'date_to'])) }}" class="btn btn-sm btn-light w-100 border-0" style="font-size: 0.75rem; color: #dd270dff;">
+                                <a href="{{ route('reports.audit-log', request()->except(['date_from', 'date_to'])) }}" class="btn btn-sm btn-light w-100 border-0" style="font-size: 0.75rem; color: {{ config('brand.primary_color') }}ff;">
                                     <i class="fas fa-times-circle me-1"></i> Clear Range
                                 </a>
                             @endif
@@ -36,7 +36,7 @@
                     
                     {{-- User Filter --}}
                     <div class="dropdown me-2">
-                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #dd270dff; min-width: 160px; border-radius: 6px; font-weight: 500;">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: {{ config('brand.primary_color') }}ff; min-width: 160px; border-radius: 6px; font-weight: 500;">
                             <i class="fas fa-user-circle me-2 opacity-75"></i>
                             @php
                                 $selectedUser = $users->firstWhere('id', request('user_id'));
@@ -59,7 +59,7 @@
 
                     {{-- Action Filter --}}
                     <div class="dropdown">
-                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #dd270dff; width: 160px; border-radius: 6px; font-weight: 500;">
+                        <button class="btn btn-sm text-white dropdown-toggle shadow-none" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: {{ config('brand.primary_color') }}ff; width: 160px; border-radius: 6px; font-weight: 500;">
                             <i class="fas fa-filter me-2 opacity-75"></i>
                             {{ request('action') && request('action') !== 'all' ? ucfirst(request('action')) : 'All Actions' }}
                         </button>

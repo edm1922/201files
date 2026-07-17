@@ -13,7 +13,7 @@ class DocumentFolderSeeder extends Seeder
         $departments = Department::all();
 
         foreach ($departments as $dept) {
-            $prefix = 'CSC-' . $dept->code;
+            $prefix = config('brand.folder_prefix') . '-' . $dept->code;
 
             $folders = [
                 ['name' => 'General', 'parent_id' => null],

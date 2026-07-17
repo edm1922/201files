@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'CSC DMS') }} - Login</title>
+    <title>{{ config('brand.name', 'DMS') }} - Login</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +23,7 @@
     <div class="login-container">
         <!-- Left Side: Overlay (Welcome) -->
         <div class="overlay-panel">
-            <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" style="height: 150px; margin-bottom: 2px;">
+            <img src="{{ asset(config('brand.logo')) }}" alt="{{ config('brand.short_name') }} Logo" style="height: 150px; margin-bottom: 2px;">
 
             <h2>Welcome back</h2>
             <p>Enter your credentials to access the Document Management System.</p>
@@ -31,7 +31,7 @@
 
         <!-- Right Side: Sign In Form -->
         <div class="form-panel">
-            <!-- <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" style="height: 80px; margin-bottom: 20px;"> -->
+            <!-- <img src="{{ asset(config('brand.logo')) }}" alt="{{ config('brand.short_name') }} Logo" style="height: 80px; margin-bottom: 20px;"> -->
             
             <form method="POST" action="{{ route('login') }}" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
                 @csrf
@@ -49,7 +49,7 @@
 
                 <!-- Errors -->
                 @if ($errors->any())
-                    <div style="margin-bottom: 15px; color: #dd270d; font-size: 0.8rem; font-weight: 600; text-align: center;">
+                    <div style="margin-bottom: 15px; color: {{ config('brand.primary_color') }}; font-size: 0.8rem; font-weight: 600; text-align: center;">
                         @foreach ($errors->all() as $error)
                             <div>{{ $error }}</div>
                         @endforeach

@@ -426,7 +426,7 @@
 
         .report-input:focus {
             background-color: #fff;
-            border-color: #dd270d;
+            border-color: {{ config('brand.primary_color') }};
             box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.1);
         }
 

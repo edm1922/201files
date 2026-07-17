@@ -21,8 +21,8 @@
 }
 
 .year-pill.active {
-    background: #dd270d;
-    border-color: #dd270d;
+    background: var(--company-primary);
+    border-color: var(--company-primary);
     color: #fff;
     box-shadow: 0 4px 6px -1px rgba(221, 39, 13, 0.2);
 }
@@ -49,7 +49,7 @@
 }
 
 .dropdown-trigger:hover {
-    border-color: #dd270d;
+    border-color: var(--company-primary);
 }
 
 .dropdown-menu-custom {
@@ -77,11 +77,11 @@
 
 .dropdown-item-custom:hover {
     background: #f8f9fa;
-    color: #dd270d;
+    color: var(--company-primary);
 }
 
 .dropdown-item-custom.active {
-    background: #dd270d;
+    background: var(--company-primary);
     color: #fff;
 }
 
@@ -197,7 +197,7 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: conic-gradient(var(--circle-color, #dd270d) var(--percent, 0%),
+    background: conic-gradient(var(--circle-color, var(--company-primary)) var(--percent, 0%),
             #eef0f3 0%);
     display: flex;
     align-items: center;
@@ -244,7 +244,7 @@
 }
 
 .date-pill:hover {
-    border-color: #dd270d;
+    border-color: var(--company-primary);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
 }
@@ -297,9 +297,9 @@
 }
 
 .calendar-nav-btn:hover {
-    background: #dd270d;
+    background: var(--company-primary);
     color: #ffffff;
-    border-color: #dd270d;
+    border-color: var(--company-primary);
 }
 
 .calendar-nav-btn i {
@@ -343,7 +343,7 @@
 
 .calendar-day.current:hover {
     background: #f3f4f6;
-    color: #dd270d;
+    color: var(--company-primary);
 }
 
 /* Days from adjacent months */
@@ -354,13 +354,13 @@
 /* Today's Date Highlight Case */
 .calendar-day.today {
     background: #fee2e2;
-    color: #dd270d !important;
+    color: var(--company-primary) !important;
     font-weight: 800;
     box-shadow: inset 0 0 0 1px #fecaca;
 }
 
 .calendar-day.today:hover {
-    background: #dd270d;
+    background: var(--company-primary);
     color: #ffffff !important;
 }
 
@@ -396,7 +396,7 @@
 .legend-ring {
     width: 12px;
     height: 12px;
-    border: 2.5px solid #dd270d;
+    border: 2.5px solid var(--company-primary);
     /* Border color set dynamically in JS */
     border-radius: 50%;
     flex-shrink: 0;

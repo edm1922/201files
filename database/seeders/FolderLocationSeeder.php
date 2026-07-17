@@ -16,7 +16,6 @@ class FolderLocationSeeder extends Seeder
             $rangeEnd = ($index + 1) * 500;
 
             $locations[] = [
-                'id' => $index + 1,
                 'company_id' => 1,
                 'row_name' => $row,
                 'range_start' => $rangeStart,

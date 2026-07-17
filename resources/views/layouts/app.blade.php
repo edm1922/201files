@@ -6,8 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="meili-search-url" content="{{ route('employees.meiliSearch') }}">
     <meta name="app-base-url" content="{{ rtrim(url('/'), '/') }}">
-    <title>{{ config('app.name', 'Laravel') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('logo2.png') }}">
+    <meta name="app-folder-prefix" content="{{ config('brand.folder_prefix') }}">
+    <title>{{ config('brand.name', 'DMS') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset(config('brand.logo')) }}">
 
 
 
@@ -42,6 +43,14 @@
     @endif
 
     @stack('styles')
+    <style>
+        :root {
+            --company-primary: {{ config('brand.primary_color') }};
+            --company-primary-hover: {{ config('brand.primary_color') }}dd;
+            --company-primary-light: {{ config('brand.primary_color') }}1a;
+            --company-primary-border: {{ config('brand.primary_color') }}33;
+        }
+    </style>
 </head>
 <body>
 
@@ -57,10 +66,10 @@
             <button class="btn topbar__icon-btn me-2" id="sidebar-toggle" title="Toggle menu" aria-label="Toggle sidebar">
                 <i class="fas fa-bars"></i>
             </button>
-            <a class="navbar-brand d-flex align-items-center topbar__brand" href="{{ route('dashboard') }}">
-                <img src="{{ asset('logo2.png') }}" alt="CSC-DMS Logo" height="35" class="me-2">
-                CSC-DMS
-            </a>
+                <a class="navbar-brand d-flex align-items-center topbar__brand" href="{{ route('dashboard') }}">
+                    <img src="{{ asset(config('brand.logo')) }}" alt="{{ config('brand.short_name') }} Logo" height="35" class="me-2">
+                    {{ config('brand.short_name') }}
+                </a>
 
             <div class="topbar__actions ms-auto">
                 <a class="btn topbar__icon-btn topbar__notification" href="{{ route('notifications.index') }}" title="Notifications" aria-label="Notifications{{ $unreadNotificationsCount > 0 ? ' (' . $unreadNotificationsCount . ' unread)' : '' }}">

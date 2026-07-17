@@ -1,11 +1,11 @@
 <x-app-layout>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div><h2 class="h4 mb-0 fw-bold">Dashboard</h2>
-        <small>Welcome to the CSC Document Management System</small></div>
+        <small>Welcome to the {{ config('brand.name') }}</small></div>
         <div class="d-flex align-items-center gap-3">
             <div class="calendar-wrapper" x-data="{ open: false }">
                 <div class="date-pill" @click="open = !open">
-                    <i class="fas fa-calendar-alt me-2" style="color: #dd270d !important;"></i>
+                    <i class="fas fa-calendar-alt me-2" style="color: {{ config('brand.primary_color') }} !important;"></i>
                     <span>{{ date('M d, Y', strtotime($calendarDate)) }}</span> 
                 </div>
 
@@ -118,7 +118,7 @@
                 <div class="graph-container">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3 class="dashboard-section-title mb-0">
-                            <i class="fas fa-chart-line" style="color: #dd270d;"></i> Hiring Trends
+                            <i class="fas fa-chart-line" style="color: {{ config('brand.primary_color') }};"></i> Hiring Trends
                         </h3>
                         <form action="{{ route('dashboard') }}" method="GET" class="filter-wrapper mb-0" id="yearFilterForm" x-data="{ open: false }">
                             <input type="hidden" name="year" id="selectedYear" value="{{ $year }}">
@@ -201,10 +201,10 @@
                 <div class="graph-container">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3 class="dashboard-section-title mb-0">
-                            <i class="fas fa-chart-pie" style="color: #dd270d;"></i> Company Distribution
+                            <i class="fas fa-chart-pie" style="color: {{ config('brand.primary_color') }};"></i> Company Distribution
                         </h3>
                         <!-- Company Filter Dropdown -->
-                        <div class="custom-dropdown" x-data="{ open: false, selected: 'All Companies', selectedColor: '#dd270d' }" @click.away="open = false">
+                        <div class="custom-dropdown" x-data="{ open: false, selected: 'All Companies', selectedColor: '{{ config('brand.primary_color') }}' }" @click.away="open = false">
                             <button type="button" class="dropdown-trigger" @click="open = !open">
                                 <div class="d-flex align-items-center gap-2">
                                     <span x-show="selected !== 'All Companies'" class="legend-dot" :style="'background-color: ' + selectedColor"></span>
@@ -233,7 +233,7 @@
                 <!-- Bank Employee Column Chart -->
                 <div class="graph-container">
                     <h3 class="dashboard-section-title mb-2">
-                        <i class="fas fa-university" style="color: #dd270d;"></i> Bank Distribution
+                        <i class="fas fa-university" style="color: {{ config('brand.primary_color') }};"></i> Bank Distribution
                     </h3>
                     <div style="height: 300px; position: relative;">
                         <canvas id="bankChart"></canvas>

@@ -217,7 +217,7 @@
 }
 
 .field-input:focus {
-    border-color: #dd270d;
+    border-color: var(--company-primary);
     box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.12);
     outline: none;
 }
@@ -241,12 +241,12 @@
 
 .select2-container--default.select2-container--focus .select2-selection--single,
 .select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #dd270d !important;
+    border-color: var(--company-primary) !important;
     box-shadow: 0 0 0 3px rgba(221, 39, 13, 0.12) !important;
 }
 
 .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
-    background-color: #dd270d !important;
+    background-color: var(--company-primary) !important;
     color: #ffffff !important;
 }
 
@@ -642,7 +642,7 @@
 .emp-summary-mono {
     font-size: 1rem;
     font-weight: 600;
-    color: #dd270d;
+    color: var(--company-primary);
 }
 
 /* Status badges */
@@ -695,7 +695,7 @@
 }
 
 .meili-folder-code {
-    color: #dd270d;
+    color: var(--company-primary);
     font-weight: 700;
     font-size: 0.85rem;
 }
@@ -707,9 +707,9 @@
 .meili-item:hover,
 .meili-item.active {
     background: #fef2f2;
-    color: #dd270d;
+    color: var(--company-primary);
     cursor: pointer;
-    border-left: 3px solid #dd270d;
+    border-left: 3px solid var(--company-primary);
     padding-left: 11px;
     /* offset border to prevent jumping */
 }
@@ -1057,8 +1057,8 @@
 }
 
 .overlay-panel {
-    background: #dd270d;
-    background: linear-gradient(to right, #dd270d, #dd270d);
+    background: var(--company-primary);
+    background: linear-gradient(to right, var(--company-primary), var(--company-primary));
     color: #ffffff;
     width: 45%;
     display: flex;
@@ -1106,8 +1106,8 @@
 
 .social-container a:hover {
     background-color: #fcebeb;
-    color: #dd270d;
-    border-color: #dd270d;
+    color: var(--company-primary);
+    border-color: var(--company-primary);
 }
 
 .form-panel span {
@@ -1145,8 +1145,8 @@
 
 .btn-signin {
     border-radius: 20px;
-    border: 1px solid #dd270d;
-    background-color: #dd270d;
+    border: 1px solid var(--company-primary);
+    background-color: var(--company-primary);
     color: #FFFFFF;
     font-size: 12px;
     font-weight: bold;
@@ -1163,8 +1163,8 @@
 }
 
 .btn-signin:hover {
-    background-color: #dd270d;
-    border-color: #dd270d;
+    background-color: var(--company-primary);
+    border-color: var(--company-primary);
 }
 
 .overlay-panel h1,
@@ -1217,7 +1217,7 @@
 
 .upload-zone:hover,
 .upload-zone--dragover {
-    border-color: var(--brand-red, #dd270d);
+    border-color: var(--brand-red, var(--company-primary));
     background: rgba(221, 39, 13, 0.02);
     box-shadow: 0 4px 12px rgba(221, 39, 13, 0.08);
 }
@@ -1231,7 +1231,7 @@
 
 .upload-zone:hover .upload-zone__icon {
     transform: translateY(-5px);
-    color: var(--brand-red, #dd270d);
+    color: var(--brand-red, var(--company-primary));
 }
 
 .upload-zone__text {
@@ -1358,8 +1358,8 @@
 
 .btn-action-round:hover {
     background: #f8fafc;
-    color: var(--brand-red, #dd270d);
-    border-color: var(--brand-red, #dd270d);
+    color: var(--brand-red, var(--company-primary));
+    border-color: var(--brand-red, var(--company-primary));
     transform: scale(1.05);
 }
 
@@ -1522,7 +1522,7 @@
 }
 
 .explorer-breadcrumb a.active {
-    color: #dd270d;
+    color: var(--company-primary);
     font-weight: 700;
 }
 
@@ -2078,7 +2078,7 @@ body.preview-overlay-open {
 
 /* ─── Pagination Red Override ─── */
 .pagination .page-item .page-link {
-    color: var(--company-primary, #dd270d);
+    color: var(--company-primary);
     border-color: #dee2e6;
     transition: all 0.2s;
 }
@@ -2091,12 +2091,12 @@ body.preview-overlay-open {
 
 .pagination .page-item .page-link:focus {
     box-shadow: 0 0 0 0.25rem var(--company-primary-light, rgba(221, 39, 13, 0.25));
-    color: var(--company-primary, #dd270d);
+    color: var(--company-primary);
 }
 
 .pagination .page-item.active .page-link {
-    background-color: var(--company-primary, #dd270d);
-    border-color: var(--company-primary, #dd270d);
+    background-color: var(--company-primary);
+    border-color: var(--company-primary);
     color: #fff;
 }
 

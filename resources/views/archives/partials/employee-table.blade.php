@@ -18,7 +18,7 @@
                     @foreach($employees as $employee)
                         <tr>
                             <td class="border-bottom-0" style="padding: 16px 24px;">
-                                <span class="fw-semibold font-monospace" style="color: #dd270d;">
+                                <span class="fw-semibold font-monospace" style="color: {{ config('brand.primary_color') }};">
                                     {{ $employee->folder?->folder_code ?? '—' }}
                                 </span>
                             </td>
@@ -31,7 +31,7 @@
                             <td class="border-bottom-0" style="padding: 16px 24px;">
                                 {{ $employee->date_hired ? $employee->date_hired->format('M d, Y') : '—' }}
                             </td>
-                            <td class="fw-semibold font-monospace" style="padding: 16px 24px; color: #dd270d;">
+                            <td class="fw-semibold font-monospace" style="padding: 16px 24px; color: {{ config('brand.primary_color') }};">
                                 {{ $employee->folderLocation?->full_location ?? '—' }}
                             </td>
                             <td class="border-bottom-0" style="padding: 16px 24px;">
@@ -100,7 +100,7 @@
                 <div class="modal-body p-4">
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; border-left: 4px solid #dd270d;">
+                            <div class="p-3 rounded-3 mb-3" style="background-color: #f8fafc; border-left: 4px solid {{ config('brand.primary_color') }};">
                                 <label class="text-muted small text-uppercase fw-bold mb-1">Full Name</label>
                                 <div class="h5 mb-0 text-dark fw-bold text-uppercase" x-text="selectedEmployee.name"></div>
                             </div>
@@ -128,13 +128,13 @@
                                 <div class="col-6">
                                     <div class="p-3">
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Folder Code</label>
-                                        <div class="mb-0 fw-bold font-monospace" style="color: #dd270d;" x-text="selectedEmployee.folder_code"></div>
+                                        <div class="mb-0 fw-bold font-monospace" style="color: {{ config('brand.primary_color') }};" x-text="selectedEmployee.folder_code"></div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="p-3">
                                         <label class="text-muted small text-uppercase fw-bold mb-1">Location</label>
-                                        <div class="mb-0 fw-semibold font-monospace" style="color: #dd270d;" x-text="selectedEmployee.location"></div>
+                                        <div class="mb-0 fw-semibold font-monospace" style="color: {{ config('brand.primary_color') }};" x-text="selectedEmployee.location"></div>
                                     </div>
                                 </div>
                             </div>
@@ -185,7 +185,7 @@
                     <p class="mb-2">Are you sure you want to <strong class="text-danger">permanently delete</strong> this employee?</p>
                     <div class="p-3 rounded-3" style="background-color: #fef2f2; border: 1px solid #fee2e2;">
                         <div class="fw-semibold" style="color: #991b1b;" x-text="confirmName"></div>
-                        <div class="text-muted" style="font-size: 0.85rem;">Folder Code: <span x-text="confirmFolderCode" class="font-monospace fw-bold" style="color: #dd270d;"></span></div>
+                        <div class="text-muted" style="font-size: 0.85rem;">Folder Code: <span x-text="confirmFolderCode" class="font-monospace fw-bold" style="color: {{ config('brand.primary_color') }};"></span></div>
                     </div>
                     <p class="mt-3 mb-0 text-muted" style="font-size: 0.85rem;">
                         <i class="fas fa-info-circle me-1"></i>

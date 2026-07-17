@@ -119,7 +119,7 @@ class FolderCodeService
 
     public function formatCode(string $companyCode, int $number): string
     {
-        return 'CSC-'.strtoupper(trim($companyCode)).'-'.str_pad((string) $number, 4, '0', STR_PAD_LEFT);
+        return config('brand.folder_prefix').'-'.strtoupper(trim($companyCode)).'-'.str_pad((string) $number, 4, '0', STR_PAD_LEFT);
     }
 
     protected function resolveSequenceNumber(Folder $folder, Company $company): int

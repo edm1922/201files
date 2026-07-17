@@ -778,7 +778,7 @@
                                 Folder Code <span class="text-muted fw-normal">(Optional)</span>
                             </label>
                             <input type="text" id="create_folder_code" name="folder_code"
-                                class="form-control field-input bg-light" placeholder="e.g. CSC-FIN-0001"
+                                class="form-control field-input bg-light" placeholder="e.g. {{ config('brand.folder_prefix') }}-FIN-0001"
                                 data-folder-create-code>
                         </div>
                         <div class="mb-2">
@@ -833,7 +833,7 @@
                                 style="font-size: 0.85rem;">Folder Code <span
                                     class="text-muted fw-normal">(Optional)</span></label>
                             <input type="text" name="folder_code" id="rename_folder_code"
-                                class="form-control field-input bg-light" placeholder="e.g. CSC-HR-0001">
+                                class="form-control field-input bg-light" placeholder="e.g. {{ config('brand.folder_prefix') }}-HR-0001">
                         </div>
                         <div class="mb-2">
                             <label for="rename_folder_location" class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">
